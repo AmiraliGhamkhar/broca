@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* Self-hosted Vazirmatn — never a third-party CDN (SPEC §1.1, §10) */
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("/fonts/vazirmatn/Vazirmatn-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("/fonts/vazirmatn/Vazirmatn-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("/fonts/vazirmatn/Vazirmatn-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    /* Five-color brand palette — placeholder tokens; replace from design spec (SPEC §9, §15) */
+    --color-broca-cream: #FDFBF7;
+    --color-broca-ink: #1C1B19;
+    --color-broca-slate: #4B5563;
+    --color-broca-accent: #C2410C;
+    --color-broca-sand: #E7DED2;
+    --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+    background-color: var(--color-broca-cream);
+    color: var(--color-broca-ink);
+    font-family: var(--font-sans);
+}
