@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('robots', 'noindex, follow')
+
 @section('content')
 <section class="mx-auto max-w-4xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
     <a href="{{ route('courses.show', $course) }}" class="text-sm font-black text-coral underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به دوره</a>

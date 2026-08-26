@@ -2,6 +2,8 @@
 
 @section('title', $quiz->title . ' — ' . __('app.name'))
 
+@section('robots', 'noindex, follow')
+
 @section('content')
 <section class="mx-auto max-w-4xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
     <a href="{{ route('courses.show', $quiz->course) }}" class="text-sm font-black text-coral underline-offset-4 hover:underline">بازگشت به دوره</a>

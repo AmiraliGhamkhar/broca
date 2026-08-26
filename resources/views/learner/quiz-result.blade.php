@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('robots', 'noindex, follow')
+
 @section('content')
 <section class="mx-auto max-w-3xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
     <p class="text-sm font-black text-coral">نتیجهٔ آزمون</p>
