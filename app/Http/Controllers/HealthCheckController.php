@@ -13,14 +13,15 @@ class HealthCheckController extends Controller
         try {
             DB::connection()->getPdo();
             $db = 'ok';
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             $db = 'error';
         }
 
+        // Load balancers must drain unhealthy instances: report 503 on failure.
         return Response::json([
             'status' => $db === 'ok' ? 'ok' : 'degraded',
             'db' => $db,
             'time' => now()->toIso8601ZuluString(),
-        ]);
+        ], $db === 'ok' ? 200 : 503);
     }
 }

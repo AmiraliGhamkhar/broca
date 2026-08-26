@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\PhoneNormalizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use App\Support\PhoneNormalizer;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -28,7 +28,18 @@ class AuthenticatedSessionController extends Controller
         }
 
         $field = filter_var($validated['identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-        $identifier = $field === 'email' ? mb_strtolower($validated['identifier']) : PhoneNormalizer::normalize($validated['identifier']);
+
+        if ($field === 'email') {
+            $identifier = mb_strtolower($validated['identifier']);
+        } else {
+            try {
+                $identifier = PhoneNormalizer::normalize($validated['identifier']);
+            } catch (\InvalidArgumentException) {
+                // Invalid phone-like identifier → validation error, never a 500.
+                throw ValidationException::withMessages(['identifier' => 'ایمیل یا شمارهٔ همراه معتبر وارد کنید.']);
+            }
+        }
+
         $credentials = [$field => $identifier, 'password' => $validated['password'], 'status' => 'active'];
 
         if (! auth()->attempt($credentials, $request->boolean('remember'))) {

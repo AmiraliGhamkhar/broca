@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* Self-hosted Vazirmatn — never a third-party CDN (SPEC §1.1, §10) */
+/* Self-hosted Vazirmatn (OFL licensed, files in public/fonts/vazirmatn) —
+   never a third-party font CDN (SPEC §1.1, §10). */
 @font-face {
     font-family: "Vazirmatn";
     src: url("/fonts/vazirmatn/Vazirmatn-Regular.woff2") format("woff2");
@@ -22,14 +23,32 @@
     font-style: normal;
     font-display: swap;
 }
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("/fonts/vazirmatn/Vazirmatn-Black.woff2") format("woff2");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
 
 @theme {
-    /* Five-color brand palette — placeholder tokens; replace from design spec (SPEC §9, §15) */
+    /* Brand palette tokens. cream/ink/slate/accent/sand were the original
+       five; coral/sun/teal/plum are the supporting tints already referenced
+       across views — placeholder values until the client's design file
+       lands, then replace hexes only (SPEC §9, §15). */
     --color-broca-cream: #FDFBF7;
     --color-broca-ink: #1C1B19;
     --color-broca-slate: #4B5563;
     --color-broca-accent: #C2410C;
     --color-broca-sand: #E7DED2;
+
+    --color-cream: #FDFBF7;
+    --color-ink: #1C1B19;
+    --color-coral: #C2410C;
+    --color-sun: #F5E6C4;
+    --color-teal: #0F766E;
+    --color-plum: #6B2D5C;
+
     --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -37,4 +56,9 @@ html {
     background-color: var(--color-broca-cream);
     color: var(--color-broca-ink);
     font-family: var(--font-sans);
+}
+
+/* Alpine x-cloak: hide interactive islands until Alpine boots. */
+[x-cloak] {
+    display: none !important;
 }

@@ -173,19 +173,6 @@ return new class extends Migration
             $table->unique(['user_id', 'video_id']);
         });
 
-        Schema::create('learning_progress', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('trackable_type', 30);
-            $table->unsignedBigInteger('trackable_id');
-            $table->timestamp('started_at')->nullable();
-            $table->timestamp('completed_at')->nullable();
-            $table->timestamp('last_activity_at')->nullable();
-            $table->json('metadata')->nullable();
-            $table->timestamps();
-            $table->unique(['user_id', 'trackable_type', 'trackable_id']);
-        });
-
         Schema::create('quizzes', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('course_id')->constrained()->cascadeOnDelete();
@@ -318,7 +305,6 @@ return new class extends Migration
         Schema::dropIfExists('quiz_options');
         Schema::dropIfExists('quiz_questions');
         Schema::dropIfExists('quizzes');
-        Schema::dropIfExists('learning_progress');
         Schema::dropIfExists('video_progress');
         Schema::dropIfExists('course_enrollments');
         Schema::dropIfExists('flashcards');

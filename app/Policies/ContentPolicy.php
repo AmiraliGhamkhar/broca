@@ -2,60 +2,65 @@
 
 namespace App\Policies;
 
-use App\Models\CourseEnrollment;
 use App\Models\Flashcard;
 use App\Models\Note;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\User;
 use App\Models\Video;
+use App\Services\EntitlementService;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Content gating policy. Frequent per-user checks (subscription, enrollment)
+ * are memoized on the User instance, and controllers eager-load the
+ * question→quiz→course / card→deck→course chains, so filtering a page of
+ * items does not degrade into an N+1.
+ */
 class ContentPolicy
 {
+    public function __construct(private readonly EntitlementService $entitlements)
+    {
+    }
+
     public function viewVideo(User $user, Video $video): bool
     {
-        return $this->canView($user, $video, $video->is_free_designated);
+        return $this->canView($user, $video);
     }
 
     public function viewNote(User $user, Note $note): bool
     {
-        return $this->canView($user, $note, $note->is_free_designated);
+        return $this->canView($user, $note);
     }
 
     public function viewFlashcard(User $user, Flashcard $flashcard): bool
     {
-        return $this->canView($user, $flashcard, $flashcard->is_free_designated);
-    }
-
-    public function viewQuiz(User $user, Quiz $quiz): bool
-    {
-        return $this->canView($user, $quiz, false);
+        return $this->canView($user, $flashcard);
     }
 
     public function viewQuizQuestion(User $user, QuizQuestion $question): bool
     {
-        return $this->canView($user, $question, $question->is_free_designated);
+        return $this->canView($user, $question);
     }
 
-    private function canView(User $user, Model $content, bool $isFree): bool
+    private function canView(User $user, Model $content): bool
     {
         if (! $user->isActive() || ! $user->hasVerifiedEmail()) {
             return false;
         }
 
         $course = $this->courseFor($content);
-        if (! $course || ! $this->isPublished($course) || ! $this->isEnrolled($user, $course->id) || ! $this->isPublished($content)) {
+        if (! $course || ! $this->isPublished($course) || ! $this->isPublished($content)) {
             return false;
         }
 
-        return $isFree || $user->subscriptions()
-            ->where('status', 'active')
-            ->whereNotNull('activated_at')
-            ->whereNotNull('starts_at')->where('starts_at', '<=', now())
-            ->where(function ($query): void {
-                $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
-            })->exists();
+        if (! $user->isEnrolledIn($course->id)) {
+            return false;
+        }
+
+        // Freemium decision delegated to the single entitlement service:
+        // active subscription OR free-designated within the global cap.
+        return $this->entitlements->canAccess($user, $content);
     }
 
     private function courseFor(Model $content): ?object
@@ -78,10 +83,5 @@ class ContentPolicy
     private function isPublished(Model $model): bool
     {
         return $model->status === 'published' && $model->published_at?->isPast();
-    }
-
-    private function isEnrolled(User $user, int $courseId): bool
-    {
-        return $user->enrollments()->where('course_id', $courseId)->where('status', 'active')->exists();
     }
 }

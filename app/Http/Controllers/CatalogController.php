@@ -11,11 +11,25 @@ class CatalogController extends Controller
 {
     public function index(Request $request): View
     {
-        $courses = Course::query()->with(['subject', 'author', 'reviewer'])->published()
-            ->when($request->filled('q'), fn ($query) => $query->where('title', 'like', '%'.$request->string('q').'%'))
-            ->orderBy('sort_order')->paginate(12)->withQueryString();
+        $subjects = Subject::query()->where('is_visible', true)->orderBy('sort_order')->get();
 
-        return view('catalog.index', compact('courses'));
+        $courses = Course::query()
+            ->with(['subject', 'author', 'reviewer'])
+            ->published()
+            ->when(
+                $request->filled('q'),
+                // Escape LIKE wildcards so "%" / "_" in user input match literally.
+                fn ($query) => $query->where('title', 'like', '%'.addcslashes((string) $request->string('q'), '\\%_').'%')
+            )
+            ->when(
+                $request->filled('subject'),
+                fn ($query) => $query->whereHas('subject', fn ($subject) => $subject->where('slug', (string) $request->string('subject')))
+            )
+            ->orderBy('sort_order')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('catalog.index', compact('courses', 'subjects'));
     }
 
     public function subject(Subject $subject): View
@@ -30,11 +44,13 @@ class CatalogController extends Controller
     {
         abort_unless($course->status === 'published' && $course->published_at?->isPast(), 404);
         $course->load(['subject', 'author', 'reviewer']);
-        $course->setRelation('videos', $course->videos()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get());
+        $course->setRelation('videos', $course->videos()->published()->orderBy('sort_order')->get());
         $course->setRelation('notes', $course->notes()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get());
         $course->setRelation('decks', $course->decks()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get());
         $course->setRelation('quizzes', $course->quizzes()->where('status', 'published')->where('published_at', '<=', now())->get());
 
-        return view('courses.show', compact('course'));
+        $isEnrolled = auth()->check() && auth()->user()->isEnrolledIn($course->id);
+
+        return view('courses.show', compact('course', 'isEnrolled'));
     }
 }

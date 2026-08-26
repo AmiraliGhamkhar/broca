@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', $video->title . ' — ' . __('app.name'))
+
 @section('content')
 <section class="mx-auto max-w-5xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28" x-data="videoPlayback()">
     <a href="{{ route('courses.show', $course) }}" class="text-sm font-black text-coral underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به دوره</a>
@@ -13,7 +15,15 @@
     <div class="mt-12 rounded-[2rem] bg-ink p-6 text-cream sm:p-10">
         <template x-if="manifest">
             <div>
-                <video class="aspect-video w-full rounded-[1.25rem] bg-black" controls playsinline preload="metadata" x-bind:src="manifest" aria-label="پخش {{ $video->title }}"></video>
+                <video x-ref="player" class="aspect-video w-full rounded-[1.25rem] bg-black" controls playsinline preload="metadata" x-bind:src="manifest" aria-label="پخش {{ $video->title }}"></video>
+
+                <div class="mt-5 flex flex-wrap items-center gap-4">
+                    <div class="h-2 w-40 rounded-full bg-cream/20 overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" x-bind:aria-valuenow="progressPercent">
+                        <div class="h-2 rounded-full bg-sun transition-all" x-bind:style="`width:${progressPercent}%`"></div>
+                    </div>
+                    <p class="text-sm text-cream/65"><span x-text="progressPercent">0</span>٪ دیده‌شده</p>
+                    <p x-show="completed" x-cloak class="text-sm font-black text-sun">✓ این ویدیو برای تو تکمیل شده است.</p>
+                </div>
                 <p class="mt-5 text-sm text-cream/65">اگر پخش ویدیو شروع نشد، اتصال سرویس ویدیو هنوز در محیط نمونه فعال نشده است.</p>
             </div>
         </template>
@@ -24,7 +34,7 @@
                 <h2 class="mt-6 text-2xl font-black">ویدیو آمادهٔ یادگیری است</h2>
                 @if ($canPlay)
                     <p class="mt-3 max-w-md leading-8 text-cream/65">برای دریافت مجوز کوتاه‌مدت پخش، دکمهٔ زیر را بزن.</p>
-                    <button type="button" x-on:click="loadPlayback" x-bind:disabled="loading" class="mt-6 rounded-full bg-sun px-6 py-3 font-black text-ink disabled:cursor-wait disabled:opacity-60">
+                    <button type="button" x-on:click="loadPlayback" x-bind:disabled="loading" class="mt-6 rounded-full bg-sun px-6 py-3 font-black text-ink disabled:cursor-wait disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-cream">
                         <span x-show="!loading">دریافت مجوز پخش</span>
                         <span x-show="loading" x-cloak>در حال آماده‌سازی…</span>
                     </button>
@@ -51,6 +61,10 @@
             loading: false,
             manifest: null,
             error: '',
+            progressPercent: 0,
+            completed: false,
+            lastSentAt: 0,
+
             async loadPlayback() {
                 this.loading = true;
                 this.error = '';
@@ -62,15 +76,63 @@
                     });
                     const payload = await response.json();
 
-                    if (!response.ok) {
+                    if (!response.ok || !payload.playback_url) {
                         throw new Error('این ویدیو در حال حاضر برای حساب تو در دسترس نیست.');
                     }
 
                     this.manifest = payload.playback_url;
+                    this.$nextTick(() => this.bindPlayer());
                 } catch (error) {
                     this.error = error.message || 'دریافت مجوز پخش ممکن نشد.';
                 } finally {
                     this.loading = false;
+                }
+            },
+
+            bindPlayer() {
+                const player = this.$refs.player;
+                if (!player) {
+                    return;
+                }
+
+                // Report progress at most every 10 seconds while watching,
+                // plus once when the video ends.
+                player.addEventListener('timeupdate', () => {
+                    const now = Date.now();
+                    if (now - this.lastSentAt >= 10000) {
+                        this.lastSentAt = now;
+                        this.report(Math.floor(player.currentTime));
+                    }
+                });
+                player.addEventListener('ended', () => this.report(Math.ceil(player.duration || player.currentTime)));
+            },
+
+            async report(watchedSeconds) {
+                if (!watchedSeconds || watchedSeconds < 1) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(@js(route('videos.progress', $video)), {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': @js(csrf_token()),
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ watched_seconds: watchedSeconds }),
+                    });
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const data = await response.json();
+                    this.progressPercent = data.watched_percent ?? this.progressPercent;
+                    this.completed = Boolean(data.completed);
+                } catch {
+                    // Progress reporting is best-effort; never interrupt playback.
                 }
             },
         };

@@ -9,6 +9,9 @@ use Illuminate\Support\Str;
 
 /**
  * @extends Factory<User>
+ *
+ * is_admin/status are NOT mass-assignable, so states use forceFill after
+ * creation — never $fillable.
  */
 class UserFactory extends Factory
 {
@@ -29,20 +32,32 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->unique()->numerify('09#########'),
             'email_verified_at' => now(),
-            'is_admin' => false,
-            'status' => 'active',
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the model's email address is unverified.
      */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function suspended(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->forceFill(['status' => 'suspended'])->save();
+        });
+    }
+
+    public function admin(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->forceFill(['is_admin' => true])->save();
+        });
     }
 }

@@ -1,58 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Broca (بروکا)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Persian (RTL) subscription-based medical-education platform: video courses, downloadable notes, spaced-repetition flashcards, and untimed quizzes behind a freemium paywall with Iranian gateway payments (ZarinPal via `shetabit/payment`).
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **PHP 8.4+ / Laravel 13** — Blade + Tailwind CSS v4 + Alpine.js (plain HTML/CSS/JS to the browser; no SPA, no parallel JSON API)
+- **MySQL 8** by default (shared/cPanel-hosting friendly); PostgreSQL works if you control the host — see `DECISIONS.md`
+- **shetabit/payment v7** — ZarinPal driver (Zibal available as a second driver)
+- **Vite** for assets; Vazirmatn self-hosted (`public/fonts/vazirmatn`, OFL)
+- **PHPUnit** for tests
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Local setup
 
 ```bash
-composer require laravel/boost --dev
+composer install
+cp .env.example .env
+php artisan key:generate
 
-php artisan boost:install
+# MySQL: create a database and set DB_* in .env
+# (or use DB_CONNECTION=sqlite && touch database/database.sqlite)
+php artisan migrate --seed
+
+npm install --ignore-scripts
+npm run build
+
+php artisan serve        # http://127.0.0.1:8000
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+The seeder creates an admin (`admin@broca.test` / `password`), three plans (free / 1-month / 3-month with **placeholder prices**), and one published course exercising the freemium limits.
 
-## Contributing
+## Payments (sandbox)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Set in `.env`:
 
-## Code of Conduct
+```
+ZARINPAL_MERCHANT_ID=<sandbox merchant id>
+ZARINPAL_SANDBOX=true
+ZARINPAL_CALLBACK_URL="${APP_URL}/payments/zarinpal/callback"
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Money is stored in **Rial as integers** — never floats. The payment flow: invoice → gateway redirect → server-side verification (amount-bound) → idempotent subscription activation (row-locked, replay-safe).
 
-## Security Vulnerabilities
+## Tests
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+composer test          # php artisan test
+vendor/bin/pint --test # code style
+```
 
-## License
+The money paths are covered first-class: freemium gating (`ContentAccessTest`) and payment callback/idempotency (`PaymentTest`), plus quiz grading (`QuizTest`) and the SM-2 scheduler (`SrsServiceTest`).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Docs
+
+- `SPEC.md` — original product/technical specification
+- `DECISIONS.md` — running log of decisions and open questions
+- `docs/PROJECT_STATUS.md` — what's done / in-progress / pending
+- `docs/RUNNING_LOCALLY.md` — setup details
+
+## Security posture
+
+- CSRF everywhere (web middleware), mass-assignment locked down (`is_admin`/`status` are **not** fillable)
+- Auth + password-reset routes rate-limited; login has per-identifier+IP throttling
+- Suspended users are logged out mid-session by the `active` middleware
+- Entitlement enforced server-side by `ContentPolicy` + `EntitlementService` — never in JS alone
+- Video playback via short-lived signed URLs that re-check entitlement

@@ -3,15 +3,24 @@
 namespace App\Services;
 
 use App\Models\UserFlashcardSchedule;
+use Carbon\CarbonImmutable;
 
+/**
+ * SM-2-compatible scheduler (documented, deterministic). A pure-PHP FSRS
+ * implementation can replace this class behind the same method signatures —
+ * see DECISIONS.md.
+ */
 class SrsService
 {
     /**
-     * Apply one SM-2-style review and persist the user's schedule.
+     * Pure computation of one SM-2-style review. Mutates nothing.
      *
      * Quality is 0 (complete failure) through 5 (easy recall).
      *
-     * @return array{previous_interval_days:int,new_interval_days:int,previous_ease_factor:float,new_ease_factor:float}
+     * @return array{
+     *     change: array{previous_interval_days:int, new_interval_days:int, previous_ease_factor:float, new_ease_factor:float},
+     *     next: array{state:string, ease_factor:float, interval_days:int, repetition_count:int, due_at:CarbonImmutable, last_reviewed_at:CarbonImmutable}
+     * }
      */
     public function review(UserFlashcardSchedule $schedule, int $quality): array
     {
@@ -33,20 +42,38 @@ class SrsService
             $state = 'review';
         }
 
-        $schedule->fill([
-            'state' => $state,
-            'ease_factor' => round($ease, 2),
-            'interval_days' => $interval,
-            'repetition_count' => $repetitions,
-            'due_at' => now()->addDays($interval),
-            'last_reviewed_at' => now(),
-        ])->save();
+        $now = CarbonImmutable::now();
 
         return [
-            'previous_interval_days' => $previousInterval,
-            'new_interval_days' => $interval,
-            'previous_ease_factor' => $previousEase,
-            'new_ease_factor' => round($ease, 2),
+            'change' => [
+                'previous_interval_days' => $previousInterval,
+                'new_interval_days' => $interval,
+                'previous_ease_factor' => $previousEase,
+                'new_ease_factor' => round($ease, 2),
+            ],
+            'next' => [
+                'state' => $state,
+                'ease_factor' => round($ease, 2),
+                'interval_days' => $interval,
+                'repetition_count' => $repetitions,
+                'due_at' => $now->addDays($interval),
+                'last_reviewed_at' => $now,
+            ],
         ];
+    }
+
+    /**
+     * Compute and persist the review onto the schedule (call inside the
+     * controller's transaction). Returns the FlashcardReview columns.
+     *
+     * @return array{previous_interval_days:int, new_interval_days:int, previous_ease_factor:float, new_ease_factor:float}
+     */
+    public function apply(UserFlashcardSchedule $schedule, int $quality): array
+    {
+        $result = $this->review($schedule, $quality);
+
+        $schedule->fill($result['next'])->save();
+
+        return $result['change'];
     }
 }

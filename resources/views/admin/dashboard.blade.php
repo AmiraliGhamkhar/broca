@@ -3,58 +3,45 @@
 @section('title', 'پنل ادمین — ' . __('app.name'))
 
 @section('content')
-    <section class="max-w-6xl mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold">پنل ادمین</h1>
-        <p class="mt-2 text-broca-slate">مدیریت محتوای بروکا</p>
+<section class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-black">پنل ادمین</h1>
+    <p class="mt-2 text-broca-slate">مدیریت محتوای بروکا</p>
 
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white border border-broca-sand rounded-lg p-4">
-                <h2 class="text-lg font-medium">کاربران</h2>
-                <p class="mt-2 text-3xl font-bold">1,234</p>
-                <p class="mt-1 text-broca-slate">کاربر فعال</p>
-            </div>
-            <div class="bg-white border border-broca-sand rounded-lg p-4">
-                <h2 class="text-lg font-medium">دوره‌ها</h2>
-                <p class="mt-2 text-3xl font-bold">28</p>
-                <p class="mt-1 text-broca-slate">دوره منتشر شده</p>
-            </div>
-            <div class="bg-white border border-broca-sand rounded-lg p-4">
-                <h2 class="text-lg font-medium">اشتراک‌ها</h2>
-                <p class="mt-2 text-3xl font-bold">456</p>
-                <p class="mt-1 text-broca-slate">اشتراک فعال</p>
-            </div>
-            <div class="bg-white border border-broca-sand rounded-lg p-4">
-                <h2 class="text-lg font-medium">بلاگ</h2>
-                <p class="mt-2 text-3xl font-bold">12</p>
-                <p class="mt-1 text-broca-slate">مقاله منتشر شده</p>
-            </div>
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-white border border-broca-sand rounded-2xl p-4">
+            <h2 class="text-lg font-bold">کاربران</h2>
+            <p class="mt-2 text-3xl font-black">{{ number_format($users) }}</p>
+            <p class="mt-1 text-broca-slate">کاربر ثبت‌شده</p>
         </div>
-
-        <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div class="bg-white border border-broca-sand rounded-lg p-4">
-                <h2 class="text-lg font-medium">فعالیت‌های اخیر</h2>
-                <ul class="mt-4 space-y-3">
-                    <li class="flex justify-between">
-                        <span>دکتر علیرضا محمدی</span>
-                        <span class="text-broca-slate">۱۴۰۲/۰۵/۱۵</span>
-                    </li>
-                    <li class="flex justify-between">
-                        <span>دکتر فاطمه رضایی</span>
-                        <span class="text-broca-slate">۱۴۰۲/۰۵/۱۴</span>
-                    </li>
-                    <li class="flex justify-between">
-                        <span>دکتر حسین کریمی</span>
-                        <span class="text-broca-slate">۱۴۰۲/۰۵/۱۳</span>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="bg-white border border-broca-sand rounded-lg p-4 lg:col-span-2">
-                <h2 class="text-lg font-medium">گزارش‌های مالی</h2>
-                <div class="mt-4 h-48 bg-broca-sand rounded flex items-center justify-center">
-                    <p class="text-broca-slate">نمودار مالی (نمونه)</p>
-                </div>
-            </div>
+        <div class="bg-white border border-broca-sand rounded-2xl p-4">
+            <h2 class="text-lg font-bold">دوره‌ها</h2>
+            <p class="mt-2 text-3xl font-black">{{ number_format($courses) }}</p>
+            <p class="mt-1 text-broca-slate">دوره در {{ number_format($subjects) }} درس‌نامه</p>
         </div>
-    </section>
+        <div class="bg-white border border-broca-sand rounded-2xl p-4">
+            <h2 class="text-lg font-bold">اشتراک‌ها</h2>
+            <p class="mt-2 text-3xl font-black">{{ number_format($activeSubscriptions) }}</p>
+            <p class="mt-1 text-broca-slate">اشتراک فعال</p>
+        </div>
+        <div class="bg-white border border-broca-sand rounded-2xl p-4">
+            <h2 class="text-lg font-bold">فاکتورها</h2>
+            <p class="mt-2 text-3xl font-black">{{ number_format($paidInvoices) }}</p>
+            <p class="mt-1 text-broca-slate">فاکتور پرداخت‌شده</p>
+        </div>
+        <div class="bg-white border border-broca-sand rounded-2xl p-4">
+            <h2 class="text-lg font-bold">درآمد</h2>
+            <p class="mt-2 text-3xl font-black">{{ number_format($revenueIrr / 10) }}</p>
+            <p class="mt-1 text-broca-slate">تومان (جمع فاکتورهای پرداخت‌شده)</p>
+        </div>
+        <div class="bg-white border border-broca-sand rounded-2xl p-4">
+            <h2 class="text-lg font-bold">ویدیوها</h2>
+            <p class="mt-2 text-3xl font-black">{{ number_format($videos) }}</p>
+            <p class="mt-1 text-broca-slate">ویدیوی ثبت‌شده</p>
+        </div>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+        <a href="{{ route('admin.videos.index') }}" class="rounded-full bg-broca-accent px-5 py-2.5 font-bold text-white">مدیریت ویدیوها</a>
+    </div>
+</section>
 @endsection

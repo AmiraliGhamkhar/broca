@@ -12,6 +12,7 @@
         <label class="flex items-center gap-3 text-sm font-bold"><input type="checkbox" name="remember" value="1" /> مرا به خاطر بسپار</label>
         <button class="w-full rounded-full bg-ink px-6 py-4 font-black text-cream">ورود</button>
     </form>
+    <p class="mt-6 text-sm font-bold text-ink/60"><a class="text-coral underline" href="{{ route('password.request') }}">گذرواژه‌ات را فراموش کرده‌ای؟</a></p>
     <p class="mt-8 text-sm font-bold text-ink/60">حساب نداری؟ <a class="text-coral underline" href="{{ route('register') }}">ثبت‌نام کن</a></p>
 </section>
 @endsection

@@ -23,4 +23,18 @@ final class PhoneNormalizer
 
         return $phone;
     }
+
+    /**
+     * Non-throwing variant for validation rules.
+     */
+    public static function isValid(string $phone): bool
+    {
+        try {
+            self::normalize($phone);
+        } catch (InvalidArgumentException) {
+            return false;
+        }
+
+        return true;
+    }
 }

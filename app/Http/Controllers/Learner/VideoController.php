@@ -11,6 +11,7 @@ use App\Policies\ContentPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class VideoController extends Controller
 {
@@ -24,8 +25,13 @@ class VideoController extends Controller
         return view('learner.video', compact('course', 'video', 'canPlay', 'threshold'));
     }
 
+    /**
+     * Short-lived playback authorization. Returns a signed media URL; the
+     * media route re-checks entitlement before streaming.
+     */
     public function playback(Request $request, Video $video, VideoProvider $provider): JsonResponse
     {
+        abort_unless($video->isPublished(), 404);
         abort_unless(app(ContentPolicy::class)->viewVideo($request->user(), $video), 403);
 
         try {
@@ -37,11 +43,26 @@ class VideoController extends Controller
         return response()->json($playback);
     }
 
+    /**
+     * Streams the (placeholder) media behind a signed URL. Entitlement is
+     * re-checked server-side; the signature itself carries the expiry.
+     */
+    public function media(Request $request, Video $video): BinaryFileResponse
+    {
+        abort_unless($video->isPublished(), 404);
+        abort_unless(app(ContentPolicy::class)->viewVideo($request->user(), $video), 403);
+
+        $path = public_path('videos/sample.mp4');
+
+        abort_unless(is_file($path), 404, 'Playback asset is not configured yet.');
+
+        return response()->file($path, ['Cache-Control' => 'private, no-store']);
+    }
+
     public function progress(Request $request, Video $video): JsonResponse
     {
         abort_unless(app(ContentPolicy::class)->viewVideo($request->user(), $video), 403);
         $data = $request->validate(['watched_seconds' => ['required', 'integer', 'min:0']]);
-        $request->merge(['watched_seconds' => $data['watched_seconds']]);
         $duration = (int) $video->duration_seconds;
         $seconds = $duration > 0 ? min($data['watched_seconds'], $duration) : $data['watched_seconds'];
         $percent = $duration > 0 ? min(100, (int) floor($seconds / $duration * 100)) : 0;
@@ -50,7 +71,12 @@ class VideoController extends Controller
         $progress = \DB::transaction(function () use ($request, $video, $seconds, $percent, $threshold): VideoProgress {
             $progress = VideoProgress::query()->where('user_id', $request->user()->id)->where('video_id', $video->id)->lockForUpdate()->first();
             if (! $progress) {
-                $progress = new VideoProgress(['user_id' => $request->user()->id, 'video_id' => $video->id]);
+                try {
+                    $progress = VideoProgress::create(['user_id' => $request->user()->id, 'video_id' => $video->id]);
+                } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                    // Lost a first-insert race — re-read the winner's row.
+                    $progress = VideoProgress::query()->where('user_id', $request->user()->id)->where('video_id', $video->id)->lockForUpdate()->firstOrFail();
+                }
             }
             $progress->watched_seconds = max((int) $progress->watched_seconds, $seconds);
             $progress->watched_percent = max((int) $progress->watched_percent, $percent);
@@ -68,6 +94,6 @@ class VideoController extends Controller
 
     private function published(Course $course, Video $video): bool
     {
-        return $course->status === 'published' && $course->published_at?->isPast() && $video->status === 'published' && $video->published_at?->isPast();
+        return $course->status === 'published' && $course->published_at?->isPast() && $video->isPublished();
     }
 }

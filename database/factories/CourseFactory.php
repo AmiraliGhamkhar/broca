@@ -15,4 +15,12 @@ class CourseFactory extends Factory
     {
         return ['subject_id' => Subject::factory(), 'title' => fake()->sentence(4), 'slug' => fake()->unique()->slug(), 'excerpt' => fake()->sentence(), 'description' => fake()->paragraph(), 'status' => 'draft', 'author_id' => Contributor::factory(), 'reviewer_id' => Contributor::factory(), 'sort_order' => 0];
     }
+
+    public function published(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'published',
+            'published_at' => now()->subDay(),
+        ]);
+    }
 }
