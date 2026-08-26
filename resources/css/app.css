@@ -326,3 +326,111 @@ a.rounded-xl:active {
         animation-iteration-count: 1 !important;
     }
 }
+
+/* Reusable product surfaces for public, learning, and admin screens. */
+.section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--color-coral);
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+}
+
+.section-label::before {
+    width: 1.4rem;
+    height: 2px;
+    background: currentColor;
+    content: "";
+}
+
+.interactive-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: rgb(255 255 255 / 0.48);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset;
+}
+
+.interactive-card::before {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-coral), var(--color-sun));
+    content: "";
+    opacity: 0;
+    transition: opacity 180ms ease;
+}
+
+.interactive-card:hover {
+    border-color: rgb(194 65 12 / 0.5);
+    box-shadow: var(--broca-shadow-lift);
+    transform: translateY(-4px);
+}
+
+.interactive-card:hover::before {
+    opacity: 1;
+}
+
+.surface-panel {
+    border: 1px solid rgb(28 27 25 / 0.1);
+    border-radius: var(--broca-radius-lg);
+    background: rgb(255 255 255 / 0.55);
+    box-shadow: var(--broca-shadow-soft);
+}
+
+.metric-card {
+    position: relative;
+    min-height: 9.5rem;
+    overflow: hidden;
+    border: 1px solid rgb(28 27 25 / 0.1);
+    border-radius: var(--broca-radius-lg);
+    background: rgb(255 255 255 / 0.58);
+    padding: 1.5rem;
+}
+
+.metric-card::after {
+    position: absolute;
+    inset: auto -2rem -3rem auto;
+    width: 8rem;
+    height: 8rem;
+    border: 1px solid rgb(194 65 12 / 0.14);
+    border-radius: 999px;
+    content: "";
+}
+
+.metric-card.is-highlight {
+    border-color: transparent;
+    background: var(--color-sun);
+}
+
+.metric-card.is-success {
+    border-color: rgb(15 118 110 / 0.18);
+    background: rgb(15 118 110 / 0.08);
+}
+
+.form-panel {
+    border: 1px solid rgb(28 27 25 / 0.1);
+    border-radius: var(--broca-radius-lg);
+    background: rgb(255 255 255 / 0.62);
+    padding: clamp(1.25rem, 4vw, 2.5rem);
+    box-shadow: var(--broca-shadow-soft);
+}
+
+.empty-state {
+    border: 1px dashed rgb(28 27 25 / 0.25);
+    border-radius: var(--broca-radius-lg);
+    background: rgb(255 255 255 / 0.38);
+    padding: clamp(2rem, 6vw, 4rem);
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .interactive-card:hover,
+    .site-nav-links a:hover,
+    .site-nav-links button:hover {
+        transform: none;
+    }
+}

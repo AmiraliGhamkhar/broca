@@ -3,7 +3,8 @@
 @section('title', ($video->exists ? 'ویرایش ویدیو' : 'ایجاد ویدیو') . ' — ' . __('app.name'))
 
 @section('content')
-<section class="max-w-2xl mx-auto px-4 py-8">
+<section class="max-w-2xl mx-auto px-4 py-12 sm:py-16">
+    <div class="form-panel">
     <h1 class="text-2xl font-black">{{ $video->exists ? 'ویرایش ویدیو' : 'ایجاد ویدیو' }}</h1>
 
     @if ($errors->any())<div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-sm font-bold" role="alert">{{ $errors->first() }}</div>@endif
@@ -67,5 +68,6 @@
             <a href="{{ route('admin.videos.index') }}" class="inline-block px-4 py-2 text-broca-slate underline">انصراف</a>
         </div>
     </form>
+</div>
 </section>
 @endsection

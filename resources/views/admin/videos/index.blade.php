@@ -3,7 +3,7 @@
 @section('title', 'مدیریت ویدیوها — ' . __('app.name'))
 
 @section('content')
-<section class="max-w-6xl mx-auto px-4 py-8">
+<section class="max-w-6xl mx-auto px-4 py-12 sm:py-16">
     <div class="flex flex-wrap items-center justify-between gap-4">
         <h1 class="text-3xl font-black">ویدیوها</h1>
         <a href="{{ route('admin.videos.create') }}" class="rounded-full bg-broca-accent px-5 py-2.5 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">افزودن ویدیو</a>
@@ -11,7 +11,7 @@
 
     @if ($errors->any())<div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-sm font-bold" role="alert">{{ $errors->first() }}</div>@endif
 
-    <div class="mt-6 bg-white border border-broca-sand rounded-2xl overflow-x-auto">
+    <div class="surface-panel mt-8 overflow-x-auto">
         <table class="w-full text-sm">
             <thead><tr class="border-b border-broca-sand">
                 <th class="p-3 text-right">عنوان</th>

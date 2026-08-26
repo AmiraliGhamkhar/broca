@@ -6,7 +6,7 @@
 <section class="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
     <div class="flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
         <div>
-            <p class="text-sm font-black text-coral">کتابخانهٔ بروکا</p>
+            <p class="section-label">کتابخانهٔ بروکا</p>
             <h1 class="mt-4 text-5xl font-black sm:text-7xl">دوره‌ها</h1>
         </div>
         <form method="get" class="flex gap-2" role="search">
@@ -32,7 +32,7 @@
     @else
         <div class="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             @foreach ($courses as $course)
-                <a href="{{ route('courses.show', $course) }}" class="group rounded-[2rem] border border-ink/15 p-6 transition hover:-translate-y-1 hover:border-coral">
+                <a href="{{ route('courses.show', $course) }}" class="interactive-card group rounded-[2rem] border border-ink/15 p-6 transition">
                     <p class="text-sm font-bold text-coral">{{ $course->subject->name }}</p>
                     <h2 class="mt-8 text-2xl font-black">{{ $course->title }}</h2>
                     <p class="mt-3 leading-7 text-ink/65">{{ $course->excerpt }}</p>

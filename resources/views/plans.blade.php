@@ -4,14 +4,14 @@
 
 @section('content')
 <section class="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-    <p class="text-sm font-black text-coral">دسترسی به یادگیری</p>
+    <p class="section-label">دسترسی به یادگیری</p>
     <h1 class="mt-4 text-5xl font-black sm:text-7xl">اشتراک‌ها</h1>
     <p class="mt-5 max-w-2xl leading-8 text-ink/65">دو ویدیوی اول، یک جزوه، ده کارت مرور و یک نمونه‌سؤال رایگان است؛ برای دسترسی کامل به همهٔ محتوای دوره‌ها یکی از پلن‌های زیر را فعال کن.</p>
 
     <div class="mt-16 grid gap-5 md:grid-cols-3">
         @forelse ($plans as $plan)
-            <article class="flex flex-col rounded-[2rem] border-2 border-ink p-6">
-                <p class="text-sm font-black text-coral">{{ $plan->name }}</p>
+            <article class="interactive-card flex flex-col rounded-[2rem] border-2 border-ink p-6">
+                <p class="section-label">{{ $plan->name }}</p>
                 <h2 class="mt-8 text-3xl font-black">{{ $plan->duration_months ? $plan->duration_months.' ماهه' : 'رایگان' }}</h2>
                 <p class="mt-5 leading-7 text-ink/65">{{ $plan->description ?: '[PLACEHOLDER: توضیح پلن]' }}</p>
 

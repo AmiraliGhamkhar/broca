@@ -2,6 +2,7 @@
 
 @section('content')
 <section class="mx-auto max-w-xl px-5 py-20 sm:px-8 lg:py-28">
+    <div class="form-panel">
     <p class="text-sm font-black text-coral">ورود به بروکا</p>
     <h1 class="mt-4 text-4xl font-black sm:text-6xl">ادامهٔ مسیر</h1>
     @if ($errors->any())<div class="mt-6 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-sm font-bold">{{ $errors->first() }}</div>@endif
@@ -14,5 +15,6 @@
     </form>
     <p class="mt-6 text-sm font-bold text-ink/60"><a class="text-coral underline" href="{{ route('password.request') }}">گذرواژه‌ات را فراموش کرده‌ای؟</a></p>
     <p class="mt-8 text-sm font-bold text-ink/60">حساب نداری؟ <a class="text-coral underline" href="{{ route('register') }}">ثبت‌نام کن</a></p>
+</div>
 </section>
 @endsection
