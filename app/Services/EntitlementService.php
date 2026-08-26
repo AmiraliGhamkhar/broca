@@ -1,9 +1,23 @@
 <?php
+
 namespace App\Services;
 
+use App\Models\QuizQuestion;
+use App\Models\Flashcard;
+use App\Models\Note;
+use App\Models\Video;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * The single decision point for freemium entitlement. ContentPolicy (and any
+ * future gate) must delegate here instead of re-implementing the rules.
+ *
+ * Locked product decision: exactly 2 free videos, 1 free note, 10 free
+ * flashcards and 1 free quiz question globally — everything else requires an
+ * active subscription.
+ */
 class EntitlementService
 {
     public const FREE_VIDEO_CAP = 2;
@@ -11,47 +25,58 @@ class EntitlementService
     public const FREE_FLASHCARD_CAP = 10;
     public const FREE_QUIZ_QUESTION_CAP = 1;
 
-    /**
-     * Determine if a user can access a given item (video, note, flashcard, quiz question).
-     */
-    public function canAccess(User $user, $item): bool
-    {
-        // Subscription placeholder – always false for now (Phase 3 will implement)
-        if (method_exists($user, 'hasActiveSubscription') && $user->hasActiveSubscription()) {
-            return true;
-        }
+    /** Cap per content type, keyed by class basename. */
+    private const CAPS = [
+        Video::class => self::FREE_VIDEO_CAP,
+        Note::class => self::FREE_NOTE_CAP,
+        Flashcard::class => self::FREE_FLASHCARD_CAP,
+        QuizQuestion::class => self::FREE_QUIZ_QUESTION_CAP,
+    ];
 
-        return $this->isFree($item);
+    /**
+     * Can the user access this item? Either through an active subscription
+     * (single source of truth: User::hasActiveSubscription) or because the
+     * item is free-designated and the global free cap is respected.
+     */
+    public function canAccess(User $user, Model $item): bool
+    {
+        return $user->hasActiveSubscription() || $this->isFree($item);
     }
 
     /**
-     * Check if the item is designated free and the global cap is not exceeded.
+     * Is the item designated free AND within the global cap?
      */
-    public function isFree($item): bool
+    public function isFree(Model $item): bool
     {
-        if (! property_exists($item, 'is_free_designated') || ! $item->is_free_designated) {
+        if (! array_key_exists($item::class, self::CAPS)) {
             return false;
         }
+
+        if (! $item->is_free_designated) {
+            return false;
+        }
+
         return $this->freeCapNotExceeded($item);
     }
 
-    protected function freeCapNotExceeded($item): bool
+    /**
+     * Fail-closed cap check: if more items are designated free than the cap
+     * allows (e.g. a race or a direct DB edit), NONE of them are served free.
+     */
+    protected function freeCapNotExceeded(Model $item): bool
     {
-        $model = get_class($item);
-        $cacheKey = "free_cap_{$model}";
-        $count = Cache::remember($cacheKey, 300, fn() => $model::where('is_free_designated', true)
-            ->where('status', 'published')
-            ->count());
-        switch (true) {
-            case $item instanceof \App\Models\Video:
-                return $count <= self::FREE_VIDEO_CAP;
-            case $item instanceof \App\Models\Note:
-                return $count <= self::FREE_NOTE_CAP;
-            case $item instanceof \App\Models\Flashcard:
-                return $count <= self::FREE_FLASHCARD_CAP;
-            case $item instanceof \App\Models\QuizQuestion:
-                return $count <= self::FREE_QUIZ_QUESTION_CAP;
-        }
-        return false;
+        $model = $item::class;
+        $cacheKey = 'free_cap_'.str_replace('\\', '_', $model);
+
+        $count = Cache::remember(
+            $cacheKey,
+            300,
+            fn () => $model::query()
+                ->where('is_free_designated', true)
+                ->where('status', 'published')
+                ->count()
+        );
+
+        return $count <= self::CAPS[$model];
     }
 }

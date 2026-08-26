@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
-use App\Contracts\VideoProvider;
-use App\Services\PlaceholderVideoProvider;
 use App\Contracts\PaymentGateway;
+use App\Contracts\VideoProvider;
+use App\Services\EntitlementService;
+use App\Services\PlaceholderVideoProvider;
 use App\Services\ZarinPalGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -20,8 +21,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(VideoProvider::class, PlaceholderVideoProvider::class);
         $this->app->bind(PaymentGateway::class, ZarinPalGateway::class);
-        // Register EntitlementService singleton for freemium gating
-        $this->app->singleton(\App\Services\EntitlementService::class, fn($app) => new \App\Services\EntitlementService());
+        $this->app->singleton(EntitlementService::class);
     }
 
     /**
@@ -31,6 +31,12 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for('video-progress', function (Request $request): Limit {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Registration sends a verification email — throttle to stop
+        // account spam and email bombing through the signup form.
+        RateLimiter::for('registration', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->ip());
         });
     }
 }

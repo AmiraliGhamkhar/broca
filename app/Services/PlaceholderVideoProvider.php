@@ -7,6 +7,15 @@ use App\Models\Video;
 use Illuminate\Support\Facades\URL;
 use RuntimeException;
 
+/**
+ * Provider-neutral playback boundary. Returns a short-lived SIGNED media URL;
+ * the signed URL carries the expiry, and the media route re-checks entitlement
+ * server-side before streaming anything.
+ *
+ * When a real VOD/CDN provider is wired in, replace this binding with an
+ * adapter that converts the stored provider-neutral reference into the
+ * provider's signed playback URL — the controller and views do not change.
+ */
 class PlaceholderVideoProvider implements VideoProvider
 {
     public function authorize(Video $video): array
@@ -16,11 +25,13 @@ class PlaceholderVideoProvider implements VideoProvider
         }
 
         $expiresAt = now()->addMinutes(5);
-        $url = URL::temporarySignedRoute('videos.manifest.placeholder', $expiresAt, [
+        $url = URL::temporarySignedRoute('videos.media', $expiresAt, [
             'video' => $video->getKey(),
-            'reference' => hash_hmac('sha256', $video->manifest_reference, (string) config('app.key')),
         ]);
 
-        return ['playback_url' => $url, 'expires_at' => $expiresAt->toIso8601String()];
+        return [
+            'playback_url' => $url,
+            'expires_at' => $expiresAt->toIso8601String(),
+        ];
     }
 }

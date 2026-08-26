@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Invoice extends Model
 {
@@ -32,9 +33,25 @@ class Invoice extends Model
         return ['amount_irr' => 'integer', 'paid_at' => 'datetime', 'expires_at' => 'datetime'];
     }
 
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function plan(): BelongsTo { return $this->belongsTo(Plan::class); }
-    public function transactions(): HasMany { return $this->hasMany(PaymentTransaction::class); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
 
     public function initiate(string $gateway, string $authority, ?int $expiresInMinutes = 30): void
     {
@@ -77,5 +94,10 @@ class Invoice extends Model
     public function isPending(): bool
     {
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_INITIATED], true);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_INITIATED]);
     }
 }

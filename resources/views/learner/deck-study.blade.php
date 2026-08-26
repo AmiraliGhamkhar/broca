@@ -38,6 +38,7 @@
                 const response = await fetch(@js(url('/flashcards')) + '/' + cardId + '/review', {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @js(csrf_token()) },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ quality }),
                 });
                 return response.ok;

@@ -67,8 +67,6 @@ return [
 
     'timezone' => env('APP_TIMEZONE', 'UTC'),
 
-    'display_timezone' => env('BROCA_DISPLAY_TIMEZONE', 'Asia/Tehran'),
-
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
@@ -80,17 +78,11 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'fa'),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'fa'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'fa_IR'),
-
-    'video_completion_threshold' => (int) env('BROCA_VIDEO_COMPLETION_THRESHOLD', 70),
-
-    'currency' => env('BROCA_CURRENCY', 'IRR'),
-
-    'currency_display' => env('BROCA_CURRENCY_DISPLAY', 'toman'),
 
     /*
     |--------------------------------------------------------------------------
