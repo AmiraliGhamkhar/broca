@@ -36,6 +36,7 @@ class VideoController extends Controller
     public function store(Request $request, FreeItemDesignationService $freeItems): RedirectResponse
     {
         $data = $this->validated();
+        abort_if($data['status'] === 'published', 422, 'انتشار ویدیو باید از مسیر بررسی و انتشار انجام شود.');
 
         $video = new Video(collect($data)->except(['is_free_designated', 'published_at'])->all());
         $video->slug = $this->uniqueSlug($data['title'], (int) $data['course_id']);
@@ -57,6 +58,7 @@ class VideoController extends Controller
     public function update(Request $request, Video $video, FreeItemDesignationService $freeItems): RedirectResponse
     {
         $data = $this->validated();
+        abort_if($data['status'] === 'published' && $video->status !== 'published', 422, 'انتشار ویدیو باید از مسیر بررسی و انتشار انجام شود.');
 
         $video->fill(collect($data)->except(['is_free_designated', 'published_at', 'course_id', 'slug'])->all());
         // Moving a video between courses must keep the per-course slug unique.

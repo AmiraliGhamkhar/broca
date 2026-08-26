@@ -12,7 +12,7 @@ return [
     // Kill switch for the checkout while payment incidents are being
     // investigated. Plans stay visible; purchase buttons are replaced by a
     // notice (see the plans view).
-    'checkout_enabled' => (bool) env('BROCA_CHECKOUT_ENABLED', true),
+    'checkout_enabled' => (bool) env('BROCA_CHECKOUT_ENABLED', false),
 
     // Force every request to HTTPS (production). Set APP_FORCE_HTTPS=true
     // once TLS is live at the host; local dev stays on plain HTTP.

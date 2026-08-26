@@ -31,8 +31,8 @@ class FreeItemDesignationService
 
                 $item->update(['is_free_designated' => $designated]);
 
-                Cache::forget('free_cap_'.str_replace('\\', '', get_class($item)));
-                Cache::forget('free_cap_'.str_replace('\\', '_', get_class($item)));
+                Cache::forget(EntitlementService::freeCapKey(get_class($item)));
+
             });
         } finally {
             optional($lock)->release();

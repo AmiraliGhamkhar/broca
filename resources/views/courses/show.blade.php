@@ -6,7 +6,7 @@
 
 @section('content')
 <section class="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-    <p class="text-sm font-black text-coral">{{ $course->subject->name }}</p>
+    <p class="section-label">{{ $course->subject->name }}</p>
     <h1 class="mt-4 max-w-4xl text-5xl font-black leading-tight sm:text-7xl">{{ $course->title }}</h1>
     <p class="mt-6 max-w-2xl text-lg leading-9 text-ink/65">{{ $course->description ?: $course->excerpt }}</p>
 
@@ -29,7 +29,7 @@
     @endif
 
     <div class="mt-20 grid gap-5 md:grid-cols-2">
-        <div class="rounded-[2rem] border border-ink/15 p-6">
+        <div class="surface-panel p-6">
             <p class="text-sm font-black text-coral">ویدیوها</p>
             <ul class="mt-6 space-y-3">
                 @forelse ($course->videos as $video)
@@ -48,7 +48,7 @@
             </ul>
         </div>
 
-        <div class="rounded-[2rem] border border-ink/15 p-6">
+        <div class="surface-panel p-6">
             <p class="text-sm font-black text-plum">جزوه‌ها</p>
             <ul class="mt-6 space-y-3">
                 @forelse ($course->notes as $note)

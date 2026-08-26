@@ -16,7 +16,7 @@ class PlanAdminTest extends TestCase
         $admin = User::factory()->admin()->create();
         $plan = Plan::factory()->monthly()->create(['price_irr' => 5000000]);
 
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.plans.update', $plan), [
                 'name' => 'یک‌ماهه',
                 'description' => 'دسترسی کامل',
@@ -39,7 +39,7 @@ class PlanAdminTest extends TestCase
         $admin = User::factory()->admin()->create();
         $plan = Plan::factory()->monthly()->create();
 
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.plans.update', $plan), [
                 'name' => 'x',
                 'price_irr' => -100,
@@ -47,7 +47,7 @@ class PlanAdminTest extends TestCase
             ])
             ->assertSessionHasErrors('price_irr');
 
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.plans.update', $plan), [
                 'name' => 'x',
                 'price_irr' => 'not-a-number',

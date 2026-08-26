@@ -26,13 +26,7 @@
             <p class="font-black text-teal">ورود دومرحله‌ای فعال است ✓</p>
             <p class="mt-2 text-sm leading-7 text-ink/70">هر بار ورود، کد ۶ رقمی از اپلیکیشن احرازگر پرسیده می‌شود. {{ count($user->recoveryCodes()) }} کد بازیابی باقی مانده است.</p>
 
-            <form method="post" action="{{ route('admin.two-factor.disable') }}" class="mt-5 space-y-3">
-                @csrf
-                <label for="disable_code" class="block text-sm font-bold">برای غیرفعال‌سازی، کد فعلی را وارد کنید:</label>
-                <input id="disable_code" name="code" type="text" inputmode="numeric" maxlength="6" required class="w-40 rounded-xl border border-ink/20 bg-transparent p-2 text-center font-black tracking-widest" dir="ltr">
-                @error('code')<p class="text-sm font-bold text-coral" role="alert">{{ $message }}</p>@enderror
-                <button type="submit" class="block rounded-full border border-coral px-5 py-2 text-sm font-black text-coral">غیرفعال‌سازی</button>
-            </form>
+            <p class="mt-5 text-sm font-bold text-ink/70">برای حفظ امنیت، ورود دومرحله‌ای برای مدیران اجباری است و غیرفعال نمی‌شود.</p>
         </div>
     @elseif ($user->totp_secret)
         <div class="mt-8 rounded-[2rem] border border-ink/15 p-6">

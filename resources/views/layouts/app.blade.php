@@ -30,15 +30,15 @@
 </head>
 <body class="bg-cream text-ink font-sans antialiased min-h-screen flex flex-col">
 
-    <header class="border-b border-broca-sand">
+    <header class="site-header border-b border-broca-sand">
         <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-            <a href="{{ url('/') }}" class="text-xl font-black">{{ __('app.name') }}</a>
-            <div class="flex items-center gap-3">
+            <a href="{{ url('/') }}" class="brand-lockup text-xl font-black"><span class="brand-mark" aria-hidden="true">ب</span><span>{{ __('app.name') }}</span></a>
+            <div class="site-nav-links flex items-center gap-3">
                 <a href="{{ route('catalog') }}" class="px-3 py-1.5 rounded-md font-bold hover:bg-broca-sand focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">{{ __('app.nav_catalog') }}</a>
                 <a href="{{ route('plans') }}" class="px-3 py-1.5 rounded-md font-bold hover:bg-broca-sand focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">{{ __('app.nav_plans') }}</a>
                 @guest
                     <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-md font-bold hover:bg-broca-sand focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">{{ __('app.cta_login') }}</a>
-                    <a href="{{ route('register') }}" class="px-3 py-1.5 rounded-md bg-broca-accent text-white font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">{{ __('app.cta_register') }}</a>
+                    <a href="{{ route('register') }}" class="nav-primary px-3 py-1.5 rounded-md bg-broca-accent text-white font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-ink">{{ __('app.cta_register') }}</a>
                 @else
                     <a href="{{ route('dashboard') }}" class="px-3 py-1.5 rounded-md font-bold hover:bg-broca-sand focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">{{ __('app.nav_dashboard') }}</a>
                     @if (auth()->user()->is_admin)

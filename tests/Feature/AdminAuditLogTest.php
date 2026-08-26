@@ -18,7 +18,7 @@ class AdminAuditLogTest extends TestCase
         $admin = User::factory()->admin()->create();
         $video = Video::factory()->for(Course::factory())->create();
 
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.free-items.update', ['type' => 'videos', 'id' => $video->id]), ['designated' => true])
             ->assertRedirect();
 
@@ -33,7 +33,7 @@ class AdminAuditLogTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
+        $this->actingAsAdmin($admin)->get(route('admin.dashboard'))->assertOk();
 
         $this->assertSame(0, AdminActivityLog::count());
     }
@@ -42,7 +42,7 @@ class AdminAuditLogTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->post(route('admin.two-factor.verify'), ['code' => '123456']);
 
         // 2FA verify is outside the audit group (it contains one-time codes)
@@ -50,7 +50,7 @@ class AdminAuditLogTest extends TestCase
         $this->assertSame(0, AdminActivityLog::count());
 
         $video = Video::factory()->for(Course::factory())->create();
-        $this->actingAs($admin)->patch(route('admin.videos.update', $video), [
+        $this->actingAsAdmin($admin)->patch(route('admin.videos.update', $video), [
             'course_id' => $video->course_id,
             'title' => 'عنوان جدید',
             'status' => 'draft',

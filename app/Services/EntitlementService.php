@@ -25,6 +25,11 @@ class EntitlementService
     public const FREE_FLASHCARD_CAP = 10;
     public const FREE_QUIZ_QUESTION_CAP = 1;
 
+    public static function freeCapKey(string $model): string
+    {
+        return 'free_cap_'.str_replace('\\', '_', $model);
+    }
+
     /** Cap per content type, keyed by class basename. */
     private const CAPS = [
         Video::class => self::FREE_VIDEO_CAP,
@@ -66,7 +71,7 @@ class EntitlementService
     protected function freeCapNotExceeded(Model $item): bool
     {
         $model = $item::class;
-        $cacheKey = 'free_cap_'.str_replace('\\', '_', $model);
+        $cacheKey = self::freeCapKey($model);
 
         $count = Cache::remember(
             $cacheKey,

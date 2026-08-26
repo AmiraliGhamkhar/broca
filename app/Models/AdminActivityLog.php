@@ -11,7 +11,7 @@ class AdminActivityLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'action', 'route_name', 'method', 'url',
+        'user_id', 'actor_name_snapshot', 'actor_email_snapshot', 'action', 'route_name', 'method', 'url',
         'ip_address', 'user_agent', 'payload', 'status_code',
     ];
 

@@ -25,6 +25,7 @@ class PaymentController extends Controller
      */
     public function checkout(Request $request, Plan $plan): RedirectResponse
     {
+        abort_unless(config('broca.checkout_enabled'), 503, 'پرداخت تا زمان آماده‌سازی نهایی فعال نیست.');
         abort_unless($plan->is_active, 404);
 
         // The free tier needs no purchase — never send it through the gateway.
@@ -47,6 +48,9 @@ class PaymentController extends Controller
 
         $invoice ??= Invoice::create([
             'user_id' => $user->id,
+            'user_name_snapshot' => $user->name,
+            'user_email_snapshot' => $user->email,
+            'user_phone_snapshot' => $user->phone,
             'plan_id' => $plan->id,
             'number' => $this->nextInvoiceNumber(),
             'amount_irr' => (int) $plan->price_irr,
