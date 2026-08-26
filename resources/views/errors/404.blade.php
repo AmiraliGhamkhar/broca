@@ -1,14 +1,28 @@
 @extends('layouts.app')
 
-@section('title', '۴۰۴ — ' . __('app.name'))
+@section('title', 'صفحه پیدا نشد — ' . __('app.name'))
+
+@section('robots', 'noindex, nofollow')
 
 @section('content')
-    <section class="max-w-2xl mx-auto px-4 py-24 text-center">
-        <p class="text-7xl font-bold text-broca-accent">۴۰۴</p>
-        <h1 class="mt-4 text-2xl font-bold">صفحه مورد نظر یافت نشد</h1>
-        <p class="mt-3 text-broca-slate">ممکن است آدرس تغییر کرده باشد یا صفحه حذف شده باشد.</p>
-        <a href="{{ url('/') }}" class="inline-block mt-8 px-5 py-2.5 rounded-md bg-broca-accent text-white font-medium">
-            بازگشت به صفحه اصلی
-        </a>
-    </section>
+<section class="mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 lg:py-32">
+    <p class="text-[7rem] font-black leading-none text-broca-accent sm:text-[10rem]" aria-hidden="true">۴۰۴</p>
+    <h1 class="mt-2 text-3xl font-black sm:text-5xl">این صفحه اینجا نیست</h1>
+    <p class="mx-auto mt-5 max-w-xl leading-9 text-ink/65">
+        ممکن است آدرس تغییر کرده باشد، صفحه حذف شده باشد یا لینک اشتباه وارد شده باشد.
+        نگران نباش — مسیر یادگیری از اینجا ادامه دارد.
+    </p>
+
+    <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+        <a href="{{ route('home') }}" class="rounded-full bg-ink px-7 py-4 font-black text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به صفحهٔ اصلی</a>
+        <a href="{{ route('catalog') }}" class="rounded-full bg-sun px-7 py-4 font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">مرور دوره‌ها</a>
+        @auth
+            <a href="{{ route('dashboard') }}" class="rounded-full border border-ink/30 px-7 py-4 font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">داشبورد من</a>
+        @else
+            <a href="{{ route('login') }}" class="rounded-full border border-ink/30 px-7 py-4 font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
+        @endauth
+    </div>
+
+    <p class="mt-10 text-sm font-bold text-ink/50">اگر فکر می‌کنید این خطا از طرف ماست، با پشتیبانی تماس بگیرید.</p>
+</section>
 @endsection

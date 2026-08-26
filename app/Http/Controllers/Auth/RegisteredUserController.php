@@ -53,6 +53,7 @@ class RegisteredUserController extends Controller
             return $user;
         });
 
+        // Verification email is queued (see VerifyEmailNotification).
         event(new Registered($user));
         auth()->login($user);
 

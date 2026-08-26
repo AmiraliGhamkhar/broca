@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\ForceSecureConnections;
+use App\Http\Middleware\LogAdminActivity;
+use App\Http\Middleware\RequireAdminTwoFactor;
+use App\Http\Middleware\SetSecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
