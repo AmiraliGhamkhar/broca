@@ -25,6 +25,8 @@ class LogAdminActivity
             try {
                 AdminActivityLog::create([
                     'user_id' => $request->user()?->id,
+                    'actor_name_snapshot' => mb_substr((string) $request->user()?->name, 0, 255),
+                    'actor_email_snapshot' => mb_substr((string) $request->user()?->email, 0, 255),
                     'action' => $this->action($request),
                     'route_name' => $request->route()?->getName(),
                     'method' => $request->method(),

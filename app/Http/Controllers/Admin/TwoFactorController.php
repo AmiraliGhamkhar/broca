@@ -15,7 +15,7 @@ use Illuminate\View\View;
  */
 class TwoFactorController extends Controller
 {
-    public function challenge(Request $request): View
+    public function challenge(Request $request): View|RedirectResponse
     {
         $user = $request->user();
 

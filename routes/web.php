@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FreeItemController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\PlanController as AdminPlanController;
+use App\Http\Controllers\Admin\TwoFactorController;
 use App\Http\Controllers\Admin\PublicationController;
 use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -111,13 +114,29 @@ Route::get('/video-playback/{video}', [VideoController::class, 'media'])
     ->middleware(['signed', 'auth', 'active', 'verified'])
     ->name('videos.media');
 
+Route::middleware(['auth', 'active', 'verified', 'admin'])->group(function (): void {
+    Route::get('/admin/two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('admin.two-factor.challenge');
+    Route::post('/admin/two-factor/challenge', [TwoFactorController::class, 'verify'])->middleware('throttle:10,1')->name('admin.two-factor.verify');
+    Route::post('/admin/two-factor/recover', [TwoFactorController::class, 'recover'])->middleware('throttle:5,1')->name('admin.two-factor.recover');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Admin (staff only)
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin'])->group(function (): void {
+    Route::get('/two-factor', [TwoFactorController::class, 'edit'])->name('admin.two-factor.edit');
+    Route::post('/two-factor/start', [TwoFactorController::class, 'start'])->name('admin.two-factor.start');
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->name('admin.two-factor.enable');
+});
+
+Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {
     Route::get('/', AdminDashboardController::class)->name('admin.dashboard');
+    Route::get('/plans', [AdminPlanController::class, 'index'])->name('admin.plans.index');
+    Route::get('/plans/{plan}/edit', [AdminPlanController::class, 'edit'])->name('admin.plans.edit');
+    Route::patch('/plans/{plan}', [AdminPlanController::class, 'update'])->name('admin.plans.update');
+    Route::get('/activity', [ActivityLogController::class, 'index'])->name('admin.activity.index');
 
     Route::get('/videos', [AdminVideoController::class, 'index'])->name('admin.videos.index');
     Route::get('/videos/create', [AdminVideoController::class, 'create'])->name('admin.videos.create');

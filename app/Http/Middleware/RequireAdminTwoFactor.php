@@ -20,6 +20,14 @@ class RequireAdminTwoFactor
     {
         $user = $request->user();
 
+        if ($user?->is_admin && (! $user->hasConfirmedTwoFactor() || $request->routeIs('admin.two-factor.challenge', 'admin.two-factor.verify', 'admin.two-factor.recover'))) {
+            if ($request->routeIs('admin.two-factor.challenge', 'admin.two-factor.verify', 'admin.two-factor.recover')) {
+                return $next($request);
+            }
+
+            return redirect()->route('admin.two-factor.edit');
+        }
+
         if ($user?->is_admin && $user->hasConfirmedTwoFactor()) {
             $passedAt = $request->session()->get(self::SESSION_KEY);
 

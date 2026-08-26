@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Security: `is_admin` and `status` are deliberately NOT mass-assignable.
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * admin tooling, so no request payload can ever grant admin or flip status.
  */
 #[Fillable(['name', 'email', 'phone', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'totp_secret', 'recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -63,6 +64,44 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->status === 'active';
     }
 
+    public function hasConfirmedTwoFactor(): bool
+    {
+        return ! empty($this->totp_secret) && ! empty($this->totp_confirmed_at);
+    }
+
+    /** @return list<string> */
+    public function recoveryCodes(): array
+    {
+        return is_array($this->recovery_codes) ? $this->recovery_codes : [];
+    }
+
+    /** @param list<string> $codes */
+    public function storeRecoveryCodes(array $codes): void
+    {
+        $this->forceFill(['recovery_codes' => array_values(array_map('strtoupper', $codes))])->save();
+    }
+
+    public function consumeRecoveryCode(string $code): bool
+    {
+        $normalized = strtoupper(trim($code));
+
+        return DB::transaction(function () use ($normalized): bool {
+            $user = self::query()->whereKey($this->getKey())->lockForUpdate()->first();
+            $codes = $user?->recoveryCodes() ?? [];
+
+            foreach ($codes as $index => $stored) {
+                if (hash_equals((string) $stored, $normalized)) {
+                    unset($codes[$index]);
+                    $user->forceFill(['recovery_codes' => array_values($codes)])->save();
+
+                    return true;
+                }
+            }
+
+            return false;
+        });
+    }
+
     /**
      * Single source of truth for "does this user currently have a paid,
      * activated, non-expired subscription". Every policy, gate, and view
@@ -106,6 +145,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'totp_confirmed_at' => 'datetime',
+            'recovery_codes' => 'array',
         ];
     }
 }

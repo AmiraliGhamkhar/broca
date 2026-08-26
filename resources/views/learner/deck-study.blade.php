@@ -6,6 +6,7 @@
 
 @section('content')
 <section class="mx-auto max-w-5xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28" x-data="flashcardStudy()">
+    <p x-show="error" x-cloak class="mb-8 rounded-2xl border-2 border-coral p-4 font-bold text-coral" role="alert" x-text="error"></p>
     <a href="{{ route('courses.show', $deck->course) }}" class="text-sm font-black text-coral underline-offset-4 hover:underline">بازگشت به دوره</a>
     <p class="mt-12 text-sm font-black text-coral">مرور فاصله‌دار</p>
     <h1 class="mt-4 text-5xl font-black sm:text-7xl">{{ $deck->title }}</h1>
@@ -40,14 +41,24 @@
 <script>
     function flashcardStudy() {
         return {
-            async submitReview(cardId, quality) {
-                const response = await fetch(@js(url('/flashcards')) + '/' + cardId + '/review', {
+            error: '',
+            async submitReview(reviewUrl, quality) {
+                this.error = '';
+                try {
+                const response = await fetch(reviewUrl, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @js(csrf_token()) },
                     credentials: 'same-origin',
                     body: JSON.stringify({ quality }),
                 });
+                if (!response.ok) {
+                    this.error = response.status === 429 ? 'تعداد درخواست‌ها زیاد است؛ کمی بعد دوباره تلاش کنید.' : 'ثبت مرور انجام نشد؛ دوباره تلاش کنید.';
+                }
                 return response.ok;
+                } catch {
+                    this.error = 'ارتباط با سرور برقرار نشد؛ دوباره تلاش کنید.';
+                    return false;
+                }
             },
         };
     }

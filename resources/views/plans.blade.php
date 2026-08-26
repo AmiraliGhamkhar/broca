@@ -26,12 +26,14 @@
 
                 <div class="mt-8">
                     @auth
-                        @if ((int) $plan->price_irr > 0 && (int) $plan->duration_months >= 1)
+                        @if (config('broca.checkout_enabled') && (int) $plan->price_irr > 0 && (int) $plan->duration_months >= 1)
                             <form method="post" action="{{ route('checkout', $plan) }}">
                                 @csrf
                                 <button type="submit" class="w-full rounded-full bg-ink px-7 py-4 font-black text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">خرید و پرداخت</button>
                             </form>
                             <p class="mt-3 text-xs text-ink/50">پرداخت امن از طریق درگاه زرین‌پال؛ پیش از انتقال، فاکتور صادر می‌شود.</p>
+                        @elseif (! config('broca.checkout_enabled'))
+                            <p class="rounded-xl border border-coral/40 bg-coral/10 px-4 py-3 text-sm font-bold text-coral">پرداخت تا آماده‌شدن نهایی سامانه موقتاً غیرفعال است.</p>
                         @else
                             <a href="{{ route('dashboard') }}" class="block rounded-full bg-ink px-7 py-4 text-center font-black text-cream">فعال است</a>
                         @endif

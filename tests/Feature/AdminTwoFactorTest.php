@@ -11,11 +11,11 @@ class AdminTwoFactorTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_without_2fa_reaches_the_panel_directly(): void
+    public function test_admin_without_2fa_is_required_to_enroll(): void
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get('/admin')->assertOk();
+        $this->actingAs($admin)->get('/admin')->assertRedirect(route('admin.two-factor.edit'));
     }
 
     public function test_admin_with_confirmed_2fa_is_challenged(): void

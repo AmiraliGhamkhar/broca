@@ -16,7 +16,7 @@ class PublicationTest extends TestCase
         $admin = User::factory()->admin()->create();
         $course = Course::factory()->create(['status' => 'in_review', 'published_at' => null]);
 
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.publication.update', ['type' => 'courses', 'id' => $course->id]), ['status' => 'published'])
             ->assertRedirect();
 
@@ -31,7 +31,7 @@ class PublicationTest extends TestCase
         $course = Course::factory()->create(['status' => 'draft']);
 
         // draft → archived is not a legal transition.
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.publication.update', ['type' => 'courses', 'id' => $course->id]), ['status' => 'archived'])
             ->assertSessionHasErrors('status');
 
@@ -43,7 +43,7 @@ class PublicationTest extends TestCase
         $admin = User::factory()->admin()->create();
         $course = Course::factory()->create(['status' => 'in_review', 'author_id' => null]);
 
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.publication.update', ['type' => 'courses', 'id' => $course->id]), ['status' => 'published'])
             ->assertSessionHasErrors('status');
 

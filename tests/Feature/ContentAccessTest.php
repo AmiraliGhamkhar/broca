@@ -121,12 +121,12 @@ class ContentAccessTest extends TestCase
         Video::factory()->count(2)->for($this->course)->create();
 
         foreach (Video::all() as $video) {
-            $response = $this->actingAs($admin)->patch(route('admin.free-items.update', ['type' => 'videos', 'id' => $video->id]), ['designated' => true]);
+            $response = $this->actingAsAdmin($admin)->patch(route('admin.free-items.update', ['type' => 'videos', 'id' => $video->id]), ['designated' => true]);
             $response->assertRedirect();
         }
 
         $third = Video::factory()->for($this->course)->create();
-        $this->actingAs($admin)
+        $this->actingAsAdmin($admin)
             ->patch(route('admin.free-items.update', ['type' => 'videos', 'id' => $third->id]), ['designated' => true])
             ->assertSessionHasErrors('free_item');
     }

@@ -19,6 +19,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'active' => \App\Http\Middleware\EnsureActive::class,
+            'admin.2fa' => RequireAdminTwoFactor::class,
+            'admin.audit' => LogAdminActivity::class,
+        ]);
+
+        $middleware->web(append: [
+            ForceSecureConnections::class,
+            SetSecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
