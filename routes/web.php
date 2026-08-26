@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 Route::get('/health', \App\Http\Controllers\HealthCheckController::class)->name('health');
+Route::get('/blog', fn () => view('blog.index'))->name('blog.index');
+Route::get('/blog/{slug}', fn () => view('blog.show'))->name('blog.show');
 Route::get('/video-manifests/{video}', function (\Illuminate\Http\Request $request, \App\Models\Video $video) {
     abort_unless($request->user() && $request->user()->hasVerifiedEmail(), 403);
     abort_unless($video->status === 'published' && $video->published_at?->isPast(), 404);
