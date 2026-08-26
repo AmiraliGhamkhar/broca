@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+#[Fillable(['course_id', 'title', 'slug', 'description', 'pass_threshold_percent', 'is_free_designated', 'status', 'published_at', 'author_id', 'reviewer_id'])]
+class Quiz extends Model
+{
+    use SoftDeletes;
+    protected function casts(): array { return ['published_at' => 'datetime', 'is_free_designated' => 'boolean']; }
+    public function course(): BelongsTo { return $this->belongsTo(Course::class); }
+    public function questions(): HasMany { return $this->hasMany(QuizQuestion::class); }
+}

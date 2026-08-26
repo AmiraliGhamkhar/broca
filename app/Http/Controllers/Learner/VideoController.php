@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Http\Controllers\Learner;
+
+use App\Contracts\VideoProvider;
+use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\Video;
+use App\Models\VideoProgress;
+use App\Policies\ContentPolicy;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class VideoController extends Controller
+{
+    public function show(Request $request, Course $course, Video $video): View
+    {
+        abort_unless($video->course_id === $course->id && $this->published($course, $video), 404);
+
+        $canPlay = app(ContentPolicy::class)->viewVideo($request->user(), $video);
+        $threshold = $video->completion_threshold_percent ?: config('broca.video_completion_threshold');
+
+        return view('learner.video', compact('course', 'video', 'canPlay', 'threshold'));
+    }
+
+    public function playback(Request $request, Video $video, VideoProvider $provider): JsonResponse
+    {
+        abort_unless(app(ContentPolicy::class)->viewVideo($request->user(), $video), 403);
+
+        try {
+            $playback = $provider->authorize($video);
+        } catch (\RuntimeException) {
+            abort(404);
+        }
+
+        return response()->json($playback);
+    }
+
+    public function progress(Request $request, Video $video): JsonResponse
+    {
+        abort_unless(app(ContentPolicy::class)->viewVideo($request->user(), $video), 403);
+        $data = $request->validate(['watched_seconds' => ['required', 'integer', 'min:0']]);
+        $request->merge(['watched_seconds' => $data['watched_seconds']]);
+        $duration = (int) $video->duration_seconds;
+        $seconds = $duration > 0 ? min($data['watched_seconds'], $duration) : $data['watched_seconds'];
+        $percent = $duration > 0 ? min(100, (int) floor($seconds / $duration * 100)) : 0;
+        $threshold = $video->completion_threshold_percent ?: config('broca.video_completion_threshold');
+
+        $progress = \DB::transaction(function () use ($request, $video, $seconds, $percent, $threshold): VideoProgress {
+            $progress = VideoProgress::query()->where('user_id', $request->user()->id)->where('video_id', $video->id)->lockForUpdate()->first();
+            if (! $progress) {
+                $progress = new VideoProgress(['user_id' => $request->user()->id, 'video_id' => $video->id]);
+            }
+            $progress->watched_seconds = max((int) $progress->watched_seconds, $seconds);
+            $progress->watched_percent = max((int) $progress->watched_percent, $percent);
+            $progress->last_watched_at = now();
+            if ($progress->watched_percent >= $threshold && ! $progress->completed_at) {
+                $progress->completed_at = now();
+            }
+            $progress->save();
+
+            return $progress;
+        });
+
+        return response()->json(['completed' => (bool) $progress->completed_at, 'watched_percent' => $progress->watched_percent]);
+    }
+
+    private function published(Course $course, Video $video): bool
+    {
+        return $course->status === 'published' && $course->published_at?->isPast() && $video->status === 'published' && $video->published_at?->isPast();
+    }
+}
