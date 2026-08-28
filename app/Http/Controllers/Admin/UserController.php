@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+class UserController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $users = User::query()
+            ->withCount(['enrollments', 'subscriptions', 'quizAttempts'])
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $term = '%' . addcslashes((string) $request->string('q'), '\\%_') . '%';
+                $q->where(function ($sub) use ($term) {
+                    $sub->where('name', 'like', $term)
+                        ->orWhere('email', 'like', $term)
+                        ->orWhere('phone', 'like', $term);
+                });
+            })
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when($request->filled('role'), function ($q) use ($request) {
+                if ($request->string('role') === 'admin') {
+                    $q->where('is_admin', true);
+                } elseif ($request->string('role') === 'learner') {
+                    $q->where('is_admin', false);
+                }
+            })
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.users.index', compact('users'));
+    }
+
+    public function show(User $user): View
+    {
+        $user->load([
+            'enrollments.course.subject',
+            'subscriptions.plan',
+            'quizAttempts.quiz',
+            'consents',
+        ]);
+
+        return view('admin.users.show', compact('user'));
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:active,suspended'],
+            'is_admin' => ['nullable', 'boolean'],
+        ]);
+
+        // Guard against self-lockout / self-demotion
+        if ($user->id === $request->user()->id && $validated['status'] === 'suspended') {
+            return back()->withErrors(['status' => 'نمی‌توانید حساب کاربری خودتان را تعلیق کنید.']);
+        }
+
+        if ($user->id === $request->user()->id && ! $request->boolean('is_admin')) {
+            return back()->withErrors(['is_admin' => 'نمی‌توانید نقش مدیریت را از حساب خودتان سلب کنید.']);
+        }
+
+        $user->forceFill([
+            'status' => $validated['status'],
+            'is_admin' => $request->boolean('is_admin'),
+        ])->save();
+
+        return back()->with('status', 'اطلاعات کاربر با موفقیت به‌روزرسانی شد.');
+    }
+}

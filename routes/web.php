@@ -1,11 +1,17 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\FreeItemController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\CourseController as AdminCourseController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\FlashcardController as AdminFlashcardController;
+use App\Http\Controllers\Admin\FreeItemController;
+use App\Http\Controllers\Admin\NoteController as AdminNoteController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
-use App\Http\Controllers\Admin\TwoFactorController;
 use App\Http\Controllers\Admin\PublicationController;
+use App\Http\Controllers\Admin\QuizController as AdminQuizController;
+use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
+use App\Http\Controllers\Admin\TwoFactorController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -133,11 +139,24 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin'])->gro
 
 Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {
     Route::get('/', AdminDashboardController::class)->name('admin.dashboard');
-    Route::get('/plans', [AdminPlanController::class, 'index'])->name('admin.plans.index');
-    Route::get('/plans/{plan}/edit', [AdminPlanController::class, 'edit'])->name('admin.plans.edit');
-    Route::patch('/plans/{plan}', [AdminPlanController::class, 'update'])->name('admin.plans.update');
-    Route::get('/activity', [ActivityLogController::class, 'index'])->name('admin.activity.index');
 
+    // Courses CRUD
+    Route::get('/courses', [AdminCourseController::class, 'index'])->name('admin.courses.index');
+    Route::get('/courses/create', [AdminCourseController::class, 'create'])->name('admin.courses.create');
+    Route::post('/courses', [AdminCourseController::class, 'store'])->name('admin.courses.store');
+    Route::get('/courses/{course}/edit', [AdminCourseController::class, 'edit'])->name('admin.courses.edit');
+    Route::patch('/courses/{course}', [AdminCourseController::class, 'update'])->name('admin.courses.update');
+    Route::delete('/courses/{course}', [AdminCourseController::class, 'destroy'])->name('admin.courses.destroy');
+
+    // Subjects CRUD
+    Route::get('/subjects', [AdminSubjectController::class, 'index'])->name('admin.subjects.index');
+    Route::get('/subjects/create', [AdminSubjectController::class, 'create'])->name('admin.subjects.create');
+    Route::post('/subjects', [AdminSubjectController::class, 'store'])->name('admin.subjects.store');
+    Route::get('/subjects/{subject}/edit', [AdminSubjectController::class, 'edit'])->name('admin.subjects.edit');
+    Route::patch('/subjects/{subject}', [AdminSubjectController::class, 'update'])->name('admin.subjects.update');
+    Route::delete('/subjects/{subject}', [AdminSubjectController::class, 'destroy'])->name('admin.subjects.destroy');
+
+    // Videos CRUD
     Route::get('/videos', [AdminVideoController::class, 'index'])->name('admin.videos.index');
     Route::get('/videos/create', [AdminVideoController::class, 'create'])->name('admin.videos.create');
     Route::post('/videos', [AdminVideoController::class, 'store'])->name('admin.videos.store');
@@ -145,6 +164,54 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admi
     Route::patch('/videos/{video}', [AdminVideoController::class, 'update'])->name('admin.videos.update');
     Route::delete('/videos/{video}', [AdminVideoController::class, 'destroy'])->name('admin.videos.destroy');
 
+    // Notes CRUD
+    Route::get('/notes', [AdminNoteController::class, 'index'])->name('admin.notes.index');
+    Route::get('/notes/create', [AdminNoteController::class, 'create'])->name('admin.notes.create');
+    Route::post('/notes', [AdminNoteController::class, 'store'])->name('admin.notes.store');
+    Route::get('/notes/{note}/edit', [AdminNoteController::class, 'edit'])->name('admin.notes.edit');
+    Route::patch('/notes/{note}', [AdminNoteController::class, 'update'])->name('admin.notes.update');
+    Route::delete('/notes/{note}', [AdminNoteController::class, 'destroy'])->name('admin.notes.destroy');
+
+    // Flashcard Decks & Cards CRUD
+    Route::get('/flashcards', [AdminFlashcardController::class, 'index'])->name('admin.flashcards.index');
+    Route::get('/flashcards/decks/create', [AdminFlashcardController::class, 'createDeck'])->name('admin.flashcards.decks.create');
+    Route::post('/flashcards/decks', [AdminFlashcardController::class, 'storeDeck'])->name('admin.flashcards.decks.store');
+    Route::get('/flashcards/decks/{deck}/edit', [AdminFlashcardController::class, 'editDeck'])->name('admin.flashcards.decks.edit');
+    Route::patch('/flashcards/decks/{deck}', [AdminFlashcardController::class, 'updateDeck'])->name('admin.flashcards.decks.update');
+    Route::delete('/flashcards/decks/{deck}', [AdminFlashcardController::class, 'destroyDeck'])->name('admin.flashcards.decks.destroy');
+    Route::get('/flashcards/cards/create', [AdminFlashcardController::class, 'createCard'])->name('admin.flashcards.cards.create');
+    Route::post('/flashcards/cards', [AdminFlashcardController::class, 'storeCard'])->name('admin.flashcards.cards.store');
+    Route::get('/flashcards/cards/{card}/edit', [AdminFlashcardController::class, 'editCard'])->name('admin.flashcards.cards.edit');
+    Route::patch('/flashcards/cards/{card}', [AdminFlashcardController::class, 'updateCard'])->name('admin.flashcards.cards.update');
+    Route::delete('/flashcards/cards/{card}', [AdminFlashcardController::class, 'destroyCard'])->name('admin.flashcards.cards.destroy');
+
+    // Quizzes & Questions CRUD
+    Route::get('/quizzes', [AdminQuizController::class, 'index'])->name('admin.quizzes.index');
+    Route::get('/quizzes/create', [AdminQuizController::class, 'create'])->name('admin.quizzes.create');
+    Route::post('/quizzes', [AdminQuizController::class, 'store'])->name('admin.quizzes.store');
+    Route::get('/quizzes/{quiz}/edit', [AdminQuizController::class, 'edit'])->name('admin.quizzes.edit');
+    Route::patch('/quizzes/{quiz}', [AdminQuizController::class, 'update'])->name('admin.quizzes.update');
+    Route::delete('/quizzes/{quiz}', [AdminQuizController::class, 'destroy'])->name('admin.quizzes.destroy');
+    Route::get('/quizzes/questions/create', [AdminQuizController::class, 'createQuestion'])->name('admin.quizzes.questions.create');
+    Route::post('/quizzes/questions', [AdminQuizController::class, 'storeQuestion'])->name('admin.quizzes.questions.store');
+    Route::get('/quizzes/questions/{question}/edit', [AdminQuizController::class, 'editQuestion'])->name('admin.quizzes.questions.edit');
+    Route::patch('/quizzes/questions/{question}', [AdminQuizController::class, 'updateQuestion'])->name('admin.quizzes.questions.update');
+    Route::delete('/quizzes/questions/{question}', [AdminQuizController::class, 'destroyQuestion'])->name('admin.quizzes.questions.destroy');
+
+    // Users Management
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show');
+    Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+
+    // Plans
+    Route::get('/plans', [AdminPlanController::class, 'index'])->name('admin.plans.index');
+    Route::get('/plans/{plan}/edit', [AdminPlanController::class, 'edit'])->name('admin.plans.edit');
+    Route::patch('/plans/{plan}', [AdminPlanController::class, 'update'])->name('admin.plans.update');
+
+    // Activity Log
+    Route::get('/activity', [ActivityLogController::class, 'index'])->name('admin.activity.index');
+
+    // Quick toggles
     Route::patch('/free-items/{type}/{id}', [FreeItemController::class, 'update'])->name('admin.free-items.update');
     Route::patch('/publication/{type}/{id}', [PublicationController::class, 'update'])->name('admin.publication.update');
 });
