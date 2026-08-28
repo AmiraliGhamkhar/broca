@@ -1,59 +1,81 @@
 @extends('layouts.app')
 
-@section('title', 'امنیت حساب مدیر — ' . __('app.name'))
+@section('title', 'امنیت و تأیید دو مرحله‌ای مدیران — ' . __('app.name'))
 
 @section('robots', 'noindex, follow')
 
 @section('content')
-<section class="mx-auto max-w-2xl px-5 py-20 sm:px-8">
-    <p class="text-sm font-black text-coral">امنیت مدیران</p>
-    <h1 class="mt-4 text-4xl font-black sm:text-5xl">ورود دومرحله‌ای (TOTP)</h1>
+<section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    @include('admin.nav')
 
-    @if (session('recovery_codes'))
-        <div class="mt-8 rounded-[2rem] border-2 border-teal bg-teal/10 p-6" role="status" aria-live="polite">
-            <h2 class="text-xl font-black text-teal">کدهای بازیابی — فقط همین یک بار</h2>
-            <p class="mt-2 text-sm leading-7">این کدها را در جای امنی ذخیره کنید. هر کد یک بار قابل استفاده است و دوباره نمایش داده نمی‌شود.</p>
-            <ul class="mt-4 grid grid-cols-2 gap-2 text-lg font-black" dir="ltr">
-                @foreach (session('recovery_codes') as $code)
-                    <li class="rounded-xl bg-cream px-3 py-2 text-center">{{ $code }}</li>
-                @endforeach
-            </ul>
+    <div class="form-panel">
+        <div class="flex items-center justify-between pb-4 border-b border-broca-sand">
+            <div>
+                <h2 class="text-2xl font-black text-ink">امنیت احراز هویت دو مرحله‌ای (TOTP 2FA)</h2>
+                <p class="text-xs text-broca-slate mt-1">حفاظت از پنل مدیریت با نرم‌افزارهای احرازگر استاندارد (Google Authenticator، Microsoft Authenticator و...)</p>
+            </div>
+            <span class="rounded-full px-3 py-1 text-xs font-black {{ $user->hasConfirmedTwoFactor() ? 'bg-teal/15 text-teal' : 'bg-coral/15 text-coral' }}">
+                {{ $user->hasConfirmedTwoFactor() ? 'ورود دومرحله‌ای فعال است ✓' : 'غیرفعال' }}
+            </span>
         </div>
-    @endif
 
-    @if ($user->hasConfirmedTwoFactor())
-        <div class="mt-8 rounded-[2rem] border border-teal/40 bg-teal/10 p-6">
-            <p class="font-black text-teal">ورود دومرحله‌ای فعال است ✓</p>
-            <p class="mt-2 text-sm leading-7 text-ink/70">هر بار ورود، کد ۶ رقمی از اپلیکیشن احرازگر پرسیده می‌شود. {{ count($user->recoveryCodes()) }} کد بازیابی باقی مانده است.</p>
+        @if ($errors->any())
+            <div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-xs font-bold text-coral" role="alert">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
-            <p class="mt-5 text-sm font-bold text-ink/70">برای حفظ امنیت، ورود دومرحله‌ای برای مدیران اجباری است و غیرفعال نمی‌شود.</p>
-        </div>
-    @elseif ($user->totp_secret)
-        <div class="mt-8 rounded-[2rem] border border-ink/15 p-6">
-            <p class="font-black">مرحلهٔ ۱ — کلید را در اپلیکیشن احرازگر ثبت کن</p>
-            <p class="mt-2 text-sm leading-7 text-ink/70">در Google Authenticator یا هر اپلیکیشن مشابه، گزینهٔ «افزودن کلید دستی» را بزن و این کلید را وارد کن:</p>
-            <code class="mt-3 block overflow-x-auto rounded-xl bg-ink/5 p-3 text-lg font-black" dir="ltr">{{ $user->totp_secret }}</code>
-            <p class="mt-3 text-xs text-ink/60" dir="ltr">{{ $otpauthUri }}</p>
+        @if (session('recovery_codes'))
+            <div class="mt-6 rounded-2xl border-2 border-teal bg-teal/5 p-6 space-y-4">
+                <h3 class="text-sm font-black text-teal">کدهای بازیابی یک‌بارمصرف (Recovery Codes)</h3>
+                <p class="text-xs text-ink leading-5">این کدها را در مکانی امن کپی و نگهداری کنید. در صورت گم شدن گوشی، با این کدها می‌توانید وارد شوید.</p>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-xs font-bold bg-white p-4 rounded-xl border border-teal/30" dir="ltr">
+                    @foreach (session('recovery_codes') as $code)
+                        <div class="p-2 bg-ink/5 rounded text-center">{{ $code }}</div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
-            <form method="post" action="{{ route('admin.two-factor.enable') }}" class="mt-6 space-y-3">
-                @csrf
-                <p class="font-black">مرحلهٔ ۲ — کد ۶ رقمی تولیدشده را تأیید کن</p>
-                <label for="enable_code" class="block text-sm font-bold">کد تأیید</label>
-                <input id="enable_code" name="code" type="text" inputmode="numeric" maxlength="6" required class="w-40 rounded-xl border border-ink/20 bg-transparent p-2 text-center font-black tracking-widest" dir="ltr">
-                @error('code')<p class="text-sm font-bold text-coral" role="alert">{{ $message }}</p>@enderror
-                <button type="submit" class="block rounded-full bg-ink px-6 py-3 font-black text-cream">فعال‌سازی ورود دومرحله‌ای</button>
-            </form>
-        </div>
-    @else
-        <div class="mt-8 rounded-[2rem] border border-ink/15 p-6">
-            <p class="leading-8 text-ink/70">حساب مدیر شما هنوز از ورود دومرحله‌ای محافظت نمی‌شود. با فعال‌سازی آن، حتی در صورت لو رفتن گذرواژه، دسترسی مدیران قابل سوءاستفاده نخواهد بود.</p>
-            <form method="post" action="{{ route('admin.two-factor.start') }}" class="mt-5">
-                @csrf
-                <button type="submit" class="rounded-full bg-ink px-6 py-3 font-black text-cream">شروع فعال‌سازی</button>
-            </form>
-        </div>
-    @endif
+        @if (! $user->hasConfirmedTwoFactor())
+            @if ($user->totp_secret)
+                <div class="mt-6 p-6 rounded-2xl bg-white/70 border border-broca-sand space-y-4">
+                    <h3 class="text-sm font-black text-ink">گام ۱: کلید زیر را در اپلیکیشن Authenticator وارد کنید</h3>
+                    <div class="p-3.5 rounded-xl bg-ink text-sun font-mono text-center text-sm font-black tracking-widest" dir="ltr">
+                        {{ chunk_split($user->totp_secret, 4, ' ') }}
+                    </div>
+                    @if ($otpauthUri)
+                        <p class="text-[11px] text-broca-slate font-mono break-all" dir="ltr">{{ $otpauthUri }}</p>
+                    @endif
 
-    <a href="{{ route('admin.dashboard') }}" class="mt-10 inline-block text-sm font-black text-coral underline">بازگشت به پیشخوان مدیریت</a>
+                    <h3 class="text-sm font-black text-ink pt-3">گام ۲: کد ۶ رقمی تولید شده را وارد کنید</h3>
+                    <form method="post" action="{{ route('admin.two-factor.enable') }}" class="space-y-4">
+                        @csrf
+                        <div>
+                            <input type="text" name="code" maxlength="6" inputmode="numeric" required placeholder="123456"
+                                   class="w-full max-w-xs p-3 rounded-xl border border-ink/20 text-center text-xl font-mono font-black tracking-widest bg-white" dir="ltr">
+                        </div>
+                        <button type="submit" class="rounded-full bg-ink px-6 py-2.5 text-xs font-black text-cream hover:bg-coral transition-all">
+                            تأیید و فعال‌سازی ورود دومرحله‌ای
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="mt-6 p-8 rounded-2xl bg-white/60 border border-broca-sand text-center space-y-4">
+                    <p class="text-sm font-bold text-broca-slate">برای امنیت پنل مدیریت، احراز هویت دو مرحله‌ای را فعال کنید.</p>
+                    <form method="post" action="{{ route('admin.two-factor.start') }}">
+                        @csrf
+                        <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-black text-cream hover:bg-coral transition-all">
+                            شروع راه‌اندازی 2FA
+                        </button>
+                    </form>
+                </div>
+            @endif
+        @else
+            <div class="mt-6 p-6 rounded-2xl bg-teal/5 border border-teal/20 space-y-4">
+                <p class="text-xs font-bold text-teal leading-5">حساب شما به صورت ایمن با ورود دومرحله‌ای محافظت می‌شود. در هر بار ورود به پنل ادمین کد ۶ رقمی درخواست خواهد شد.</p>
+            </div>
+        @endif
+    </div>
 </section>
 @endsection

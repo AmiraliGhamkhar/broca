@@ -5,71 +5,157 @@
 @section('canonical', route('courses.show', $course))
 
 @section('content')
-<section class="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-    <p class="section-label">{{ $course->subject->name }}</p>
-    <h1 class="mt-4 max-w-4xl text-5xl font-black leading-tight sm:text-7xl">{{ $course->title }}</h1>
-    <p class="mt-6 max-w-2xl text-lg leading-9 text-ink/65">{{ $course->description ?: $course->excerpt }}</p>
+<section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+    <div class="space-y-4">
+        <a href="{{ route('catalog') }}" class="text-xs font-black text-coral hover:underline">
+            ← بازگشت به کاتالوگ دوره‌ها
+        </a>
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-coral">{{ $course->subject->name ?? 'عمومی' }}</span>
+            <span class="rounded-full px-2.5 py-0.5 text-[10px] font-black bg-sun text-ink">
+                {{ $course->level ?: 'علوم پایه پزشکی' }}
+            </span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-black text-ink leading-tight">{{ $course->title }}</h1>
+        <p class="text-xs sm:text-sm text-broca-slate max-w-3xl leading-7 font-medium">
+            {{ $course->description ?: $course->excerpt }}
+        </p>
 
-    <div class="mt-8 flex flex-wrap gap-3 text-sm font-bold">
-        <span class="rounded-full bg-sun px-4 py-2">نویسنده: {{ $course->author?->name ?: '[PLACEHOLDER: نویسنده]' }} · {{ $course->author?->credentials ?: '[PLACEHOLDER: مدرک نویسنده]' }}</span>
-        <span class="rounded-full bg-teal px-4 py-2">بازبینی: {{ $course->reviewer?->name ?: '[PLACEHOLDER: بازبین پزشکی]' }} · {{ $course->reviewer?->credentials ?: '[PLACEHOLDER: مدرک بازبین]' }}</span>
+        <!-- Faculty Byline Pills -->
+        <div class="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-broca-sand px-4 py-2 text-ink shadow-xs">
+                <span>👨‍⚕️ استاد:</span>
+                <span class="text-coral">{{ $course->author?->name ?: 'هیئت علمی بروکا' }}</span>
+                <span class="text-[11px] text-broca-slate font-normal">({{ $course->author?->credentials ?: 'متخصص بالینی' }})</span>
+            </span>
+
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-teal/10 border border-teal/20 px-4 py-2 text-teal shadow-xs">
+                <span>✓ بازبین علمی:</span>
+                <span>{{ $course->reviewer?->name ?: 'متخصص ناظر' }}</span>
+                <span class="text-[11px] font-normal">({{ $course->reviewer?->credentials ?: 'هیئت علمی' }})</span>
+            </span>
+        </div>
+
+        <!-- Enrollment Call to Action -->
+        <div class="pt-4">
+            @guest
+                <a href="{{ route('register') }}" class="inline-block rounded-full bg-ink px-8 py-4 font-black text-cream text-xs hover:bg-coral transition-all shadow-md">
+                    برای ثبت‌نام و دسترسی رایگان وارد شوید ←
+                </a>
+            @else
+                @if ($isEnrolled)
+                    <div class="inline-flex items-center gap-2 rounded-full bg-teal/15 border border-teal/30 px-6 py-3 font-black text-teal text-xs">
+                        <span>✓</span>
+                        <span>شما در این دوره ثبت‌نام کرده‌اید. دسترسی به دروس فعال است.</span>
+                    </div>
+                @else
+                    <form method="post" action="{{ route('courses.enroll', $course) }}" class="inline-block">
+                        @csrf
+                        <button type="submit" class="rounded-full bg-ink px-8 py-4 font-black text-cream text-xs hover:bg-coral transition-all shadow-md">
+                            ثبت‌نام رایگان در این دوره ←
+                        </button>
+                    </form>
+                @endif
+            @endguest
+        </div>
     </div>
 
-    @guest
-        <a href="{{ route('register') }}" class="mt-10 inline-flex rounded-full bg-ink px-7 py-4 font-black text-cream">برای ثبت‌نام وارد شو</a>
-    @endguest
+    <!-- Course Content Grid -->
+    <div class="mt-14 grid gap-8 lg:grid-cols-2">
 
-    @if ($isEnrolled)
-        <p class="mt-10 inline-flex rounded-full bg-teal px-7 py-4 font-black text-cream">در این دوره ثبت‌نام کرده‌ای ✓</p>
-    @else
-        <form method="post" action="{{ route('courses.enroll', $course) }}" class="mt-10">
-            @csrf
-            <button class="rounded-full bg-ink px-7 py-4 font-black text-cream">ثبت‌نام رایگان در دوره</button>
-        </form>
-    @endif
+        <!-- Module 1: Video Lessons -->
+        <div class="surface-panel p-6 sm:p-8 rounded-3xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-broca-sand">
+                <h2 class="text-base font-black text-ink flex items-center gap-2">
+                    <span>🎥</span> ویدیوهای آموزشی دوره
+                </h2>
+                <span class="text-xs text-broca-slate font-bold">{{ $course->videos->count() }} درس</span>
+            </div>
 
-    <div class="mt-20 grid gap-5 md:grid-cols-2">
-        <div class="surface-panel p-6">
-            <p class="text-sm font-black text-coral">ویدیوها</p>
-            <ul class="mt-6 space-y-3">
-                @forelse ($course->videos as $video)
-                    <li class="rounded-xl bg-ink/5 p-4 font-bold">
-                        <a href="{{ route('videos.show', [$course, $video]) }}" class="flex items-center justify-between gap-3 hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">
-                            <span>{{ $video->title }}</span>
-                            <span class="flex items-center gap-2">
-                                @if ($video->is_free_designated)<span class="rounded-full bg-teal px-3 py-1 text-xs text-cream">رایگان</span>@endif
-                                <span aria-hidden="true">←</span>
-                            </span>
+            <ul class="space-y-3 text-xs">
+                @forelse ($course->videos as $idx => $video)
+                    <li class="p-3.5 rounded-2xl bg-white/70 border border-broca-sand hover:border-coral transition-all">
+                        <a href="{{ route('videos.show', [$course, $video]) }}" class="flex items-center justify-between font-bold text-ink">
+                            <div class="flex items-center gap-3">
+                                <span class="grid size-7 place-items-center rounded-full bg-ink/5 text-[11px] font-black text-ink">
+                                    {{ $idx + 1 }}
+                                </span>
+                                <div>
+                                    <span class="block font-black text-sm text-ink">{{ $video->title }}</span>
+                                    <span class="text-[11px] text-broca-slate font-normal">{{ $video->duration_seconds ? gmdate('i:s', $video->duration_seconds) . ' دقیقه' : 'درس ویدیویی' }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if ($video->is_free_designated)
+                                    <span class="rounded-full bg-teal/15 text-teal px-2.5 py-0.5 text-[11px] font-black">رایگان</span>
+                                @else
+                                    <span class="rounded-full bg-ink/10 text-ink/75 px-2.5 py-0.5 text-[11px] font-black">ویژه</span>
+                                @endif
+                                <span class="text-coral">←</span>
+                            </div>
                         </a>
                     </li>
                 @empty
-                    <li class="text-ink/60">هنوز ویدیویی منتشر نشده است.</li>
+                    <li class="text-broca-slate py-4 text-center">هنوز ویدیویی در این دوره منتشر نشده است.</li>
                 @endforelse
             </ul>
         </div>
 
-        <div class="surface-panel p-6">
-            <p class="text-sm font-black text-plum">جزوه‌ها</p>
-            <ul class="mt-6 space-y-3">
+        <!-- Module 2: Notes & Handouts -->
+        <div class="surface-panel p-6 sm:p-8 rounded-3xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-broca-sand">
+                <h2 class="text-base font-black text-ink flex items-center gap-2">
+                    <span>📄</span> جزوات و خلاصه دروس (PDF)
+                </h2>
+                <span class="text-xs text-broca-slate font-bold">{{ $course->notes->count() }} جزوه</span>
+            </div>
+
+            <ul class="space-y-3 text-xs">
                 @forelse ($course->notes as $note)
-                    <li class="rounded-xl bg-ink/5 p-4 font-bold">
-                        <a href="{{ route('notes.show', [$course, $note]) }}" class="flex items-center justify-between gap-3 hover:text-coral focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">
-                            <span>{{ $note->title }}</span>
-                            <span class="flex items-center gap-2">
-                                @if ($note->is_free_designated)<span class="rounded-full bg-teal px-3 py-1 text-xs text-cream">رایگان</span>@endif
-                                <span aria-hidden="true">←</span>
-                            </span>
+                    <li class="p-3.5 rounded-2xl bg-white/70 border border-broca-sand hover:border-coral transition-all">
+                        <a href="{{ route('notes.show', [$course, $note]) }}" class="flex items-center justify-between font-bold text-ink">
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">📑</span>
+                                <div>
+                                    <span class="block font-black text-sm text-ink">{{ $note->title }}</span>
+                                    <span class="text-[11px] text-broca-slate font-normal">فرمت PDF اختصاصی</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if ($note->is_free_designated)
+                                    <span class="rounded-full bg-teal/15 text-teal px-2.5 py-0.5 text-[11px] font-black">رایگان</span>
+                                @else
+                                    <span class="rounded-full bg-ink/10 text-ink/75 px-2.5 py-0.5 text-[11px] font-black">ویژه</span>
+                                @endif
+                                <span class="text-coral">دانلود ←</span>
+                            </div>
                         </a>
                     </li>
                 @empty
-                    <li class="text-ink/60">هنوز جزوه‌ای منتشر نشده است.</li>
+                    <li class="text-broca-slate py-4 text-center">هنوز جزوه‌ای در این دوره منتشر نشده است.</li>
                 @endforelse
             </ul>
 
-            <p class="mt-8 text-sm text-ink/60">
-                @foreach ($course->decks as $deck)<a href="{{ route('decks.study', [$course, $deck]) }}" class="me-2 underline hover:text-coral">{{ $deck->title }}</a>@endforeach
-                @foreach ($course->quizzes as $quiz)<a href="{{ route('quizzes.show', $quiz) }}" class="me-2 underline hover:text-coral">{{ $quiz->title }}</a>@endforeach
-            </p>
+            <!-- Decks and Quizzes Quick Links inside the course -->
+            @if ($course->decks->isNotEmpty() || $course->quizzes->isNotEmpty())
+                <div class="pt-6 border-t border-broca-sand space-y-3">
+                    <h3 class="text-xs font-black text-ink">کارت‌های مرور و آزمون‌های این دوره:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($course->decks as $deck)
+                            <a href="{{ route('decks.study', [$course, $deck]) }}"
+                               class="px-4 py-2 rounded-full bg-sun text-ink text-xs font-black hover:bg-cream border border-ink/10 transition-all">
+                                🗂 {{ $deck->title }}
+                            </a>
+                        @endforeach
+                        @foreach ($course->quizzes as $quiz)
+                            <a href="{{ route('quizzes.show', $quiz) }}"
+                               class="px-4 py-2 rounded-full bg-ink text-cream text-xs font-black hover:bg-coral transition-all">
+                                📝 {{ $quiz->title }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </section>
