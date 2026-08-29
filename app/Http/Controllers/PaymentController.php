@@ -5,19 +5,20 @@ namespace App\Http\Controllers;
 use App\Contracts\PaymentGateway;
 use App\Models\Invoice;
 use App\Models\Plan;
-use App\Models\Subscription;
 use App\Models\PaymentTransaction;
+use App\Services\PaymentFinalizer;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    public function __construct(private readonly PaymentGateway $gateway)
-    {
+    public function __construct(
+        private readonly PaymentGateway $gateway,
+        private readonly PaymentFinalizer $finalizer,
+    ) {
     }
 
     /**
@@ -34,6 +35,12 @@ class PaymentController extends Controller
         }
 
         $user = $request->user();
+
+        // Never sell a second subscription while one is already active —
+        // the user should renew after the current one ends.
+        if ($user->hasActiveSubscription()) {
+            return redirect()->route('plans')->with('status', 'هم‌اکنون اشتراک فعال دارید؛ پس از پایان اشتراک می‌توانید دوباره خرید کنید.');
+        }
 
         // Reuse a live invoice for this plan+price (never send the user to
         // the gateway twice for two different invoices of the same intent).
@@ -100,46 +107,11 @@ class PaymentController extends Controller
         // A cancelled callback (Status !== OK) skips the network call.
         $verified = $status === 'OK' && $this->gateway->verifyPayment($invoice);
 
-        $activated = DB::transaction(function () use ($invoice, $transaction, $verified): bool {
-            // Row-level lock + status re-check: only ONE concurrent/replayed
-            // callback can resolve a pending invoice — and a concurrent
-            // "paid" resolution can never be downgraded to "failed".
-            $locked = Invoice::query()
-                ->whereKey($invoice->id)
-                ->whereIn('status', [Invoice::STATUS_PENDING, Invoice::STATUS_INITIATED])
-                ->lockForUpdate()
-                ->first();
-
-            if (! $locked) {
-                // Another process resolved this invoice while we waited.
-                return $invoice->fresh()?->isPaid() ?? false;
-            }
-
-            if (! $verified) {
-                $transaction->markFailed();
-                $locked->markFailed();
-
-                return false;
-            }
-
-            $transaction->markVerified();
-            $locked->markPaid();
-
-            $plan = $locked->plan;
-            $subscription = Subscription::create([
-                'user_id' => $locked->user_id,
-                'plan_id' => $locked->plan_id,
-                'invoice_id' => $locked->id,
-                'gateway' => $locked->gateway,
-                // Unique constraint = DB-level idempotency backstop.
-                'gateway_reference' => $locked->authority,
-                'starts_at' => now(),
-                'ends_at' => now()->addMonths(max(1, (int) $plan->duration_months)),
-            ]);
-            $subscription->activate();
-
-            return true;
-        });
+        // Single money-resolution path: PaymentFinalizer owns the row-lock,
+        // status re-check, idempotent subscription activation and the
+        // "never downgrade a paid invoice" invariant (also used by
+        // broca:reconcile-payments — one copy of the logic, not two).
+        $activated = $this->finalizer->finalize($invoice, $verified, $transaction);
 
         return $activated
             ? redirect()->route('checkout.success', $invoice)

@@ -135,6 +135,8 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin'])->gro
     Route::get('/two-factor', [TwoFactorController::class, 'edit'])->name('admin.two-factor.edit');
     Route::post('/two-factor/start', [TwoFactorController::class, 'start'])->name('admin.two-factor.start');
     Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->name('admin.two-factor.enable');
+    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])->name('admin.two-factor.disable');
+    Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('admin.two-factor.recovery-codes');
 });
 
 Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {

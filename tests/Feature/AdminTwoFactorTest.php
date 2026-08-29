@@ -78,6 +78,58 @@ class AdminTwoFactorTest extends TestCase
         $this->actingAs($user)->post(route('admin.two-factor.verify'), ['code' => '123456'])->assertForbidden();
     }
 
+    public function test_admin_can_disable_two_factor_with_the_current_code(): void
+    {
+        $admin = $this->enrolledAdmin();
+        $admin->storeRecoveryCodes(['AAAAA-BBBBB']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.disable'), ['code' => Totp::currentCode($admin->totp_secret)])
+            ->assertRedirect(route('admin.two-factor.edit'));
+
+        $admin = $admin->fresh();
+        $this->assertNull($admin->totp_secret);
+        $this->assertNull($admin->totp_confirmed_at);
+        $this->assertSame([], $admin->recoveryCodes());
+        $this->assertFalse($admin->hasConfirmedTwoFactor());
+
+        // The panel no longer demands the challenge (same as never enrolled).
+        $this->actingAs($admin)->get('/admin')
+            ->assertRedirect(route('admin.two-factor.edit'));
+    }
+
+    public function test_admin_cannot_disable_two_factor_with_a_wrong_code(): void
+    {
+        $admin = $this->enrolledAdmin();
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.disable'), ['code' => '000000'])
+            ->assertSessionHasErrors('code');
+
+        $this->assertTrue($admin->fresh()->hasConfirmedTwoFactor());
+    }
+
+    public function test_admin_can_regenerate_recovery_codes(): void
+    {
+        $admin = $this->enrolledAdmin();
+        $admin->storeRecoveryCodes(['OLD01-AAAAA', 'OLD02-BBBBB']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.recovery-codes'))
+            ->assertRedirect(route('admin.two-factor.edit'))
+            ->assertSessionHas('recovery_codes');
+
+        $admin = $admin->fresh();
+        $codes = $admin->recoveryCodes();
+        $this->assertCount(10, $codes);
+        $this->assertNotContains('OLD01-AAAAA', $codes);
+
+        // Old codes are dead immediately.
+        $this->assertFalse($admin->consumeRecoveryCode('OLD01-AAAAA'));
+        // A fresh code still works once.
+        $this->assertTrue($admin->consumeRecoveryCode($codes[0]));
+    }
+
     public function test_totp_enrollment_flow(): void
     {
         $admin = User::factory()->admin()->create();

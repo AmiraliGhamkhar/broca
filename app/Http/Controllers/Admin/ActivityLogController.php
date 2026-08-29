@@ -14,8 +14,7 @@ class ActivityLogController extends Controller
             'logs' => AdminActivityLog::query()
                 ->with('user')
                 ->latest('id')
-                ->limit(300)
-                ->get(),
+                ->paginate(100),
         ]);
     }
 }

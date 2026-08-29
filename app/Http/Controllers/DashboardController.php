@@ -77,17 +77,9 @@ class DashboardController extends Controller
             ->limit(3)
             ->get();
 
-        // Active Subscription details
-        $activeSubscription = $user->subscriptions()
-            ->where('status', 'active')
-            ->whereNotNull('activated_at')
-            ->whereNotNull('starts_at')
-            ->where('starts_at', '<=', now())
-            ->where(function ($query): void {
-                $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
-            })
-            ->with('plan')
-            ->first();
+        // Active Subscription details (single source of truth — see
+        // User::activeSubscription(); never re-implement the expiry logic).
+        $activeSubscription = $user->activeSubscription();
 
         return view('learner.dashboard', [
             'user' => $user,
@@ -99,7 +91,7 @@ class DashboardController extends Controller
             'recentAttempts' => $recentAttempts,
             'completedVideos' => $watchedVideosCount,
             'recentProgress' => $recentProgress,
-            'hasSubscription' => $user->hasActiveSubscription(),
+            'hasSubscription' => (bool) $activeSubscription,
             'activeSubscription' => $activeSubscription,
         ]);
     }

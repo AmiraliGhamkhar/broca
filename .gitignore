@@ -18,6 +18,8 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+# Runtime-provisioned placeholder media (see `php artisan broca:provision-media`)
+/public/videos
 /storage/*.key
 /storage/pail
 /vendor

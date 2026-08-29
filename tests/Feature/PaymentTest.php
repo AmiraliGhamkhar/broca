@@ -69,6 +69,42 @@ class PaymentTest extends TestCase
         $this->assertSame([], $this->gateway->startedInvoiceIds);
     }
 
+    public function test_checkout_refuses_when_user_already_has_an_active_subscription(): void
+    {
+        $user = User::factory()->create();
+        $plan = Plan::factory()->monthly()->create(['price_irr' => 500000]);
+
+        Subscription::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->post(route('checkout', $plan));
+
+        $response->assertRedirect(route('plans'));
+        $this->assertDatabaseMissing('invoices', ['user_id' => $user->id]);
+        $this->assertSame([], $this->gateway->startedInvoiceIds);
+    }
+
+    public function test_checkout_is_allowed_again_after_the_subscription_expired(): void
+    {
+        $user = User::factory()->create();
+        $plan = Plan::factory()->monthly()->create(['price_irr' => 500000]);
+
+        Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'active',
+            'activated_at' => now()->subMonths(2),
+            'starts_at' => now()->subMonths(2),
+            'ends_at' => now()->subMonth(),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('checkout', $plan));
+
+        $this->assertStringStartsWith(
+            '/fake-gateway?authority=FAKE-AUTH-',
+            (string) $response->headers->get('Location'),
+            'expired subscription no longer blocks a fresh purchase'
+        );
+    }
+
     public function test_callback_success_verifies_marks_paid_and_activates_subscription(): void
     {
         $user = User::factory()->create();

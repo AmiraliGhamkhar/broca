@@ -111,7 +111,7 @@ class TwoFactorController extends Controller
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'digits:6'],
-        ]);
+        ], ['code.digits' => 'کد تأیید باید ۶ رقم باشد.']);
 
         $user = $request->user();
 
@@ -128,6 +128,23 @@ class TwoFactorController extends Controller
         $request->session()->forget(RequireAdminTwoFactor::SESSION_KEY);
 
         return redirect()->route('admin.two-factor.edit')->with('status', 'ورود دومرحله‌ای غیرفعال شد.');
+    }
+
+    public function regenerateRecoveryCodes(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user->hasConfirmedTwoFactor()) {
+            return redirect()->route('admin.two-factor.edit');
+        }
+
+        $recoveryCodes = $this->freshRecoveryCodes();
+
+        $user->storeRecoveryCodes($recoveryCodes);
+
+        return redirect()->route('admin.two-factor.edit')
+            ->with('recovery_codes', $recoveryCodes)
+            ->with('status', 'کدهای بازیابی جدید ساخته شدند. کدهای پیشین دیگر کار نمی‌کنند — این کدها را فقط یک بار می‌بینید.');
     }
 
     /**

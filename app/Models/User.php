@@ -27,7 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @var array<int, bool> */
     protected array $enrollmentCache = [];
 
-    protected ?bool $activeSubscriptionCache = null;
+    protected ?Subscription $activeSubscriptionCache = null;
 
     public function enrollments(): HasMany
     {
@@ -103,14 +103,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * The currently active subscription (memoized per instance), or null.
      * Single source of truth for "does this user currently have a paid,
-     * activated, non-expired subscription". Every policy, gate, and view
-     * helper must call this — never re-implement the expiry logic.
-     *
-     * Memoized per instance, so listing pages that check many items do not
-     * re-run the query per item.
+     * activated, non-expired subscription" — every policy, gate, and view
+     * helper must call this (or hasActiveSubscription) — never re-implement
+     * the expiry logic. A NULL ends_at means the subscription never expires.
      */
-    public function hasActiveSubscription(): bool
+    public function activeSubscription(): ?Subscription
     {
         return $this->activeSubscriptionCache ??= $this->subscriptions()
             ->where('status', 'active')
@@ -120,7 +119,14 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where(function ($query): void {
                 $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
             })
-            ->exists();
+            ->with('plan')
+            ->latest('id')
+            ->first();
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription() !== null;
     }
 
     /**

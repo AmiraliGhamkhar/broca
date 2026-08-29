@@ -36,7 +36,13 @@ class Subscription extends Model
 
     public function isActive(): bool
     {
-        return $this->status === 'active' && $this->ends_at && $this->ends_at->isFuture();
+        // Mirrors User::activeSubscription(): a NULL ends_at means the
+        // subscription never expires, so it counts as active.
+        return $this->status === 'active'
+            && $this->activated_at !== null
+            && $this->starts_at !== null
+            && ! $this->starts_at->isFuture()
+            && ($this->ends_at === null || $this->ends_at->isFuture());
     }
 
     public function isScheduled(): bool
