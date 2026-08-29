@@ -375,7 +375,7 @@ A follow-up audit (CRITICAL 1 / HIGH 2 / MEDIUM 8 / LOW 7) was delivered in chat
 
 ### Third round — LOW fix status (2026-08-29)
 
-All nine LOW findings from the second audit were fixed in commit `0f05ded`:
+All nine LOW findings from the second audit were fixed in commit `a8aef4e`:
 
 | # | Finding | Fix |
 |---|---|---|
