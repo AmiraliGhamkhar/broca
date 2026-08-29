@@ -83,6 +83,21 @@ class PaymentTest extends TestCase
         $this->assertSame([], $this->gateway->startedInvoiceIds);
     }
 
+    public function test_checkout_refuses_while_a_lifetime_subscription_null_ends_at_is_active(): void
+    {
+        $user = User::factory()->create();
+        $plan = Plan::factory()->monthly()->create(['price_irr' => 500000]);
+
+        // NULL ends_at means "active forever" (User::isActive contract).
+        Subscription::factory()->create(['user_id' => $user->id, 'ends_at' => null]);
+
+        $response = $this->actingAs($user)->post(route('checkout', $plan));
+
+        $response->assertRedirect(route('plans'));
+        $this->assertDatabaseMissing('invoices', ['user_id' => $user->id]);
+        $this->assertSame([], $this->gateway->startedInvoiceIds);
+    }
+
     public function test_checkout_is_allowed_again_after_the_subscription_expired(): void
     {
         $user = User::factory()->create();

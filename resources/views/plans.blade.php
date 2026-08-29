@@ -8,7 +8,7 @@
         <span class="text-xs font-bold text-rausch">طرح‌های دسترسی و یادگیری بدون مرز</span>
         <h1 class="font-display text-3xl sm:text-5xl text-ink">پلن‌های اشتراک بروکا</h1>
         <p class="text-xs sm:text-sm text-muted leading-7">
-            در تمام دوره‌ها ۲ ویدیوی اول، ۱ جزوه خلاصه، ۱۰ فلش‌کارت و ۱ نمونه‌سؤال کاملاً رایگان است. برای دسترسی نامحدود به تمام آرشیو، یکی از اشتراک‌های زیر را انتخاب کنید.
+            حساب رایگان در کل آرشیو (همه دوره‌ها روی هم) به ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت و ۱ نمونه‌سؤال دسترسی می‌دهد. برای دسترسی نامحدود به تمام آرشیو، یکی از اشتراک‌های زیر را انتخاب کنید.
         </p>
     </div>
 
@@ -46,19 +46,19 @@
                     <div class="pt-4 border-t border-hairline-soft space-y-2 text-xs text-ink/80 font-bold">
                         <div class="flex items-center gap-2">
                             <span class="text-teal">✓</span>
-                            <span>{{ $isPaid ? 'دسترسی نامحدود به تمامی ویدیوها' : 'دسترسی به ۲ ویدیوی اول هر دوره' }}</span>
+                            <span>{{ $isPaid ? 'دسترسی نامحدود به تمامی ویدیوها' : 'تا ۲ ویدیوی منتخب، در کل آرشیو و همه دوره‌ها' }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-teal">✓</span>
-                            <span>{{ $isPaid ? 'دانلود تمامی جزوات و اطلس‌های PDF' : 'دانلود ۱ جزوه نمونه در هر دوره' }}</span>
+                            <span>{{ $isPaid ? 'دانلود تمامی جزوات و اطلس‌های PDF' : 'تا ۱ جزوه PDF در کل آرشیو' }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-teal">✓</span>
-                            <span>{{ $isPaid ? 'مرور فاصله‌دار نامحدود کارت‌های SM-2' : '۱۰ کارت مرور فاصله‌دار در هر دسته' }}</span>
+                            <span>{{ $isPaid ? 'مرور فاصله‌دار نامحدود کارت‌های SM-2' : 'تا ۱۰ فلش‌کارت مرور فاصله‌دار در کل آرشیو' }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-teal">✓</span>
-                            <span>{{ $isPaid ? 'شرکت در تمامی آزمون‌های تشخیصی' : '۱ نمونه سؤال تشخیصی در هر آزمون' }}</span>
+                            <span>{{ $isPaid ? 'شرکت در تمامی آزمون‌های تشخیصی' : 'تا ۱ نمونه‌سؤال تشخیصی در کل آرشیو' }}</span>
                         </div>
                     </div>
                 </div>

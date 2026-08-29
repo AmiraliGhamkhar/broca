@@ -121,6 +121,7 @@ Route::get('/video-playback/{video}', [VideoController::class, 'media'])
     ->name('videos.media');
 
 Route::middleware(['auth', 'active', 'verified', 'admin'])->group(function (): void {
+    // NOT audited on purpose: challenge/verify/recover carry one-time codes.
     Route::get('/admin/two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('admin.two-factor.challenge');
     Route::post('/admin/two-factor/challenge', [TwoFactorController::class, 'verify'])->middleware('throttle:10,1')->name('admin.two-factor.verify');
     Route::post('/admin/two-factor/recover', [TwoFactorController::class, 'recover'])->middleware('throttle:5,1')->name('admin.two-factor.recover');
@@ -131,12 +132,14 @@ Route::middleware(['auth', 'active', 'verified', 'admin'])->group(function (): v
 | Admin (staff only)
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin'])->group(function (): void {
+Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit'])->group(function (): void {
     Route::get('/two-factor', [TwoFactorController::class, 'edit'])->name('admin.two-factor.edit');
     Route::post('/two-factor/start', [TwoFactorController::class, 'start'])->name('admin.two-factor.start');
-    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->name('admin.two-factor.enable');
-    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])->name('admin.two-factor.disable');
-    Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('admin.two-factor.recovery-codes');
+    // TOTP code verification must be rate-limited exactly like the login
+    // challenge — a 6-digit code is brute-forceable without a bound.
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->middleware('throttle:10,1')->name('admin.two-factor.enable');
+    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])->middleware('throttle:10,1')->name('admin.two-factor.disable');
+    Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->middleware('throttle:10,1')->name('admin.two-factor.recovery-codes');
 });
 
 Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {

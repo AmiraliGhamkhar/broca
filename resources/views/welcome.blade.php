@@ -195,7 +195,7 @@
                 همین حالا ثبت‌نام کنید و به دروس و فلش‌کارت‌های رایگان دسترسی پیدا کنید
             </h2>
             <p class="text-xs sm:text-sm text-white/70 max-w-lg mx-auto leading-7">
-                در تمامی دوره‌ها ۲ ویدیوی اول، ۱ جزوه خلاصه، ۱۰ کارت مرور و نمونه سؤالات تشخیصی به صورت کاملاً رایگان در دسترس شماست.
+                در حساب رایگان، در کل آرشیو و تمام دوره‌ها، به ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت مرور و ۱ نمونه‌سؤال تشخیصی به‌صورت کاملاً رایگان دسترسی دارید.
             </p>
             <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
                 <a href="{{ route('register') }}" class="px-8 py-4 rounded-full bg-rausch text-white text-xs sm:text-sm font-bold hover:bg-rausch-active transition-colors shadow-float">

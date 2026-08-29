@@ -29,6 +29,18 @@ class DashboardController extends Controller
             ->latest('enrolled_at')
             ->get();
 
+        // Effective free status (flag AND global cap) for the badges —
+        // same rule the playback/download endpoints enforce.
+        $entitlements = app(\App\Services\EntitlementService::class);
+        $enrollments->each(function ($enrollment) use ($entitlements): void {
+            $enrollment->course->videos->each(function ($video) use ($entitlements): void {
+                $video->is_free_available = $entitlements->isFree($video);
+            });
+            $enrollment->course->notes->each(function ($note) use ($entitlements): void {
+                $note->is_free_available = $entitlements->isFree($note);
+            });
+        });
+
         // Enrolled Course IDs
         $enrolledCourseIds = $enrollments->pluck('course_id')->all();
 

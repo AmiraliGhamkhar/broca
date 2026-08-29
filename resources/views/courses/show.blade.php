@@ -86,7 +86,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                @if ($video->is_free_designated)
+                                @if ($video->is_free_available)
                                     <span class="rounded-full bg-teal/10 text-teal px-2.5 py-0.5 text-[11px] font-bold">رایگان</span>
                                 @else
                                     <span class="rounded-full bg-surface-strong text-muted px-2.5 py-0.5 text-[11px] font-bold">ویژه</span>
@@ -122,7 +122,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                @if ($note->is_free_designated)
+                                @if ($note->is_free_available)
                                     <span class="rounded-full bg-teal/10 text-teal px-2.5 py-0.5 text-[11px] font-bold">رایگان</span>
                                 @else
                                     <span class="rounded-full bg-surface-strong text-muted px-2.5 py-0.5 text-[11px] font-bold">ویژه</span>
@@ -170,7 +170,7 @@
         'inLanguage' => 'fa-IR',
         'provider' => ['@type' => 'Organization', 'name' => config('app.name'), 'sameAs' => url('/')],
         'author' => $course->author ? ['@type' => 'Person', 'name' => $course->author->name, 'jobTitle' => $course->author->credentials] : null,
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection

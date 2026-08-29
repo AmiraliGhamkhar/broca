@@ -23,6 +23,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.audit' => LogAdminActivity::class,
         ]);
 
+        // TLS-terminating reverse proxies (cPanel/shared hosting) must be
+        // trusted so $request->secure() sees X-Forwarded-Proto — otherwise
+        // the HTTPS redirect loops and HSTS/secure cookies never engage.
+        $proxies = env('TRUSTED_PROXIES');
+        if ($proxies) {
+            $middleware->trustProxies(at: array_map('trim', explode(',', $proxies)));
+        }
+
         $middleware->web(append: [
             ForceSecureConnections::class,
             SetSecurityHeaders::class,

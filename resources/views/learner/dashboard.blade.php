@@ -162,7 +162,7 @@
                                 <li class="p-2 rounded-xl bg-ink/5 hover:bg-surface-soft transition-colors">
                                     <a href="{{ route('videos.show', [$course, $v]) }}" class="flex items-center justify-between font-bold text-ink">
                                         <span class="truncate">{{ $v->title }}</span>
-                                        <span class="text-[10px] text-rausch shrink-0 mr-1">{{ $v->is_free_designated ? 'رایگان' : 'ویژه' }}</span>
+                                        <span class="text-[10px] text-rausch shrink-0 mr-1">{{ $v->is_free_available ? 'رایگان' : 'ویژه' }}</span>
                                     </a>
                                 </li>
                             @empty

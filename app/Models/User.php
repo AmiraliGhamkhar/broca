@@ -69,28 +69,38 @@ class User extends Authenticatable implements MustVerifyEmail
         return ! empty($this->totp_secret) && ! empty($this->totp_confirmed_at);
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string> The stored (sha256-hashed) recovery codes.
+     *                       Plaintext codes are shown once at creation and
+     *                       never persisted — a DB leak must not bypass 2FA.
+     */
     public function recoveryCodes(): array
     {
         return is_array($this->recovery_codes) ? $this->recovery_codes : [];
     }
 
-    /** @param list<string> $codes */
+    /** @param list<string> $codes Plaintext codes; only their hashes are stored. */
     public function storeRecoveryCodes(array $codes): void
     {
-        $this->forceFill(['recovery_codes' => array_values(array_map('strtoupper', $codes))])->save();
+        $hashed = array_map(
+            fn (string $code): string => hash('sha256', strtoupper(trim($code))),
+            $codes
+        );
+
+        $this->forceFill(['recovery_codes' => array_values($hashed)])->save();
     }
 
     public function consumeRecoveryCode(string $code): bool
     {
         $normalized = strtoupper(trim($code));
+        $expected = hash('sha256', $normalized);
 
-        return DB::transaction(function () use ($normalized): bool {
+        return DB::transaction(function () use ($expected): bool {
             $user = self::query()->whereKey($this->getKey())->lockForUpdate()->first();
             $codes = $user?->recoveryCodes() ?? [];
 
             foreach ($codes as $index => $stored) {
-                if (hash_equals((string) $stored, $normalized)) {
+                if (hash_equals($expected, (string) $stored)) {
                     unset($codes[$index]);
                     $user->forceFill(['recovery_codes' => array_values($codes)])->save();
 
@@ -152,6 +162,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'totp_confirmed_at' => 'datetime',
+            // Encrypted at rest: the TOTP seed is a bearer secret.
+            'totp_secret' => 'encrypted',
             'recovery_codes' => 'array',
         ];
     }
