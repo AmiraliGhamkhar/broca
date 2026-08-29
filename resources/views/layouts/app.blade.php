@@ -141,7 +141,7 @@
                                     <span class="hidden md:block text-xs font-bold text-ink pl-2">
                                         {{ auth()->user()->name }}
                                     </span>
-                                    <span class="text-[10px] text-muted pl-1">▼</span>
+                                    <span class="text-[11px] text-muted pl-1">▼</span>
                                 </button>
 
                                 <!-- Dropdown Menu -->
@@ -150,7 +150,7 @@
                                     <div class="px-4 py-2.5 border-b border-hairline-soft text-right">
                                         <p class="font-bold text-ink">{{ auth()->user()->name }}</p>
                                         <p class="text-[11px] text-muted font-mono" dir="ltr">{{ auth()->user()->email }}</p>
-                                        <span class="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch' : 'bg-surface-soft text-muted' }}">
+                                        <span class="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch' : 'bg-surface-soft text-muted' }}">
                                             {{ auth()->user()->hasActiveSubscription() ? 'اشتراک ویژه فعال ✓' : 'حساب رایگان' }}
                                         </span>
                                     </div>

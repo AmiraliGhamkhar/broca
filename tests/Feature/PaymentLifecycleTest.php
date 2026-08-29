@@ -134,4 +134,13 @@ class PaymentLifecycleTest extends TestCase
         $this->assertTrue($user->fresh()->hasActiveSubscription());
         $this->assertDatabaseHas('subscriptions', ['invoice_id' => $invoice->id]);
     }
+
+    public function test_backup_command_refuses_non_mysql_drivers(): void
+    {
+        // The suite runs on sqlite; the command must refuse loudly instead
+        // of attempting a root mysqldump (audit finding: no credential
+        // fallback and no silent wrong-driver runs).
+        $this->artisan('broca:backup-database')
+            ->assertExitCode(\Symfony\Component\Console\Command\Command::INVALID);
+    }
 }

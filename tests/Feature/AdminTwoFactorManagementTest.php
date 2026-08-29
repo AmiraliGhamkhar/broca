@@ -90,6 +90,25 @@ class AdminTwoFactorManagementTest extends TestCase
         $this->assertDatabaseHas('admin_activity_logs', ['route_name' => 'admin.two-factor.disable']);
     }
 
+    public function test_totp_inputs_have_accessible_labels(): void
+    {
+        // Enrollment step (enable form).
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin)->post(route('admin.two-factor.start'));
+
+        $content = $this->actingAs($admin)->get(route('admin.two-factor.edit'))->assertOk()->getContent();
+        $this->assertStringContainsString('for="enable_code"', $content);
+        $this->assertStringContainsString('id="enable_code"', $content);
+
+        // Confirmed step (disable form).
+        $admin = $admin->fresh();
+        $admin->forceFill(['totp_secret' => Totp::generateSecret(), 'totp_confirmed_at' => now()])->save();
+
+        $content = $this->actingAs($admin)->get(route('admin.two-factor.edit'))->assertOk()->getContent();
+        $this->assertStringContainsString('for="disable_code"', $content);
+        $this->assertStringContainsString('id="disable_code"', $content);
+    }
+
     public function test_audit_logs_redact_one_time_codes_and_passwords(): void
     {
         $admin = User::factory()->admin()->create();

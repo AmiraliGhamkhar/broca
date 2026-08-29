@@ -16,7 +16,7 @@
         <!-- Article 1 -->
         <article class="interactive-card surface-panel p-6 rounded-3xl flex flex-col justify-between space-y-4">
             <div class="space-y-3">
-                <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-rausch-tint text-rausch">نورولوژی و زبان</span>
+                <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-rausch-tint text-rausch">نورولوژی و زبان</span>
                 <h2 class="text-base font-bold text-ink leading-6">
                     کالبدشناسی ناحیه بروکا و مقایسه بالینی آفازی حرکتی و حسی
                 </h2>
@@ -33,7 +33,7 @@
         <!-- Article 2 -->
         <article class="interactive-card surface-panel p-6 rounded-3xl flex flex-col justify-between space-y-4">
             <div class="space-y-3">
-                <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-surface-soft text-ink">فیزیولوژی قلب</span>
+                <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-surface-soft text-ink">فیزیولوژی قلب</span>
                 <h2 class="text-base font-bold text-ink leading-6">
                     تفسیر الکتروفیزیولوژی نوار قلب و مکانیسم پتانسیل عمل میوکارد
                 </h2>
@@ -50,7 +50,7 @@
         <!-- Article 3 -->
         <article class="interactive-card surface-panel p-6 rounded-3xl flex flex-col justify-between space-y-4">
             <div class="space-y-3">
-                <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-teal/10 text-teal">متدهای یادگیری</span>
+                <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-teal/10 text-teal">متدهای یادگیری</span>
                 <h2 class="text-base font-bold text-ink leading-6">
                     چگونه الگوریتم SM-2 به ماندگاری همیشگی مطالب پزشکی کمک می‌کند؟
                 </h2>

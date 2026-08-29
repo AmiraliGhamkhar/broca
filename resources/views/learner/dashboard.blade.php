@@ -26,7 +26,7 @@
                     <div class="bg-teal/20 border border-teal/40 rounded-2xl px-5 py-3 text-right">
                         <span class="text-[11px] text-teal font-bold block">پلن اشتراک شما:</span>
                         <p class="text-sm font-bold text-white">{{ $activeSubscription->plan->name ?? 'اشتراک ویژه' }}</p>
-                        <span class="text-[10px] text-white/60 block mt-0.5" dir="ltr">
+                        <span class="text-[11px] text-white/60 block mt-0.5" dir="ltr">
                             انقضا: {{ $activeSubscription->ends_at ? $activeSubscription->ends_at->timezone(config('broca.display_timezone'))->format('Y/m/d') : 'نامحدود' }}
                         </span>
                     </div>
@@ -162,7 +162,7 @@
                                 <li class="p-2 rounded-xl bg-ink/5 hover:bg-surface-soft transition-colors">
                                     <a href="{{ route('videos.show', [$course, $v]) }}" class="flex items-center justify-between font-bold text-ink">
                                         <span class="truncate">{{ $v->title }}</span>
-                                        <span class="text-[10px] text-rausch shrink-0 mr-1">{{ $v->is_free_available ? 'رایگان' : 'ویژه' }}</span>
+                                        <span class="text-[11px] text-rausch shrink-0 mr-1">{{ $v->is_free_available ? 'رایگان' : 'ویژه' }}</span>
                                     </a>
                                 </li>
                             @empty
@@ -184,7 +184,7 @@
                                 <li class="p-2 rounded-xl bg-ink/5 hover:bg-surface-soft transition-colors">
                                     <a href="{{ route('notes.show', [$course, $n]) }}" class="flex items-center justify-between font-bold text-ink">
                                         <span class="truncate">{{ $n->title }}</span>
-                                        <span class="text-[10px] text-teal shrink-0 mr-1">دانلود PDF</span>
+                                        <span class="text-[11px] text-teal shrink-0 mr-1">دانلود PDF</span>
                                     </a>
                                 </li>
                             @empty
@@ -206,7 +206,7 @@
                                 <li class="p-2 rounded-xl bg-ink/5 hover:bg-surface-soft transition-colors">
                                     <a href="{{ route('decks.study', [$course, $d]) }}" class="flex items-center justify-between font-bold text-ink">
                                         <span class="truncate">{{ $d->title }}</span>
-                                        <span class="text-[10px] text-rausch shrink-0 mr-1">{{ $d->cards_count }} کارت</span>
+                                        <span class="text-[11px] text-rausch shrink-0 mr-1">{{ $d->cards_count }} کارت</span>
                                     </a>
                                 </li>
                             @empty
@@ -228,7 +228,7 @@
                                 <li class="p-2 rounded-xl bg-ink/5 hover:bg-surface-soft transition-colors">
                                     <a href="{{ route('quizzes.show', $q) }}" class="flex items-center justify-between font-bold text-ink">
                                         <span class="truncate">{{ $q->title }}</span>
-                                        <span class="text-[10px] text-teal shrink-0 mr-1">شروع آزمون</span>
+                                        <span class="text-[11px] text-teal shrink-0 mr-1">شروع آزمون</span>
                                     </a>
                                 </li>
                             @empty

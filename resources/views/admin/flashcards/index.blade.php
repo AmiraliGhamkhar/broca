@@ -43,7 +43,7 @@
                                 <h4 class="text-sm font-bold text-ink mt-0.5">{{ $deck->title }}</h4>
                                 <span class="text-[11px] text-muted block mt-1">{{ $deck->cards_count }} کارت مرور</span>
                             </div>
-                            <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $deck->status === 'published' ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
+                            <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $deck->status === 'published' ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
                                 {{ $deck->status }}
                             </span>
                         </div>

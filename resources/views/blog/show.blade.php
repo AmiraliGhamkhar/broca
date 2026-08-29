@@ -1,15 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'کالبدشناسی ناحیه بروکا و مقایسه بالینی آفازی‌ها — ' . __('app.name'))
+@section('title', $slug === 'broca-area-and-aphasia' ? 'کالبدشناسی ناحیه بروکا و مقایسه بالینی آفازی‌ها — ' . __('app.name') : 'مقاله به‌زودی — ' . __('app.name'))
 
 @section('content')
+@if ($slug === 'broca-area-and-aphasia')
 <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
     <div class="space-y-4 pb-8 border-b border-hairline-soft">
         <a href="{{ route('blog.index') }}" class="text-xs font-bold text-rausch hover:underline">
             ← بازگشت به وبلاگ
         </a>
         <div class="flex items-center gap-2">
-            <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-rausch/10 text-rausch">نورولوژی و علوم اعصاب</span>
+            <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-rausch/10 text-rausch">نورولوژی و علوم اعصاب</span>
             <span class="text-xs text-muted">زمان مطالعه: ۶ دقیقه</span>
         </div>
         <h1 class="text-2xl sm:text-4xl font-bold text-ink leading-tight">
@@ -84,4 +85,18 @@
         </a>
     </div>
 </article>
+@else
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        <div class="surface-panel p-10 rounded-3xl text-center space-y-4">
+            <span class="text-xs font-bold text-rausch">مقاله اعلام‌شده</span>
+            <h1 class="font-display text-2xl sm:text-3xl text-ink">این مقاله به‌زودی منتشر می‌شود</h1>
+            <p class="text-xs sm:text-sm text-muted leading-7 max-w-lg mx-auto">
+                نویسندگان در حال نگارش این مطلب هستند؛ برای اطلاع از انتشار آن به وبلاگ بروکا سر بزنید.
+            </p>
+            <a href="{{ route('blog.index') }}" class="inline-block rounded-full bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-colors">
+                بازگشت به وبلاگ ←
+            </a>
+        </div>
+    </section>
+@endif
 @endsection

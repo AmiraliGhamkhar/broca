@@ -120,7 +120,7 @@
                                     <td class="p-2.5 font-bold text-ink">{{ $log->actor_name_snapshot ?: $log->user?->name ?: 'سیستم' }}</td>
                                     <td class="p-2.5 font-mono text-[11px] text-ink/80" dir="ltr">{{ $log->action }}</td>
                                     <td class="p-2.5">
-                                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $log->status_code < 400 ? 'bg-teal/10 text-teal' : 'bg-rausch-tint text-rausch' }}">{{ $log->status_code }}</span>
+                                        <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $log->status_code < 400 ? 'bg-teal/10 text-teal' : 'bg-rausch-tint text-rausch' }}">{{ $log->status_code }}</span>
                                     </td>
                                 </tr>
                             @empty

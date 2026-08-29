@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\Fixtures\FakePaymentGateway;
 use Tests\TestCase;
 
@@ -55,6 +56,38 @@ class PaymentTest extends TestCase
         $this->actingAs($user)->post(route('checkout', $plan));
 
         $this->assertSame(1, Invoice::where('user_id', $user->id)->where('plan_id', $plan->id)->count());
+    }
+
+    public function test_invoice_number_collision_retries_with_a_fresh_number_instead_of_500ing(): void
+    {
+        $this->travelTo('2026-08-29 10:00:00');
+
+        $user = User::factory()->create();
+        $plan = Plan::factory()->monthly()->create(['price_irr' => 500000]);
+
+        // Force the very next generated number to collide with an existing
+        // invoice, then let the retry draw a different suffix.
+        $stamp = 'INV-'.now()->format('YmdHis').'-';
+        Invoice::factory()->create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+            'number' => $stamp.'AAAAAAAA',
+            'amount_irr' => 999999, // different price → never reused
+        ]);
+        Str::createRandomStringsUsingSequence(['AAAAAAAA', 'BBBBBBBB']);
+
+        try {
+            $response = $this->actingAs($user)->post(route('checkout', $plan));
+        } finally {
+            Str::createRandomStringsNormally();
+        }
+
+        $this->assertStringStartsWith(
+            '/fake-gateway?authority=FAKE-AUTH-',
+            (string) $response->headers->get('Location'),
+            'checkout must survive the collision and reach the gateway'
+        );
+        $this->assertDatabaseHas('invoices', ['user_id' => $user->id, 'number' => $stamp.'BBBBBBBB']);
     }
 
     public function test_checkout_refuses_the_free_plan_without_touching_the_gateway(): void

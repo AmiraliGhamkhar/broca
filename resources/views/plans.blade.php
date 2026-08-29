@@ -17,7 +17,7 @@
             @php $isPaid = (int) $plan->price_irr > 0 && (int) $plan->duration_months >= 1; @endphp
             <article class="interactive-card surface-panel p-8 rounded-3xl flex flex-col justify-between transition-all {{ $isPaid && $plan->duration_months == 3 ? 'border-2 border-rausch shadow-float relative bg-white' : 'bg-white' }}">
                 @if ($isPaid && $plan->duration_months == 3)
-                    <span class="absolute -top-3.5 right-6 rounded-full bg-rausch px-3.5 py-1 text-[10px] font-bold text-white shadow-float">
+                    <span class="absolute -top-3.5 right-6 rounded-full bg-rausch px-3.5 py-1 text-[11px] font-bold text-white shadow-float">
                         پیشنهاد ویژه دانشجویان ★
                     </span>
                 @endif
@@ -25,7 +25,7 @@
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-rausch">{{ $plan->name }}</span>
-                        <span class="rounded-full px-2.5 py-1 text-[10px] font-bold {{ $isPaid ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
+                        <span class="rounded-full px-2.5 py-1 text-[11px] font-bold {{ $isPaid ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
                             {{ $plan->duration_months ? $plan->duration_months . ' ماهه' : 'رایگان دائمی' }}
                         </span>
                     </div>
@@ -79,7 +79,7 @@
                                     خرید اشتراک و اتصال به درگاه زرین‌پال
                                 </button>
                             </form>
-                            <p class="mt-2 text-[10px] text-center text-muted">تأیید فوری و صدور فاکتور رسمی</p>
+                            <p class="mt-2 text-[11px] text-center text-muted">تأیید فوری و صدور فاکتور رسمی</p>
                         @elseif (! config('broca.checkout_enabled') && $isPaid)
                             <p class="rounded-xl border border-rausch/30 bg-rausch-tint p-3 text-center text-xs font-bold text-rausch">
                                 درگاه پرداخت در حال آماده‌سازی نهایی است.

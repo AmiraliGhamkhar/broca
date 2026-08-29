@@ -45,16 +45,6 @@ class Subscription extends Model
             && ($this->ends_at === null || $this->ends_at->isFuture());
     }
 
-    public function isScheduled(): bool
-    {
-        return $this->status === 'scheduled';
-    }
-
-    public function isExpired(): bool
-    {
-        return $this->status === 'expired' || ($this->ends_at && $this->ends_at->isPast());
-    }
-
     public function activate(?Carbon $at = null): void
     {
         $this->update([
@@ -62,24 +52,5 @@ class Subscription extends Model
             'activated_at' => $at ?? now(),
             'starts_at' => $this->starts_at ?? ($at ?? now()),
         ]);
-    }
-
-    public function schedule(Carbon $startsAt, int $durationMonths = 1): void
-    {
-        $this->update([
-            'status' => 'scheduled',
-            'starts_at' => $startsAt,
-            'ends_at' => $startsAt->copy()->addMonths($durationMonths),
-        ]);
-    }
-
-    public function expire(): void
-    {
-        $this->update(['status' => 'expired']);
-    }
-
-    public function cancel(): void
-    {
-        $this->update(['status' => 'cancelled']);
     }
 }

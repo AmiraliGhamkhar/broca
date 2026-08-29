@@ -18,7 +18,7 @@
         @forelse ($courses as $course)
             <div class="interactive-card surface-panel p-6 rounded-3xl flex flex-col justify-between hover:shadow-lg transition-all">
                 <div class="space-y-3">
-                    <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-surface-soft text-ink">
+                    <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-surface-soft text-ink">
                         {{ $course->level ?: 'علوم پایه' }}
                     </span>
                     <h2 class="text-lg font-bold text-ink leading-7">

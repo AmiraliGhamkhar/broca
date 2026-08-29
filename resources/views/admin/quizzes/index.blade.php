@@ -43,7 +43,7 @@
                                 <h4 class="text-sm font-bold text-ink mt-0.5">{{ $quiz->title }}</h4>
                                 <span class="text-[11px] text-muted block mt-1">حدنصاب: {{ $quiz->pass_threshold_percent ?: 70 }}٪ · {{ $quiz->questions_count }} سؤال</span>
                             </div>
-                            <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $quiz->status === 'published' ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
+                            <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $quiz->status === 'published' ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
                                 {{ $quiz->status }}
                             </span>
                         </div>

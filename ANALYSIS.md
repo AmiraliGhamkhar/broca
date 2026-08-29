@@ -373,6 +373,24 @@ A follow-up audit (CRITICAL 1 / HIGH 2 / MEDIUM 8 / LOW 7) was delivered in chat
 
 **Verification (honest):** tests still cannot run in this sandbox — no PHP/composer binary and `repo.packagist.org`/`getcomposer.org` unreachable (one attempt, both `000`). All 212 repo PHP files parse clean on PHP 8.4.23 (`token_get_all(TOKEN_PARSE)` via php-wasm, 0 failures); the production asset build is byte-identical to the committed one. Run `composer test` locally (MySQL 8 or sqlite) to execute the suite — the previously-red `JsonLdEscapingTest` should now pass, and the new tests exercise every changed code path.
 
+### Third round — LOW fix status (2026-08-29)
+
+All nine LOW findings from the second audit were fixed in commit `0f05ded`:
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | Invoice-number collision → uncaught 500 (`PaymentController.php`) | `createInvoice()` retries (×5) on `UniqueConstraintViolationException`; suffix lengthened 4 → 8 chars (36⁸ ≈ 2.8e12/s); exhausted retries fall back to a graceful redirect, never a raw 500. Test forces a collision via `Str::createRandomStringsUsingSequence` |
+| 2 | Admin can demote the last admin (`Admin/UserController.php`) | Last-admin invariant: demotion blocked while `is_admin = true` count ≤ 1. Tests: last-admin blocked, demote-other allowed when one remains, self-suspension blocked, non-admin forbidden |
+| 3 | 2FA TOTP inputs lack labels (`admin/two-factor/edit.blade.php:55,100`) | `<label for="enable_code/disable_code">` + `id` + `autocomplete="one-time-code"`; accessibility test added |
+| 4 | 26 × `text-[10px]` (below readability floor) | All bumped to `text-[11px]` (the design's badge size); CSS delta only |
+| 5 | Blog route renders placeholder for any slug | `BlogController` with a canonical slug allowlist: the real article, two announced slugs → honest coming-soon panel, everything else 404. Tests: canonical/announced/unknown |
+| 6 | DB CHECK constraints absent | Migration `2026_08_29_000006` adds CHECKs (MySQL-only, skipped on sqlite): status enums on users/courses/videos/notes/flashcard_decks/flashcards/quizzes/quiz_questions/subscriptions/invoices + `amount_irr >= 0` |
+| 7 | Dead money-model methods | Removed `Subscription::schedule/cancel/isScheduled/expire` and `Invoice::markCancelled/markExpired/scopePending/isPending` — all verified caller-free (repo-wide grep, incl. views/docs/tests) |
+| 8 | `BackupDatabase` root-credential fallback + 0644 dumps | No more `?? 'root'` — missing username fails loudly; root-with-empty-password warns; dump dir 0770, dump + `.gz` chmod 0600 (PII); sqlite-driver guard test |
+| 9 | Dependency CVE audit unverifiable offline | CI now runs `composer audit` on every push (blocking); RUNBOOK pre-launch gate updated |
+
+**Verification (honest):** same sandbox limits as above — all 216 repo PHP files parse clean on PHP 8.4.23 (0 failures), the frontend build succeeds (CSS −0.03 kB from the 10px removal), and the new tests (`BlogTest`, `AdminUserManagementTest`, plus additions to `PaymentTest`/`PaymentLifecycleTest`/`AdminTwoFactorManagementTest`) must be executed locally with `composer test`.
+
 ---
 
 ## 11. Verdict

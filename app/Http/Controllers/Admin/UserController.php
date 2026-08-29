@@ -65,6 +65,12 @@ class UserController extends Controller
             return back()->withErrors(['is_admin' => 'نمی‌توانید نقش مدیریت را از حساب خودتان سلب کنید.']);
         }
 
+        // Last-admin invariant: the system must never lose its final
+        // administrator, regardless of who performs the demotion.
+        if ($user->is_admin && ! $request->boolean('is_admin') && User::query()->where('is_admin', true)->count() <= 1) {
+            return back()->withErrors(['is_admin' => 'حداقل یک مدیر باید در سیستم باقی بماند.']);
+        }
+
         $user->forceFill([
             'status' => $validated['status'],
             'is_admin' => $request->boolean('is_admin'),

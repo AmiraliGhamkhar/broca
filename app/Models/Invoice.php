@@ -76,28 +76,8 @@ class Invoice extends Model
         $this->update(['status' => self::STATUS_FAILED]);
     }
 
-    public function markCancelled(): void
-    {
-        $this->update(['status' => self::STATUS_CANCELLED]);
-    }
-
-    public function markExpired(): void
-    {
-        $this->update(['status' => self::STATUS_EXPIRED]);
-    }
-
     public function isPaid(): bool
     {
         return $this->status === self::STATUS_PAID;
-    }
-
-    public function isPending(): bool
-    {
-        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_INITIATED], true);
-    }
-
-    public function scopePending($query)
-    {
-        return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_INITIATED]);
     }
 }

@@ -52,7 +52,8 @@
                     <form method="post" action="{{ route('admin.two-factor.enable') }}" class="space-y-4">
                         @csrf
                         <div>
-                            <input type="text" name="code" maxlength="6" inputmode="numeric" required placeholder="123456"
+                            <label for="enable_code" class="block text-xs font-bold text-ink mb-1.5">کد تأیید ۶ رقمی</label>
+                            <input id="enable_code" type="text" name="code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456"
                                    class="w-full max-w-xs p-3 rounded-xl border border-ink/20 text-center text-xl font-mono font-bold tracking-widest bg-white" dir="ltr">
                         </div>
                         <button type="submit" class="rounded-full bg-ink px-6 py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all">
@@ -97,7 +98,8 @@
                     </p>
                     <form method="post" action="{{ route('admin.two-factor.disable') }}" class="space-y-3">
                         @csrf
-                        <input type="text" name="code" maxlength="6" inputmode="numeric" required placeholder="123456"
+                        <label for="disable_code" class="block text-xs font-bold text-ink">کد تأیید ۶ رقمی</label>
+                        <input id="disable_code" type="text" name="code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456"
                                class="w-full p-3 rounded-xl border border-ink/20 text-center text-lg font-mono font-bold tracking-widest bg-white" dir="ltr">
                         <button type="submit" class="rounded-full bg-rausch px-6 py-2.5 text-xs font-bold text-white hover:bg-rausch-active transition-all">
                             غیرفعال‌سازی 2FA

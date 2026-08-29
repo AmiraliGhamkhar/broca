@@ -56,10 +56,10 @@
                             <span class="brand-mark">🫀</span>
                             <div>
                                 <span class="text-xs font-bold text-ink block">نمای اطلس یادگیری بروکا</span>
-                                <span class="text-[10px] text-muted">فیزیولوژی، نورولوژی و آناتومی قفسه سینه</span>
+                                <span class="text-[11px] text-muted">فیزیولوژی، نورولوژی و آناتومی قفسه سینه</span>
                             </div>
                         </div>
-                        <span class="rounded-full px-2.5 py-1 text-[10px] font-bold bg-rausch-tint text-rausch">
+                        <span class="rounded-full px-2.5 py-1 text-[11px] font-bold bg-rausch-tint text-rausch">
                             آنلاین و فعال
                         </span>
                     </div>
@@ -71,7 +71,7 @@
                                 <span class="text-base">🎥</span>
                                 <div>
                                     <span class="font-bold text-ink block">الکتروفیزیولوژی و پتانسیل عمل میوکارد</span>
-                                    <span class="text-[10px] text-muted">درس ۱: ساختار غشای سلولی (رایگان)</span>
+                                    <span class="text-[11px] text-muted">درس ۱: ساختار غشای سلولی (رایگان)</span>
                                 </div>
                             </div>
                             <span class="text-xs font-bold text-rausch">۱۵ دقیقه</span>
@@ -81,7 +81,7 @@
                                 <span class="text-base">📄</span>
                                 <div>
                                     <span class="font-bold text-ink block">جزوهٔ خلاصهٔ الکتروفیزیولوژی و نوار قلب</span>
-                                    <span class="text-[10px] text-muted">PDF قابل دانلود</span>
+                                    <span class="text-[11px] text-muted">PDF قابل دانلود</span>
                                 </div>
                             </div>
                             <span class="text-xs font-bold text-teal">رایگان</span>
@@ -91,7 +91,7 @@
                                 <span class="text-base">🗂</span>
                                 <div>
                                     <span class="font-bold text-ink block">مرور فاصله‌دار کارت‌های قلب</span>
-                                    <span class="text-[10px] text-muted">۱۰ کارت رایگان با الگوریتم SM-2</span>
+                                    <span class="text-[11px] text-muted">۱۰ کارت رایگان با الگوریتم SM-2</span>
                                 </div>
                             </div>
                             <span class="text-xs font-bold text-rausch">آماده مرور</span>

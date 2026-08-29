@@ -35,7 +35,7 @@
                         </td>
                         <td class="p-3.5 font-bold text-ink">
                             {{ $log->actor_name_snapshot ?: $log->user?->name ?: 'سیستم' }}
-                            <span class="block text-[10px] text-muted">{{ $log->actor_email_snapshot ?: $log->user?->email }}</span>
+                            <span class="block text-[11px] text-muted">{{ $log->actor_email_snapshot ?: $log->user?->email }}</span>
                         </td>
                         <td class="p-3.5 font-mono text-[11px] font-bold text-ink" dir="ltr">
                             <span class="px-2 py-0.5 rounded bg-surface-soft font-mono">{{ $log->method }}</span>

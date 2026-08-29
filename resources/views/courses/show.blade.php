@@ -12,7 +12,7 @@
         </a>
         <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-rausch">{{ $course->subject->name ?? 'عمومی' }}</span>
-            <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-surface-soft text-ink">
+            <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-surface-soft text-ink">
                 {{ $course->level ?: 'علوم پایه پزشکی' }}
             </span>
         </div>

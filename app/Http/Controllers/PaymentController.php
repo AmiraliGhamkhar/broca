@@ -6,6 +6,7 @@ use App\Contracts\PaymentGateway;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\PaymentTransaction;
+use App\Models\User;
 use App\Services\PaymentFinalizer;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -53,25 +54,22 @@ class PaymentController extends Controller
             ->latest('id')
             ->first();
 
-        $invoice ??= Invoice::create([
-            'user_id' => $user->id,
-            'user_name_snapshot' => $user->name,
-            'user_email_snapshot' => $user->email,
-            'user_phone_snapshot' => $user->phone,
-            'plan_id' => $plan->id,
-            'number' => $this->nextInvoiceNumber(),
-            'amount_irr' => (int) $plan->price_irr,
-            'currency' => config('broca.currency', 'IRR'),
-        ]);
+        $invoice ??= $this->createInvoice($user, $plan);
 
         try {
             return redirect()->away($this->gateway->startPayment($invoice));
         } catch (\Throwable $exception) {
             report($exception);
-            $invoice->markFailed();
 
-            return redirect()->route('checkout.failed', $invoice)
-                ->with('error', 'شروع پرداخت ممکن نشد؛ لطفاً دوباره تلاش کنید.');
+            if (isset($invoice) && $invoice instanceof Invoice) {
+                $invoice->markFailed();
+
+                return redirect()->route('checkout.failed', $invoice)
+                    ->with('error', 'شروع پرداخت ممکن نشد؛ لطفاً دوباره تلاش کنید.');
+            }
+
+            return redirect()->route('plans')
+                ->with('error', 'ایجاد فاکتور ممکن نشد؛ لطفاً دوباره تلاش کنید.');
         }
     }
 
@@ -150,8 +148,40 @@ class PaymentController extends Controller
         }
     }
 
+    /**
+     * Create the invoice, retrying on a unique-`number` collision (two
+     * invoices in the same second drawing the same random suffix). The
+     * probability is ~1/2.8e12 per second, but a collision must never
+     * surface as a raw 500.
+     */
+    private function createInvoice(User $user, Plan $plan): Invoice
+    {
+        $attempts = 0;
+
+        do {
+            try {
+                return Invoice::create([
+                    'user_id' => $user->id,
+                    'user_name_snapshot' => $user->name,
+                    'user_email_snapshot' => $user->email,
+                    'user_phone_snapshot' => $user->phone,
+                    'plan_id' => $plan->id,
+                    'number' => $this->nextInvoiceNumber(),
+                    'amount_irr' => (int) $plan->price_irr,
+                    'currency' => config('broca.currency', 'IRR'),
+                ]);
+            } catch (UniqueConstraintViolationException $exception) {
+                if (++$attempts >= 5) {
+                    throw $exception;
+                }
+            }
+        } while (true);
+    }
+
     private function nextInvoiceNumber(): string
     {
-        return 'INV-'.now()->format('YmdHis').'-'.strtoupper(Str::random(4));
+        // Timestamp (second precision) + 8 random chars: 36^8 ≈ 2.8e12
+        // combinations per second — collisions are effectively impossible.
+        return 'INV-'.now()->format('YmdHis').'-'.strtoupper(Str::random(8));
     }
 }

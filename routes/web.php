@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthCheckController;
@@ -40,8 +41,8 @@ use Illuminate\Support\Facades\Route;
 */
 Route::view('/', 'welcome')->name('home');
 Route::get('/health', HealthCheckController::class)->name('health');
-Route::get('/blog', fn () => view('blog.index'))->name('blog.index');
-Route::get('/blog/{slug}', fn () => view('blog.show'))->name('blog.show');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/subjects/{subject:slug}', [CatalogController::class, 'subject'])->name('subjects.show');
 Route::get('/courses/{course:slug}', [CatalogController::class, 'course'])->name('courses.show');
