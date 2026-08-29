@@ -9,16 +9,16 @@
     @include('admin.nav')
 
     <div class="form-panel">
-        <div class="flex items-center justify-between pb-4 border-b border-broca-sand">
+        <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
             <div>
-                <span class="text-xs font-bold text-coral">{{ $deck->title }} ({{ $deck->course->title ?? '' }})</span>
-                <h2 class="text-2xl font-black text-ink mt-0.5">{{ $card->exists ? 'ویرایش کارت حافظه' : 'افزودن کارت حافظه جدید' }}</h2>
+                <span class="text-xs font-bold text-rausch">{{ $deck->title }} ({{ $deck->course->title ?? '' }})</span>
+                <h2 class="text-2xl font-bold text-ink mt-0.5">{{ $card->exists ? 'ویرایش کارت حافظه' : 'افزودن کارت حافظه جدید' }}</h2>
             </div>
-            <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="text-xs font-bold text-coral underline">بازگشت به کارت‌ها</a>
+            <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="text-xs font-bold text-rausch underline">بازگشت به کارت‌ها</a>
         </div>
 
         @if ($errors->any())
-            <div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-xs font-bold text-coral" role="alert">
+            <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -32,36 +32,36 @@
             @endif
 
             <div>
-                <label for="front" class="block text-xs font-black text-ink">روی کارت (پرسش / واژه بالینی / مفهوم کلیدی)</label>
+                <label for="front" class="block text-xs font-bold text-ink">روی کارت (پرسش / واژه بالینی / مفهوم کلیدی)</label>
                 <textarea id="front" name="front" rows="3" required
                           placeholder="مثال: پتانسیل استراحت غشایی سلول قلبی چقدر است؟"
-                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">{{ old('front', $card->front) }}</textarea>
+                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">{{ old('front', $card->front) }}</textarea>
             </div>
 
             <div>
-                <label for="back" class="block text-xs font-black text-ink">پشت کارت (پاسخ تشریحی کامل / تعریف فیزیولوژیک)</label>
+                <label for="back" class="block text-xs font-bold text-ink">پشت کارت (پاسخ تشریحی کامل / تعریف فیزیولوژیک)</label>
                 <textarea id="back" name="back" rows="4" required
                           placeholder="مثال: اختلاف پتانسیل الکتریکی در حالت دیاستول حدود منفی ۹۰ میلی‌ولت است که توسط پمپ سدیم-پتاسیم حفظ می‌شود."
-                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white/70">{{ old('back', $card->back) }}</textarea>
+                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white">{{ old('back', $card->back) }}</textarea>
             </div>
 
             <div>
-                <label for="hint" class="block text-xs font-black text-ink">نکته راهنما (اختیاری - پیش از برگرداندن کارت نمایش داده می‌شود)</label>
+                <label for="hint" class="block text-xs font-bold text-ink">نکته راهنما (اختیاری - پیش از برگرداندن کارت نمایش داده می‌شود)</label>
                 <input type="text" id="hint" name="hint" value="{{ old('hint', $card->hint) }}"
                        placeholder="مثال: توجه به یون پتاسیم در دیاستول"
-                       class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white/70">
+                       class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label for="sort_order" class="block text-xs font-black text-ink">ترتیب در دسته</label>
+                    <label for="sort_order" class="block text-xs font-bold text-ink">ترتیب در دسته</label>
                     <input type="number" id="sort_order" name="sort_order" min="0" value="{{ old('sort_order', $card->sort_order ?? 0) }}"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
 
                 <div>
-                    <label for="status" class="block text-xs font-black text-ink">وضعیت</label>
-                    <select id="status" name="status" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="status" class="block text-xs font-bold text-ink">وضعیت</label>
+                    <select id="status" name="status" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         @foreach (['draft' => 'پیش‌نویس', 'in_review' => 'در بازبینی', 'published' => 'منتشر شده', 'archived' => 'بایگانی'] as $st => $label)
                             <option value="{{ $st }}" {{ old('status', $card->status ?? 'published') === $st ? 'selected' : '' }}>
                                 {{ $label }}
@@ -78,11 +78,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-broca-sand">
-                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-black text-cream hover:bg-coral transition-all">
+            <div class="flex items-center gap-3 pt-4 border-t border-hairline-soft">
+                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-all">
                     {{ $card->exists ? 'ذخیره تغییرات کارت' : 'افزودن کارت به دسته' }}
                 </button>
-                <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-broca-slate hover:bg-broca-sand">
+                <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-muted hover:bg-surface-soft">
                     انصراف
                 </a>
             </div>

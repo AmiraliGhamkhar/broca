@@ -9,16 +9,16 @@
     @include('admin.nav')
 
     <div class="form-panel">
-        <div class="flex items-center justify-between pb-4 border-b border-broca-sand">
+        <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
             <div>
-                <h2 class="text-2xl font-black text-ink">{{ $note->exists ? 'ویرایش جزوه' : 'افزودن جزوه جدید' }}</h2>
-                <p class="text-xs text-broca-slate mt-1">مشخصات فایل، دوره مربوطه، مسیر ذخیره خصوصی و وضعیت دسترسی</p>
+                <h2 class="text-2xl font-bold text-ink">{{ $note->exists ? 'ویرایش جزوه' : 'افزودن جزوه جدید' }}</h2>
+                <p class="text-xs text-muted mt-1">مشخصات فایل، دوره مربوطه، مسیر ذخیره خصوصی و وضعیت دسترسی</p>
             </div>
-            <a href="{{ route('admin.notes.index') }}" class="text-xs font-bold text-coral underline">بازگشت به لیست جزوات</a>
+            <a href="{{ route('admin.notes.index') }}" class="text-xs font-bold text-rausch underline">بازگشت به لیست جزوات</a>
         </div>
 
         @if ($errors->any())
-            <div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-xs font-bold text-coral" role="alert">
+            <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -31,15 +31,15 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="md:col-span-2">
-                    <label for="title" class="block text-xs font-black text-ink">عنوان جزوه</label>
+                    <label for="title" class="block text-xs font-bold text-ink">عنوان جزوه</label>
                     <input type="text" id="title" name="title" value="{{ old('title', $note->title) }}" required
                            placeholder="مثال: خلاصه نموداری الکتروفیزیولوژی قلب"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
 
                 <div>
-                    <label for="course_id" class="block text-xs font-black text-ink">دوره آموزشی</label>
-                    <select id="course_id" name="course_id" required class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="course_id" class="block text-xs font-bold text-ink">دوره آموزشی</label>
+                    <select id="course_id" name="course_id" required class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         <option value="">— انتخاب دوره —</option>
                         @foreach ($courses as $c)
                             <option value="{{ $c->id }}" {{ (string)old('course_id', $note->course_id) === (string)$c->id ? 'selected' : '' }}>
@@ -51,31 +51,31 @@
             </div>
 
             <div>
-                <label for="description" class="block text-xs font-black text-ink">توضیحات و محتوای جزوه</label>
+                <label for="description" class="block text-xs font-bold text-ink">توضیحات و محتوای جزوه</label>
                 <textarea id="description" name="description" rows="3"
                           placeholder="توضیح کوتاه درباره محتوای این جزوه..."
-                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white/70">{{ old('description', $note->description) }}</textarea>
+                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white">{{ old('description', $note->description) }}</textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="storage_key" class="block text-xs font-black text-ink">کلید ذخیره‌سازی در دیسک خصوصی (Storage Key)</label>
+                    <label for="storage_key" class="block text-xs font-bold text-ink">کلید ذخیره‌سازی در دیسک خصوصی (Storage Key)</label>
                     <input type="text" id="storage_key" name="storage_key" value="{{ old('storage_key', $note->storage_key) }}"
                            placeholder="notes/sample-note.pdf" dir="ltr"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-mono bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-mono bg-white">
                 </div>
 
                 <div>
-                    <label for="mime_type" class="block text-xs font-black text-ink">نوع فایل (MIME Type)</label>
+                    <label for="mime_type" class="block text-xs font-bold text-ink">نوع فایل (MIME Type)</label>
                     <input type="text" id="mime_type" name="mime_type" value="{{ old('mime_type', $note->mime_type ?? 'application/pdf') }}" dir="ltr"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-mono bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-mono bg-white">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="author_id" class="block text-xs font-black text-ink">استاد / نویسنده علمی</label>
-                    <select id="author_id" name="author_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="author_id" class="block text-xs font-bold text-ink">استاد / نویسنده علمی</label>
+                    <select id="author_id" name="author_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         <option value="">— انتخاب نویسنده —</option>
                         @foreach ($contributors as $c)
                             <option value="{{ $c->id }}" {{ (string)old('author_id', $note->author_id) === (string)$c->id ? 'selected' : '' }}>
@@ -86,8 +86,8 @@
                 </div>
 
                 <div>
-                    <label for="reviewer_id" class="block text-xs font-black text-ink">بازبین علمی</label>
-                    <select id="reviewer_id" name="reviewer_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="reviewer_id" class="block text-xs font-bold text-ink">بازبین علمی</label>
+                    <select id="reviewer_id" name="reviewer_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         <option value="">— انتخاب بازبین پزشکی —</option>
                         @foreach ($contributors as $c)
                             <option value="{{ $c->id }}" {{ (string)old('reviewer_id', $note->reviewer_id) === (string)$c->id ? 'selected' : '' }}>
@@ -100,14 +100,14 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label for="sort_order" class="block text-xs font-black text-ink">ترتیب نمایش</label>
+                    <label for="sort_order" class="block text-xs font-bold text-ink">ترتیب نمایش</label>
                     <input type="number" id="sort_order" name="sort_order" min="0" value="{{ old('sort_order', $note->sort_order ?? 0) }}"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
 
                 <div>
-                    <label for="status" class="block text-xs font-black text-ink">وضعیت</label>
-                    <select id="status" name="status" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="status" class="block text-xs font-bold text-ink">وضعیت</label>
+                    <select id="status" name="status" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         @foreach (['draft' => 'پیش‌نویس', 'in_review' => 'در بازبینی', 'published' => 'منتشر شده', 'archived' => 'بایگانی'] as $st => $label)
                             <option value="{{ $st }}" {{ old('status', $note->status ?? 'draft') === $st ? 'selected' : '' }}>
                                 {{ $label }}
@@ -124,11 +124,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-broca-sand">
-                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-black text-cream hover:bg-coral transition-all">
+            <div class="flex items-center gap-3 pt-4 border-t border-hairline-soft">
+                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-all">
                     {{ $note->exists ? 'ذخیره تغییرات جزوه' : 'ثبت جزوه جدید' }}
                 </button>
-                <a href="{{ route('admin.notes.index') }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-broca-slate hover:bg-broca-sand">
+                <a href="{{ route('admin.notes.index') }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-muted hover:bg-surface-soft">
                     انصراف
                 </a>
             </div>

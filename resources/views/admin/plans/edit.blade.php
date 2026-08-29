@@ -9,16 +9,16 @@
     @include('admin.nav')
 
     <div class="form-panel">
-        <div class="flex items-center justify-between pb-4 border-b border-broca-sand">
+        <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
             <div>
-                <h2 class="text-2xl font-black text-ink">ویرایش تعرفه پلن: {{ $plan->name }}</h2>
-                <p class="text-xs text-broca-slate mt-1">مبالغ به ریال ذخیره و در درگاه به صورت قطعی اعتبارسنجی می‌شوند.</p>
+                <h2 class="text-2xl font-bold text-ink">ویرایش تعرفه پلن: {{ $plan->name }}</h2>
+                <p class="text-xs text-muted mt-1">مبالغ به ریال ذخیره و در درگاه به صورت قطعی اعتبارسنجی می‌شوند.</p>
             </div>
-            <a href="{{ route('admin.plans.index') }}" class="text-xs font-bold text-coral underline">بازگشت</a>
+            <a href="{{ route('admin.plans.index') }}" class="text-xs font-bold text-rausch underline">بازگشت</a>
         </div>
 
         @if ($errors->any())
-            <div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-xs font-bold text-coral" role="alert">
+            <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -28,36 +28,36 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="name" class="block text-xs font-black text-ink">عنوان پلن</label>
+                    <label for="name" class="block text-xs font-bold text-ink">عنوان پلن</label>
                     <input type="text" id="name" name="name" value="{{ old('name', $plan->name) }}" required
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
 
                 <div>
-                    <label for="price_irr" class="block text-xs font-black text-ink">مبلغ به ریال (IRR)</label>
+                    <label for="price_irr" class="block text-xs font-bold text-ink">مبلغ به ریال (IRR)</label>
                     <input type="number" id="price_irr" name="price_irr" min="0" value="{{ old('price_irr', $plan->price_irr) }}" required dir="ltr"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-mono font-bold bg-white/70">
-                    <p class="text-[11px] text-broca-slate mt-1">معادل: {{ number_format((int) old('price_irr', $plan->price_irr) / 10) }} تومان</p>
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-mono font-bold bg-white">
+                    <p class="text-[11px] text-muted mt-1">معادل: {{ number_format((int) old('price_irr', $plan->price_irr) / 10) }} تومان</p>
                 </div>
             </div>
 
             <div>
-                <label for="description" class="block text-xs font-black text-ink">توضیحات پلن</label>
+                <label for="description" class="block text-xs font-bold text-ink">توضیحات پلن</label>
                 <textarea id="description" name="description" rows="3"
-                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white/70">{{ old('description', $plan->description) }}</textarea>
+                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white">{{ old('description', $plan->description) }}</textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label for="duration_months" class="block text-xs font-black text-ink">مدت اعتبار (ماه)</label>
+                    <label for="duration_months" class="block text-xs font-bold text-ink">مدت اعتبار (ماه)</label>
                     <input type="number" id="duration_months" name="duration_months" min="0" max="36" value="{{ old('duration_months', $plan->duration_months) }}" required
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
 
                 <div>
-                    <label for="sort_order" class="block text-xs font-black text-ink">ترتیب نمایش</label>
+                    <label for="sort_order" class="block text-xs font-bold text-ink">ترتیب نمایش</label>
                     <input type="number" id="sort_order" name="sort_order" min="0" value="{{ old('sort_order', $plan->sort_order ?? 0) }}"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
 
                 <div class="flex items-center pt-6">
@@ -68,11 +68,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-broca-sand">
-                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-black text-cream hover:bg-coral transition-all">
+            <div class="flex items-center gap-3 pt-4 border-t border-hairline-soft">
+                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-all">
                     ذخیره تغییرات پلن
                 </button>
-                <a href="{{ route('admin.plans.index') }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-broca-slate hover:bg-broca-sand">
+                <a href="{{ route('admin.plans.index') }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-muted hover:bg-surface-soft">
                     انصراف
                 </a>
             </div>

@@ -9,16 +9,16 @@
     @include('admin.nav')
 
     <div class="form-panel">
-        <div class="flex items-center justify-between pb-4 border-b border-broca-sand">
+        <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
             <div>
-                <h2 class="text-2xl font-black text-ink">{{ $subject->exists ? 'ویرایش مبحث / شاخه علمی' : 'ایجاد مبحث جدید' }}</h2>
-                <p class="text-xs text-broca-slate mt-1">عنوان، توضیحات و ترتیب نمایش در صفحه کاتالوگ</p>
+                <h2 class="text-2xl font-bold text-ink">{{ $subject->exists ? 'ویرایش مبحث / شاخه علمی' : 'ایجاد مبحث جدید' }}</h2>
+                <p class="text-xs text-muted mt-1">عنوان، توضیحات و ترتیب نمایش در صفحه کاتالوگ</p>
             </div>
-            <a href="{{ route('admin.subjects.index') }}" class="text-xs font-bold text-coral underline">بازگشت</a>
+            <a href="{{ route('admin.subjects.index') }}" class="text-xs font-bold text-rausch underline">بازگشت</a>
         </div>
 
         @if ($errors->any())
-            <div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-xs font-bold text-coral" role="alert">
+            <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -30,24 +30,24 @@
             @endif
 
             <div>
-                <label for="name" class="block text-xs font-black text-ink">نام مبحث (فارسی)</label>
+                <label for="name" class="block text-xs font-bold text-ink">نام مبحث (فارسی)</label>
                 <input type="text" id="name" name="name" value="{{ old('name', $subject->name) }}" required
                        placeholder="مثال: فیزیولوژی پزشکی یا آناتومی بالینی"
-                       class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                       class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
             </div>
 
             <div>
-                <label for="description" class="block text-xs font-black text-ink">توضیحات کوتاه</label>
+                <label for="description" class="block text-xs font-bold text-ink">توضیحات کوتاه</label>
                 <textarea id="description" name="description" rows="3"
                           placeholder="توضیح کوتاه در مورد این شاخه از علوم پزشکی..."
-                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white/70">{{ old('description', $subject->description) }}</textarea>
+                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white">{{ old('description', $subject->description) }}</textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="sort_order" class="block text-xs font-black text-ink">ترتیب نمایش در کاتالوگ</label>
+                    <label for="sort_order" class="block text-xs font-bold text-ink">ترتیب نمایش در کاتالوگ</label>
                     <input type="number" id="sort_order" name="sort_order" min="0" value="{{ old('sort_order', $subject->sort_order ?? 0) }}"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
 
                 <div class="flex items-center pt-6">
@@ -58,11 +58,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-broca-sand">
-                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-black text-cream hover:bg-coral transition-all">
+            <div class="flex items-center gap-3 pt-4 border-t border-hairline-soft">
+                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-all">
                     {{ $subject->exists ? 'ذخیره تغییرات مبحث' : 'ثبت مبحث جدید' }}
                 </button>
-                <a href="{{ route('admin.subjects.index') }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-broca-slate hover:bg-broca-sand">
+                <a href="{{ route('admin.subjects.index') }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-muted hover:bg-surface-soft">
                     انصراف
                 </a>
             </div>

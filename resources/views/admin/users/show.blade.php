@@ -8,17 +8,17 @@
 <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     @include('admin.nav')
 
-    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-broca-sand">
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-hairline-soft">
         <div>
-            <span class="text-xs font-bold text-coral">شناسه کاربر: #{{ $user->id }}</span>
-            <h2 class="text-2xl font-black text-ink mt-0.5">{{ $user->name }}</h2>
-            <p class="text-xs text-broca-slate mt-1">{{ $user->email }} · {{ $user->phone ?? 'بدون شماره' }}</p>
+            <span class="text-xs font-bold text-rausch">شناسه کاربر: #{{ $user->id }}</span>
+            <h2 class="text-2xl font-bold text-ink mt-0.5">{{ $user->name }}</h2>
+            <p class="text-xs text-muted mt-1">{{ $user->email }} · {{ $user->phone ?? 'بدون شماره' }}</p>
         </div>
-        <a href="{{ route('admin.users.index') }}" class="text-xs font-bold text-coral underline">بازگشت به لیست کاربران</a>
+        <a href="{{ route('admin.users.index') }}" class="text-xs font-bold text-rausch underline">بازگشت به لیست کاربران</a>
     </div>
 
     @if ($errors->any())
-        <div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-xs font-bold text-coral" role="alert">
+        <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
             {{ $errors->first() }}
         </div>
     @endif
@@ -26,14 +26,14 @@
     <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- User Edit Panel -->
         <div class="form-panel md:col-span-1 space-y-6">
-            <h3 class="text-sm font-black text-ink pb-2 border-b border-broca-sand">تنظیم دسترسی و وضعیت حساب</h3>
+            <h3 class="text-sm font-bold text-ink pb-2 border-b border-hairline-soft">تنظیم دسترسی و وضعیت حساب</h3>
 
             <form method="post" action="{{ route('admin.users.update', $user) }}" class="space-y-4">
                 @csrf @method('patch')
 
                 <div>
-                    <label for="status" class="block text-xs font-black text-ink">وضعیت حساب</label>
-                    <select id="status" name="status" class="w-full mt-1.5 p-2.5 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="status" class="block text-xs font-bold text-ink">وضعیت حساب</label>
+                    <select id="status" name="status" class="w-full mt-1.5 p-2.5 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         <option value="active" {{ $user->status === 'active' ? 'selected' : '' }}>فعال (دسترسی عادی)</option>
                         <option value="suspended" {{ $user->status === 'suspended' ? 'selected' : '' }}>تعلیق‌شده (خروج فوری و مسدودسازی)</option>
                     </select>
@@ -46,12 +46,12 @@
                     </label>
                 </div>
 
-                <button type="submit" class="w-full mt-4 rounded-full bg-ink py-2.5 text-xs font-black text-cream hover:bg-coral transition-all">
+                <button type="submit" class="w-full mt-4 rounded-full bg-ink py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all">
                     ذخیره تغییرات دسترسی
                 </button>
             </form>
 
-            <div class="pt-4 border-t border-broca-sand text-xs space-y-2 text-broca-slate">
+            <div class="pt-4 border-t border-hairline-soft text-xs space-y-2 text-muted">
                 <p><span class="font-bold text-ink">تأیید ایمیل:</span> {{ $user->email_verified_at ? 'تأیید شده در ' . $user->email_verified_at->timezone(config('broca.display_timezone'))->format('Y/m/d H:i') : 'تأیید نشده' }}</p>
                 <p><span class="font-bold text-ink">احراز هویت دو مرحله‌ای:</span> {{ $user->hasConfirmedTwoFactor() ? 'فعال ✓' : 'غیرفعال' }}</p>
             </div>
@@ -61,67 +61,67 @@
         <div class="md:col-span-2 space-y-6">
             <!-- Enrolled Courses -->
             <div class="surface-panel p-6">
-                <h3 class="text-sm font-black text-ink flex items-center justify-between pb-3 border-b border-broca-sand">
+                <h3 class="text-sm font-bold text-ink flex items-center justify-between pb-3 border-b border-hairline-soft">
                     <span>🎓 دوره‌های ثبت‌نام شده</span>
-                    <span class="text-xs text-broca-slate">{{ $user->enrollments->count() }} دوره</span>
+                    <span class="text-xs text-muted">{{ $user->enrollments->count() }} دوره</span>
                 </h3>
                 <div class="mt-3 divide-y divide-broca-sand text-xs">
                     @forelse ($user->enrollments as $enrollment)
                         <div class="py-2.5 flex items-center justify-between">
                             <div>
                                 <span class="font-bold text-ink">{{ $enrollment->course->title ?? '—' }}</span>
-                                <span class="text-[11px] text-broca-slate block">{{ $enrollment->course->subject->name ?? '' }}</span>
+                                <span class="text-[11px] text-muted block">{{ $enrollment->course->subject->name ?? '' }}</span>
                             </div>
-                            <span class="text-broca-slate" dir="ltr">{{ $enrollment->enrolled_at?->timezone(config('broca.display_timezone'))->format('Y/m/d') }}</span>
+                            <span class="text-muted" dir="ltr">{{ $enrollment->enrolled_at?->timezone(config('broca.display_timezone'))->format('Y/m/d') }}</span>
                         </div>
                     @empty
-                        <p class="py-4 text-center text-broca-slate">در دوره‌ای ثبت‌نام نکرده است.</p>
+                        <p class="py-4 text-center text-muted">در دوره‌ای ثبت‌نام نکرده است.</p>
                     @endforelse
                 </div>
             </div>
 
             <!-- Subscriptions & Invoices -->
             <div class="surface-panel p-6">
-                <h3 class="text-sm font-black text-ink flex items-center justify-between pb-3 border-b border-broca-sand">
+                <h3 class="text-sm font-bold text-ink flex items-center justify-between pb-3 border-b border-hairline-soft">
                     <span>💳 اشتراک‌ها و تراکنش‌ها</span>
-                    <span class="text-xs text-broca-slate">{{ $user->subscriptions->count() }} اشتراک</span>
+                    <span class="text-xs text-muted">{{ $user->subscriptions->count() }} اشتراک</span>
                 </h3>
                 <div class="mt-3 divide-y divide-broca-sand text-xs">
                     @forelse ($user->subscriptions as $sub)
                         <div class="py-2.5 flex items-center justify-between">
                             <div>
                                 <span class="font-bold text-ink">{{ $sub->plan->name ?? 'پلن' }}</span>
-                                <span class="text-[11px] text-broca-slate block">انقضا: {{ $sub->ends_at ? $sub->ends_at->timezone(config('broca.display_timezone'))->format('Y/m/d') : 'نامحدود' }}</span>
+                                <span class="text-[11px] text-muted block">انقضا: {{ $sub->ends_at ? $sub->ends_at->timezone(config('broca.display_timezone'))->format('Y/m/d') : 'نامحدود' }}</span>
                             </div>
-                            <span class="rounded-full px-2.5 py-0.5 text-[11px] font-black {{ $sub->isActive() ? 'bg-teal/15 text-teal' : 'bg-broca-sand text-broca-slate' }}">
+                            <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold {{ $sub->isActive() ? 'bg-teal/15 text-teal' : 'bg-surface-soft text-muted' }}">
                                 {{ $sub->isActive() ? 'فعال' : $sub->status }}
                             </span>
                         </div>
                     @empty
-                        <p class="py-4 text-center text-broca-slate">اشتراکی خریداری نشده است.</p>
+                        <p class="py-4 text-center text-muted">اشتراکی خریداری نشده است.</p>
                     @endforelse
                 </div>
             </div>
 
             <!-- Quiz Attempts -->
             <div class="surface-panel p-6">
-                <h3 class="text-sm font-black text-ink flex items-center justify-between pb-3 border-b border-broca-sand">
+                <h3 class="text-sm font-bold text-ink flex items-center justify-between pb-3 border-b border-hairline-soft">
                     <span>📝 آزمون‌های گذرانده‌شده</span>
-                    <span class="text-xs text-broca-slate">{{ $user->quizAttempts->count() }} تلاش</span>
+                    <span class="text-xs text-muted">{{ $user->quizAttempts->count() }} تلاش</span>
                 </h3>
                 <div class="mt-3 divide-y divide-broca-sand text-xs">
                     @forelse ($user->quizAttempts as $attempt)
                         <div class="py-2.5 flex items-center justify-between">
                             <div>
                                 <span class="font-bold text-ink">{{ $attempt->quiz->title ?? 'آزمون' }}</span>
-                                <span class="text-[11px] text-broca-slate block">{{ $attempt->correct_count }} از {{ $attempt->question_count }} پاسخ درست</span>
+                                <span class="text-[11px] text-muted block">{{ $attempt->correct_count }} از {{ $attempt->question_count }} پاسخ درست</span>
                             </div>
-                            <span class="font-bold {{ $attempt->passed ? 'text-teal' : 'text-coral' }}">
+                            <span class="font-bold {{ $attempt->passed ? 'text-teal' : 'text-rausch' }}">
                                 {{ $attempt->score_percent }}٪ ({{ $attempt->passed ? 'قبول' : 'مردود' }})
                             </span>
                         </div>
                     @empty
-                        <p class="py-4 text-center text-broca-slate">آزمونی ثبت نشده است.</p>
+                        <p class="py-4 text-center text-muted">آزمونی ثبت نشده است.</p>
                     @endforelse
                 </div>
             </div>
