@@ -387,7 +387,7 @@ All nine LOW findings from the second audit were fixed in commit `0f05ded`:
 | 6 | DB CHECK constraints absent | Migration `2026_08_29_000006` adds CHECKs (MySQL-only, skipped on sqlite): status enums on users/courses/videos/notes/flashcard_decks/flashcards/quizzes/quiz_questions/subscriptions/invoices + `amount_irr >= 0` |
 | 7 | Dead money-model methods | Removed `Subscription::schedule/cancel/isScheduled/expire` and `Invoice::markCancelled/markExpired/scopePending/isPending` — all verified caller-free (repo-wide grep, incl. views/docs/tests) |
 | 8 | `BackupDatabase` root-credential fallback + 0644 dumps | No more `?? 'root'` — missing username fails loudly; root-with-empty-password warns; dump dir 0770, dump + `.gz` chmod 0600 (PII); sqlite-driver guard test |
-| 9 | Dependency CVE audit unverifiable offline | CI now runs `composer audit` on every push (blocking); RUNBOOK pre-launch gate updated |
+| 9 | Dependency CVE audit unverifiable offline | Pre-launch gate added to the RUNBOOK: `composer audit` must pass with zero known vulnerabilities. A CI `composer audit` step was drafted but could not be pushed — the GitHub App token lacks the `workflows` permission; the owner can add the step in a follow-up |
 
 **Verification (honest):** same sandbox limits as above — all 216 repo PHP files parse clean on PHP 8.4.23 (0 failures), the frontend build succeeds (CSS −0.03 kB from the 10px removal), and the new tests (`BlogTest`, `AdminUserManagementTest`, plus additions to `PaymentTest`/`PaymentLifecycleTest`/`AdminTwoFactorManagementTest`) must be executed locally with `composer test`.
 
