@@ -44,17 +44,31 @@ class VideoController extends Controller
     }
 
     /**
-     * Streams the (placeholder) media behind a signed URL. Entitlement is
-     * re-checked server-side; the signature itself carries the expiry.
+     * Streams the video's own placeholder asset behind a signed URL.
+     * Entitlement is re-checked server-side; the signature itself carries
+     * the expiry. The stored manifest_reference is a bare filename — the
+     * charset check plus realpath containment stop any traversal attempt.
      */
     public function media(Request $request, Video $video): BinaryFileResponse
     {
         abort_unless($video->isPublished(), 404);
         abort_unless(app(ContentPolicy::class)->viewVideo($request->user(), $video), 403);
 
-        $path = public_path('videos/sample.mp4');
+        $reference = (string) $video->manifest_reference;
 
-        abort_unless(is_file($path), 404, 'Playback asset is not configured yet.');
+        // Bare filename only: no slashes, no backslashes, no NUL, no '..'.
+        if ($reference === '' || ! preg_match('/^[A-Za-z0-9._-]+$/', $reference)) {
+            abort(404);
+        }
+
+        $videosDir = realpath(public_path('videos'));
+        $path = realpath(public_path('videos').DIRECTORY_SEPARATOR.$reference);
+
+        // realpath() resolves symlinks and '..' — the resolved file must
+        // still live inside the videos directory.
+        if ($videosDir === false || $path === false || ! str_starts_with($path, $videosDir.DIRECTORY_SEPARATOR)) {
+            abort(404, 'Playback asset is not configured yet.');
+        }
 
         return response()->file($path, ['Cache-Control' => 'private, no-store']);
     }

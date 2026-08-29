@@ -119,6 +119,11 @@ Rollback: `git checkout <previous-tag> && composer install && php artisan migrat
 - [ ] Real plan prices set in `/admin/plans` (seeder values are placeholders).
 - [ ] A real video asset in `public/videos` wired through the admin
       `manifest_reference` field; placeholder provider replaced before scale.
+      (Placeholders are provisioned automatically by `php artisan db:seed` /
+      `php artisan broca:provision-media` from `database/placeholder-media/`.)
 - [ ] CI green on MySQL (`.github/workflows/ci.yml`).
+- [ ] `composer audit` passes with zero known-vulnerable dependencies
+      (run locally; the CI step could not be added from this sandbox
+      because the GitHub App lacks the `workflows` permission).
 - [ ] One full sandbox payment → callback → subscription → expiry cycle.
 - [ ] Backup restored successfully at least once.

@@ -78,6 +78,83 @@ class AdminTwoFactorTest extends TestCase
         $this->actingAs($user)->post(route('admin.two-factor.verify'), ['code' => '123456'])->assertForbidden();
     }
 
+    public function test_admin_can_disable_two_factor_with_the_current_code(): void
+    {
+        $admin = $this->enrolledAdmin();
+        $admin->storeRecoveryCodes(['AAAAA-BBBBB']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.disable'), ['code' => Totp::currentCode($admin->totp_secret)])
+            ->assertRedirect(route('admin.two-factor.edit'));
+
+        $admin = $admin->fresh();
+        $this->assertNull($admin->totp_secret);
+        $this->assertNull($admin->totp_confirmed_at);
+        $this->assertSame([], $admin->recoveryCodes());
+        $this->assertFalse($admin->hasConfirmedTwoFactor());
+
+        // The panel no longer demands the challenge (same as never enrolled).
+        $this->actingAs($admin)->get('/admin')
+            ->assertRedirect(route('admin.two-factor.edit'));
+    }
+
+    public function test_admin_cannot_disable_two_factor_with_a_wrong_code(): void
+    {
+        $admin = $this->enrolledAdmin();
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.disable'), ['code' => '000000'])
+            ->assertSessionHasErrors('code');
+
+        $this->assertTrue($admin->fresh()->hasConfirmedTwoFactor());
+    }
+
+    public function test_admin_can_regenerate_recovery_codes(): void
+    {
+        $admin = $this->enrolledAdmin();
+        $admin->storeRecoveryCodes(['OLD01-AAAAA', 'OLD02-BBBBB']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.recovery-codes'))
+            ->assertRedirect(route('admin.two-factor.edit'))
+            ->assertSessionHas('recovery_codes');
+
+        $admin = $admin->fresh();
+        $codes = $admin->recoveryCodes();
+        $this->assertCount(10, $codes);
+        $this->assertNotContains('OLD01-AAAAA', $codes);
+
+        // The DB stores sha256 hashes — plaintext is flashed to the session
+        // exactly once at generation time.
+        $plaintext = session('recovery_codes');
+        $this->assertIsArray($plaintext);
+        $this->assertCount(10, $plaintext);
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $codes[0]);
+        $this->assertNotContains($plaintext[0], $codes);
+
+        // Old codes are dead immediately.
+        $this->assertFalse($admin->consumeRecoveryCode('OLD01-AAAAA'));
+        // A fresh code still works once (case-insensitively).
+        $this->assertTrue($admin->consumeRecoveryCode(strtolower($plaintext[0])));
+    }
+
+    public function test_stored_recovery_codes_are_never_plaintext(): void
+    {
+        $admin = $this->enrolledAdmin();
+        $admin->storeRecoveryCodes(['SECRET-XXXXX']);
+
+        $stored = $admin->fresh()->recoveryCodes();
+        $this->assertCount(1, $stored);
+        $this->assertNotSame('SECRET-XXXXX', $stored[0]);
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $stored[0]);
+        // Raw DB payload must not contain the plaintext anywhere.
+        $this->assertStringNotContainsString('SECRET-XXXXX', (string) $admin->fresh()->getRawOriginal('recovery_codes'));
+
+        // Hashing must not change the acceptance semantics.
+        $this->assertTrue($admin->consumeRecoveryCode('secret-xxxxx'));
+        $this->assertSame([], $admin->fresh()->recoveryCodes());
+    }
+
     public function test_totp_enrollment_flow(): void
     {
         $admin = User::factory()->admin()->create();

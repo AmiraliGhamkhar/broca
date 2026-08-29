@@ -36,17 +36,13 @@ class Subscription extends Model
 
     public function isActive(): bool
     {
-        return $this->status === 'active' && $this->ends_at && $this->ends_at->isFuture();
-    }
-
-    public function isScheduled(): bool
-    {
-        return $this->status === 'scheduled';
-    }
-
-    public function isExpired(): bool
-    {
-        return $this->status === 'expired' || ($this->ends_at && $this->ends_at->isPast());
+        // Mirrors User::activeSubscription(): a NULL ends_at means the
+        // subscription never expires, so it counts as active.
+        return $this->status === 'active'
+            && $this->activated_at !== null
+            && $this->starts_at !== null
+            && ! $this->starts_at->isFuture()
+            && ($this->ends_at === null || $this->ends_at->isFuture());
     }
 
     public function activate(?Carbon $at = null): void
@@ -56,24 +52,5 @@ class Subscription extends Model
             'activated_at' => $at ?? now(),
             'starts_at' => $this->starts_at ?? ($at ?? now()),
         ]);
-    }
-
-    public function schedule(Carbon $startsAt, int $durationMonths = 1): void
-    {
-        $this->update([
-            'status' => 'scheduled',
-            'starts_at' => $startsAt,
-            'ends_at' => $startsAt->copy()->addMonths($durationMonths),
-        ]);
-    }
-
-    public function expire(): void
-    {
-        $this->update(['status' => 'expired']);
-    }
-
-    public function cancel(): void
-    {
-        $this->update(['status' => 'cancelled']);
     }
 }

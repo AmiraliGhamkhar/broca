@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->provisionPlaceholderMedia();
+
         // 1. Administrators and Test Users
         $admin = User::factory()->create([
             'name' => 'دکتر مدیر سامانه',
@@ -436,5 +438,17 @@ class DatabaseSeeder extends Seeder
         foreach ($plans as $p) {
             Plan::updateOrCreate(['code' => $p['code']], $p + ['is_active' => true]);
         }
+    }
+
+    /**
+     * Copy the committed placeholder video/note files into the runtime
+     * locations (public/videos, storage/app/private/notes) so seeded
+     * manifest_reference / storage_key values resolve instead of 404ing.
+     * Run `php artisan broca:provision-media` again after swapping in the
+     * real assets.
+     */
+    private function provisionPlaceholderMedia(): void
+    {
+        \Illuminate\Support\Facades\Artisan::call('broca:provision-media');
     }
 }

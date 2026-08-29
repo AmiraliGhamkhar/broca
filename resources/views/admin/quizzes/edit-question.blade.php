@@ -9,16 +9,16 @@
     @include('admin.nav')
 
     <div class="form-panel">
-        <div class="flex items-center justify-between pb-4 border-b border-broca-sand">
+        <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
             <div>
-                <span class="text-xs font-bold text-coral">{{ $quiz->title }} ({{ $quiz->course->title ?? '' }})</span>
-                <h2 class="text-2xl font-black text-ink mt-0.5">{{ $question->exists ? 'ویرایش سؤال آزمون' : 'افزودن سؤال چهارگزینه‌ای جدید' }}</h2>
+                <span class="text-xs font-bold text-rausch">{{ $quiz->title }} ({{ $quiz->course->title ?? '' }})</span>
+                <h2 class="text-2xl font-bold text-ink mt-0.5">{{ $question->exists ? 'ویرایش سؤال آزمون' : 'افزودن سؤال چهارگزینه‌ای جدید' }}</h2>
             </div>
-            <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="text-xs font-bold text-coral underline">بازگشت به سؤالات آزمون</a>
+            <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="text-xs font-bold text-rausch underline">بازگشت به سؤالات آزمون</a>
         </div>
 
         @if ($errors->any())
-            <div class="mt-4 rounded-2xl border border-coral/40 bg-coral/10 p-4 text-xs font-bold text-coral" role="alert">
+            <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -32,17 +32,17 @@
             @endif
 
             <div>
-                <label for="prompt" class="block text-xs font-black text-ink">صورت سؤال (متن پرسش بالینی یا فیزیولوژی)</label>
+                <label for="prompt" class="block text-xs font-bold text-ink">صورت سؤال (متن پرسش بالینی یا فیزیولوژی)</label>
                 <textarea id="prompt" name="prompt" rows="3" required
                           placeholder="مثال: کدامیک از ساختارهای زیر به عنوان ضربان‌ساز طبیعی قلب عمل می‌کند؟"
-                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">{{ old('prompt', $question->prompt) }}</textarea>
+                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">{{ old('prompt', $question->prompt) }}</textarea>
             </div>
 
             <!-- Options & Correct Answer Selection -->
-            <div class="p-5 rounded-2xl bg-white/60 border border-broca-sand space-y-4">
-                <h3 class="text-xs font-black text-ink flex items-center justify-between">
+            <div class="p-5 rounded-2xl bg-surface-soft border border-hairline-soft space-y-4">
+                <h3 class="text-xs font-bold text-ink flex items-center justify-between">
                     <span>گزینه‌های پاسخ (گزینه صحیح را با دکمه رادیویی مشخص کنید)</span>
-                    <span class="text-[11px] text-coral font-bold">* گزینه درست الزامی است</span>
+                    <span class="text-[11px] text-rausch font-bold">* گزینه درست الزامی است</span>
                 </h3>
 
                 @php
@@ -65,42 +65,42 @@
                         <div class="flex items-center gap-3">
                             <label class="flex items-center gap-1.5 cursor-pointer shrink-0">
                                 <input type="radio" name="correct_index" value="{{ $i }}" {{ $isCorrect ? 'checked' : '' }} required class="size-4 text-teal">
-                                <span class="text-xs font-black text-ink">گزینه {{ $i + 1 }} {{ $isCorrect ? '(صحیح)' : '' }}</span>
+                                <span class="text-xs font-bold text-ink">گزینه {{ $i + 1 }} {{ $isCorrect ? '(صحیح)' : '' }}</span>
                             </label>
                             <input type="text" name="options[{{ $i }}][label]" value="{{ $optLabel }}" required
                                    placeholder="متن گزینه {{ $i + 1 }}..."
-                                   class="flex-1 p-2.5 rounded-xl border border-ink/20 text-xs bg-white/80 font-medium">
+                                   class="flex-1 p-2.5 rounded-xl border border-ink/20 text-xs bg-white font-medium">
                         </div>
                     @endfor
                 </div>
             </div>
 
             <div>
-                <label for="explanation" class="block text-xs font-black text-ink">پاسخ تشریحی و نکته آموزشی (نمایش به دانشجو پس از ارسال پاسخ)</label>
+                <label for="explanation" class="block text-xs font-bold text-ink">پاسخ تشریحی و نکته آموزشی (نمایش به دانشجو پس از ارسال پاسخ)</label>
                 <textarea id="explanation" name="explanation" rows="3"
                           placeholder="توضیح کامل در مورد دلیل درستی گزینه و رد سایر گزینه‌ها..."
-                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white/70">{{ old('explanation', $question->explanation) }}</textarea>
+                          class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white">{{ old('explanation', $question->explanation) }}</textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="source_citation" class="block text-xs font-black text-ink">منبع بالینی / رفرنس علمی</label>
+                    <label for="source_citation" class="block text-xs font-bold text-ink">منبع بالینی / رفرنس علمی</label>
                     <input type="text" id="source_citation" name="source_citation" value="{{ old('source_citation', $question->source_citation) }}"
                            placeholder="مثال: گایتون فصل ۹ / هاریسون"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-medium bg-white">
                 </div>
 
                 <div>
-                    <label for="sort_order" class="block text-xs font-black text-ink">ترتیب در آزمون</label>
+                    <label for="sort_order" class="block text-xs font-bold text-ink">ترتیب در آزمون</label>
                     <input type="number" id="sort_order" name="sort_order" min="0" value="{{ old('sort_order', $question->sort_order ?? 0) }}"
-                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                           class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="author_id" class="block text-xs font-black text-ink">طراح سؤال</label>
-                    <select id="author_id" name="author_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="author_id" class="block text-xs font-bold text-ink">طراح سؤال</label>
+                    <select id="author_id" name="author_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         <option value="">— انتخاب طراح —</option>
                         @foreach ($contributors as $c)
                             <option value="{{ $c->id }}" {{ (string)old('author_id', $question->author_id) === (string)$c->id ? 'selected' : '' }}>
@@ -111,8 +111,8 @@
                 </div>
 
                 <div>
-                    <label for="reviewer_id" class="block text-xs font-black text-ink">بازبین علمی</label>
-                    <select id="reviewer_id" name="reviewer_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="reviewer_id" class="block text-xs font-bold text-ink">بازبین علمی</label>
+                    <select id="reviewer_id" name="reviewer_id" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         <option value="">— انتخاب بازبین پزشکی —</option>
                         @foreach ($contributors as $c)
                             <option value="{{ $c->id }}" {{ (string)old('reviewer_id', $question->reviewer_id) === (string)$c->id ? 'selected' : '' }}>
@@ -125,8 +125,8 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="status" class="block text-xs font-black text-ink">وضعیت</label>
-                    <select id="status" name="status" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white/70">
+                    <label for="status" class="block text-xs font-bold text-ink">وضعیت</label>
+                    <select id="status" name="status" class="w-full mt-1.5 p-3 rounded-xl border border-ink/20 text-xs font-bold bg-white">
                         @foreach (['draft' => 'پیش‌نویس', 'in_review' => 'در بازبینی', 'published' => 'منتشر شده', 'archived' => 'بایگانی'] as $st => $label)
                             <option value="{{ $st }}" {{ old('status', $question->status ?? 'published') === $st ? 'selected' : '' }}>
                                 {{ $label }}
@@ -143,11 +143,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-broca-sand">
-                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-black text-cream hover:bg-coral transition-all">
+            <div class="flex items-center gap-3 pt-4 border-t border-hairline-soft">
+                <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-all">
                     {{ $question->exists ? 'ذخیره تغییرات سؤال' : 'ثبت سؤال در آزمون' }}
                 </button>
-                <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-broca-slate hover:bg-broca-sand">
+                <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="px-5 py-3 rounded-full border border-ink/20 text-xs font-bold text-muted hover:bg-surface-soft">
                     انصراف
                 </a>
             </div>

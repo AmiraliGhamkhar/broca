@@ -38,4 +38,33 @@ class JsonLdEscapingTest extends TestCase
     {
         $this->get(route('home'))->assertOk()->assertSee('application/ld+json');
     }
+
+    public function test_course_json_ld_remains_valid_json_after_escaping(): void
+    {
+        $title = '</script><script>alert(1)</script>';
+        $course = Course::factory()->published()->create([
+            'title' => $title,
+            'excerpt' => 'خلاصه دوره',
+        ]);
+
+        $content = $this->get(route('courses.show', $course))->assertOk()->getContent();
+
+        preg_match_all('/<script type="application\/ld\+json">\s*(.*?)\s*<\/script>/s', $content, $matches);
+        $this->assertNotEmpty($matches[0], 'at least one JSON-LD block must be present');
+
+        $courseBlockFound = false;
+        foreach ($matches[1] as $block) {
+            // Every block must be parseable JSON even with a hostile title.
+            $decoded = json_decode($block, true);
+            $this->assertIsArray($decoded);
+
+            if (($decoded['@type'] ?? null) === 'Course') {
+                $this->assertSame($title, $decoded['name']);
+                $this->assertStringNotContainsString('</script>', $block, 'no raw breakout may survive inside the block');
+                $courseBlockFound = true;
+            }
+        }
+
+        $this->assertTrue($courseBlockFound, 'Course JSON-LD block must be present');
+    }
 }

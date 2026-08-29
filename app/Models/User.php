@@ -27,7 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @var array<int, bool> */
     protected array $enrollmentCache = [];
 
-    protected ?bool $activeSubscriptionCache = null;
+    protected ?Subscription $activeSubscriptionCache = null;
 
     public function enrollments(): HasMany
     {
@@ -69,28 +69,38 @@ class User extends Authenticatable implements MustVerifyEmail
         return ! empty($this->totp_secret) && ! empty($this->totp_confirmed_at);
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string> The stored (sha256-hashed) recovery codes.
+     *                       Plaintext codes are shown once at creation and
+     *                       never persisted — a DB leak must not bypass 2FA.
+     */
     public function recoveryCodes(): array
     {
         return is_array($this->recovery_codes) ? $this->recovery_codes : [];
     }
 
-    /** @param list<string> $codes */
+    /** @param list<string> $codes Plaintext codes; only their hashes are stored. */
     public function storeRecoveryCodes(array $codes): void
     {
-        $this->forceFill(['recovery_codes' => array_values(array_map('strtoupper', $codes))])->save();
+        $hashed = array_map(
+            fn (string $code): string => hash('sha256', strtoupper(trim($code))),
+            $codes
+        );
+
+        $this->forceFill(['recovery_codes' => array_values($hashed)])->save();
     }
 
     public function consumeRecoveryCode(string $code): bool
     {
         $normalized = strtoupper(trim($code));
+        $expected = hash('sha256', $normalized);
 
-        return DB::transaction(function () use ($normalized): bool {
+        return DB::transaction(function () use ($expected): bool {
             $user = self::query()->whereKey($this->getKey())->lockForUpdate()->first();
             $codes = $user?->recoveryCodes() ?? [];
 
             foreach ($codes as $index => $stored) {
-                if (hash_equals((string) $stored, $normalized)) {
+                if (hash_equals($expected, (string) $stored)) {
                     unset($codes[$index]);
                     $user->forceFill(['recovery_codes' => array_values($codes)])->save();
 
@@ -103,14 +113,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * The currently active subscription (memoized per instance), or null.
      * Single source of truth for "does this user currently have a paid,
-     * activated, non-expired subscription". Every policy, gate, and view
-     * helper must call this — never re-implement the expiry logic.
-     *
-     * Memoized per instance, so listing pages that check many items do not
-     * re-run the query per item.
+     * activated, non-expired subscription" — every policy, gate, and view
+     * helper must call this (or hasActiveSubscription) — never re-implement
+     * the expiry logic. A NULL ends_at means the subscription never expires.
      */
-    public function hasActiveSubscription(): bool
+    public function activeSubscription(): ?Subscription
     {
         return $this->activeSubscriptionCache ??= $this->subscriptions()
             ->where('status', 'active')
@@ -120,7 +129,14 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where(function ($query): void {
                 $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
             })
-            ->exists();
+            ->with('plan')
+            ->latest('id')
+            ->first();
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription() !== null;
     }
 
     /**
@@ -146,6 +162,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'totp_confirmed_at' => 'datetime',
+            // Encrypted at rest: the TOTP seed is a bearer secret.
+            'totp_secret' => 'encrypted',
             'recovery_codes' => 'array',
         ];
     }

@@ -101,4 +101,14 @@ class PlaybackTest extends TestCase
         $stranger = User::factory()->create();
         $this->actingAs($stranger)->get($signed)->assertForbidden();
     }
+
+    public function test_provision_media_command_copies_placeholder_assets(): void
+    {
+        $this->artisan('broca:provision-media')->assertExitCode(0);
+
+        $this->assertFileExists(public_path('videos/sample-video.mp4'));
+        $this->assertFileExists(storage_path('app/private/notes/electrophysiology-summary.pdf'));
+        $this->assertFileExists(storage_path('app/private/notes/neuroanatomy-broca-atlas.pdf'));
+        $this->assertFileExists(storage_path('app/private/notes/thorax-clinical-guide.pdf'));
+    }
 }

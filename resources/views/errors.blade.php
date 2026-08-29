@@ -21,15 +21,15 @@
 
 @section('content')
 <section class="mx-auto max-w-3xl px-5 py-24 text-center sm:px-8 lg:py-32">
-    <p class="text-[7rem] font-black leading-none text-broca-accent sm:text-[10rem]" aria-hidden="true">{{ $persianCode }}</p>
-    <h1 class="mt-2 text-3xl font-black sm:text-5xl">{{ $heading }}</h1>
-    <p class="mx-auto mt-5 max-w-xl leading-9 text-ink/65">{{ $body }}</p>
+    <p class="text-[7rem] font-bold leading-none text-rausch sm:text-[10rem]" aria-hidden="true">{{ $persianCode }}</p>
+    <h1 class="mt-2 text-3xl font-bold sm:text-5xl">{{ $heading }}</h1>
+    <p class="mx-auto mt-5 max-w-xl leading-9 text-muted">{{ $body }}</p>
 
     <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
         @if (in_array($code, [419, 403], true))
-            <a href="{{ route('login') }}" class="rounded-full bg-ink px-7 py-4 font-black text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
+            <a href="{{ route('login') }}" class="rounded-full bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
         @endif
-        <a href="{{ route('home') }}" class="rounded-full {{ in_array($code, [419, 403], true) ? 'bg-sun' : 'bg-ink text-cream' }} px-7 py-4 font-black focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به صفحهٔ اصلی</a>
+        <a href="{{ route('home') }}" class="rounded-full {{ in_array($code, [419, 403], true) ? 'bg-surface-soft' : 'bg-ink text-white' }} px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به صفحهٔ اصلی</a>
     </div>
 </section>
 @endsection

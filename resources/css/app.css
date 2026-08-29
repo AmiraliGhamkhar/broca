@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
-/* Self-hosted Vazirmatn (OFL licensed, files in public/fonts/vazirmatn) —
-   never a third-party font CDN (SPEC §1.1, §10). */
+/* =========================================================================
+   Broca — Airbnb-inspired design system (per DESIGN-airbnb.md)
+   Fonts: Vazirmatn (body) + Lalezar (display), both self-hosted (OFL).
+   Accent: Rausch #ff385c — the single brand voltage.
+   ========================================================================= */
+
+/* ---- Self-hosted Vazirmatn (body) ---- */
 @font-face {
     font-family: "Vazirmatn";
     src: url("/fonts/vazirmatn/Vazirmatn-Regular.woff2") format("woff2");
@@ -31,31 +36,106 @@
     font-display: swap;
 }
 
+/* ---- Self-hosted Lalezar (display) ---- */
+@font-face {
+    font-family: "Lalezar";
+    src: url("/fonts/lalezar/Lalezar-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
-    /* Brand palette tokens. cream/ink/slate/accent/sand were the original
-       five; coral/sun/teal/plum are the supporting tints already referenced
-       across views — placeholder values until the client's design file
-       lands, then replace hexes only (SPEC §9, §15). */
-    --color-broca-cream: #FDFBF7;
-    --color-broca-ink: #1C1B19;
-    --color-broca-slate: #4B5563;
-    --color-broca-accent: #C2410C;
-    --color-broca-sand: #E7DED2;
+    /* Airbnb design tokens (DESIGN-airbnb.md) */
+    --color-rausch: #ff385c;
+    --color-rausch-active: #e00b41;
+    --color-rausch-disabled: #ffd1da;
+    --color-rausch-tint: #fff1f3;
+    --color-error-text: #c13515;
+    --color-error-text-hover: #b32505;
+    --color-ink: #222222;
+    --color-body: #3f3f3f;
+    --color-muted: #6a6a6a;
+    --color-muted-soft: #929292;
+    --color-hairline: #dddddd;
+    --color-hairline-soft: #ebebeb;
+    --color-border-strong: #c1c1c1;
+    --color-canvas: #ffffff;
+    --color-surface-soft: #f7f7f7;
+    --color-surface-strong: #f2f2f2;
+    --color-legal-link: #428bff;
+    --color-error: #c13515;
+    --color-disabled: #ffd1da;
+    --color-paper: #ffffff;
+    --color-charcoal: #222222;
 
-    --color-cream: #FDFBF7;
-    --color-ink: #1C1B19;
-    --color-coral: #C2410C;
-    --color-sun: #F5E6C4;
-    --color-teal: #0F766E;
-    --color-plum: #6B2D5C;
+    /* Legacy aliases so existing view classes keep compiling */
+    --color-cream: #ffffff;
+    --color-broca-cream: #ffffff;
+    --color-sun: #fff1f3;
+    --color-broca-accent: #ff385c;
+    --color-coral: #ff385c;
+    --color-broca-ink: #222222;
+    --color-broca-slate: #6a6a6a;
+    --color-broca-sand: #ebebeb;
+    --color-teal: #0f766e;
+    --color-plum: #460479;
+    --color-gold: #f5e6c4;
+    --color-navy: #1c1b19;
+    --color-white: #ffffff;
+    --color-gray-50: #f9f9f9;
+    --color-gray-100: #f7f7f7;
+    --color-gray-200: #ebebeb;
+    --color-gray-300: #dddddd;
+    --color-gray-400: #c1c1c1;
+    --color-gray-500: #929292;
+    --color-gray-600: #6a6a6a;
+    --color-gray-700: #3f3f3f;
+    --color-gray-800: #222222;
+    --color-gray-900: #111111;
+    --color-red-50: #fff1f3;
+    --color-red-100: #ffd1da;
+    --color-red-500: #ff385c;
+    --color-red-600: #e00b41;
+    --color-red-700: #c13515;
 
+    /* Typography: Lalezar display, Vazirmatn body */
+    --font-display: "Lalezar", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
     --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+
+    /* Airbnb elevation — the single shadow tier */
+    --shadow-float: 0 0 0 1px rgb(0 0 0 / 0.02), 0 2px 6px 0 rgb(0 0 0 / 0.04), 0 4px 8px 0 rgb(0 0 0 / 0.1);
+    --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 12px rgb(0 0 0 / 0.08);
 }
 
 html {
-    background-color: var(--color-broca-cream);
-    color: var(--color-broca-ink);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
     font-family: var(--font-sans);
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+}
+
+/* Lalezar display treatment */
+h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+}
+
+::selection {
+    background: var(--color-rausch);
+    color: #ffffff;
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
 }
 
 /* Alpine x-cloak: hide interactive islands until Alpine boots. */
@@ -63,53 +143,17 @@ html {
     display: none !important;
 }
 
-/* -------------------------------------------------------------------------
-   Broca premium clinical layer
-   ------------------------------------------------------------------------- */
-
-:root {
-    --broca-radius-lg: 2rem;
-    --broca-radius-md: 1.25rem;
-    --broca-shadow-soft: 0 18px 55px rgb(28 27 25 / 0.08);
-    --broca-shadow-lift: 0 22px 60px rgb(28 27 25 / 0.14);
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    background-image: radial-gradient(circle at 8% 0%, rgb(245 230 196 / 0.34), transparent 27rem),
-        radial-gradient(circle at 96% 20%, rgb(107 45 92 / 0.06), transparent 24rem);
-}
-
-::selection {
-    background: var(--color-sun);
-    color: var(--color-ink);
-}
-
-:focus-visible {
-    outline: 3px solid var(--color-coral);
-    outline-offset: 3px;
-}
-
-a,
-button,
-input,
-textarea,
-select,
-details summary {
-    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease,
-        box-shadow 160ms ease, transform 160ms ease, opacity 160ms ease;
-}
+/* =========================================================================
+   Layout primitives
+   ========================================================================= */
 
 .site-header {
     position: sticky;
     top: 0;
-    z-index: 40;
-    background: rgb(253 251 247 / 0.88);
-    backdrop-filter: blur(18px);
-    border-color: rgb(231 222 210 / 0.82);
+    z-index: 50;
+    background: rgb(255 255 255 / 0.92);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--color-hairline-soft);
 }
 
 .site-header nav {
@@ -129,11 +173,11 @@ details summary {
     height: 2.35rem;
     place-items: center;
     border-radius: 0.8rem;
-    background: var(--color-ink);
-    color: var(--color-sun);
-    font-size: 0.85rem;
-    font-weight: 900;
-    box-shadow: 0 8px 18px rgb(28 27 25 / 0.14);
+    background: var(--color-rausch);
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 400;
+    font-family: var(--font-display);
 }
 
 .site-nav-links {
@@ -150,82 +194,42 @@ details summary {
 
 .site-nav-links a:hover,
 .site-nav-links button:hover {
-    background: var(--color-sand);
-    transform: translateY(-1px);
+    background: var(--color-surface-soft);
 }
 
 .site-nav-links .nav-primary {
     background: var(--color-ink);
-    color: var(--color-cream);
-    box-shadow: 0 7px 18px rgb(28 27 25 / 0.13);
+    color: #ffffff;
 }
 
 .site-nav-links .nav-primary:hover {
-    background: var(--color-coral);
+    background: var(--color-rausch);
 }
 
-main > .mx-auto[role="status"],
-main > .mx-auto[role="alert"] {
-    box-shadow: var(--broca-shadow-soft);
-}
-
-/* Give repeated content cards a quiet, premium lift without changing layout. */
-article {
-    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-}
-
-article:hover {
-    box-shadow: var(--broca-shadow-soft);
-}
-
-input:not([type="radio"]):not([type="checkbox"]),
-textarea,
-select {
-    border-color: rgb(28 27 25 / 0.16);
-    border-radius: 0.9rem;
-    background: rgb(255 255 255 / 0.42);
-}
-
-input:not([type="radio"]):not([type="checkbox"]):hover,
-textarea:hover,
-select:hover {
-    border-color: rgb(194 65 12 / 0.42);
-}
-
-input:not([type="radio"]):not([type="checkbox"]):focus,
-textarea:focus,
-select:focus {
-    border-color: var(--color-coral);
-    box-shadow: 0 0 0 4px rgb(194 65 12 / 0.11);
-    outline: none;
-}
-
-button:not(:disabled):active,
-a.rounded-full:active,
-a.rounded-xl:active {
-    transform: translateY(1px) scale(0.99);
-}
+/* =========================================================================
+   Hero
+   ========================================================================= */
 
 .hero-shell {
     position: relative;
     isolation: isolate;
     min-height: min(720px, calc(100vh - 4.75rem));
     overflow: hidden;
-    background: var(--color-sand);
+    background: var(--color-surface-soft);
 }
 
 .hero-shell::after {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(90deg, rgb(253 251 247 / 0.88) 0%, rgb(253 251 247 / 0.58) 42%, rgb(253 251 247 / 0.14) 100%);
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0.55) 42%, rgb(255 255 255 / 0.12) 100%);
     content: "";
     pointer-events: none;
 }
 
 .hero-shell video,
 .hero-shell .hero-poster {
-    filter: saturate(0.78) contrast(0.96);
+    filter: saturate(0.85) contrast(0.98);
 }
 
 .hero-content {
@@ -241,21 +245,21 @@ a.rounded-xl:active {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid rgb(107 45 92 / 0.2);
+    border: 1px solid rgb(255 56 92 / 0.25);
     border-radius: 999px;
-    background: rgb(253 251 247 / 0.7);
-    padding: 0.5rem 0.85rem;
-    color: var(--color-plum);
+    background: rgb(255 255 255 / 0.8);
+    padding: 0.5rem 0.9rem;
+    color: var(--color-rausch);
     font-size: 0.8rem;
-    font-weight: 800;
-    box-shadow: 0 10px 25px rgb(28 27 25 / 0.06);
+    font-weight: 700;
+    box-shadow: var(--shadow-float);
 }
 
 .hero-kicker::before {
     width: 0.45rem;
     height: 0.45rem;
     border-radius: 999px;
-    background: var(--color-teal);
+    background: var(--color-rausch);
     content: "";
 }
 
@@ -274,6 +278,162 @@ a.rounded-xl:active {
     border-radius: 999px;
     padding-inline: 1.35rem;
 }
+
+/* =========================================================================
+   Surfaces & cards
+   ========================================================================= */
+
+/* The single Airbnb shadow tier — hover-float only. */
+.interactive-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--color-surface-card, #ffffff);
+    border: 1px solid var(--color-hairline-soft);
+    border-radius: 0.875rem; /* rounded.md ~14px */
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.interactive-card:hover {
+    border-color: var(--color-hairline);
+    box-shadow: var(--shadow-float);
+    transform: translateY(-2px);
+}
+
+/* Airbnb secondary / outline button look */
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-ink);
+    border-radius: 0.5rem;
+    background: #ffffff;
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.btn-outline:hover {
+    background: var(--color-surface-soft);
+}
+
+/* Airbnb pill CTA */
+.btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-rausch);
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    transition: background-color 160ms ease;
+}
+
+.btn-pill:hover {
+    background: var(--color-rausch-active);
+}
+
+.surface-panel {
+    border: 1px solid var(--color-hairline-soft);
+    border-radius: 0.875rem;
+    background: #ffffff;
+    box-shadow: none;
+}
+
+.metric-card {
+    position: relative;
+    min-height: 9.5rem;
+    overflow: hidden;
+    border: 1px solid var(--color-hairline-soft);
+    border-radius: 0.875rem;
+    background: #ffffff;
+    padding: 1.5rem;
+}
+
+.metric-card.is-highlight {
+    border-color: rgb(255 56 92 / 0.2);
+    background: var(--color-rausch-tint);
+}
+
+.metric-card.is-success {
+    border-color: rgb(15 118 110 / 0.2);
+    background: rgb(15 118 110 / 0.06);
+}
+
+.form-panel {
+    border: 1px solid var(--color-hairline-soft);
+    border-radius: 1.25rem;
+    background: #ffffff;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
+    box-shadow: var(--shadow-float);
+}
+
+.empty-state {
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 1.25rem;
+    background: var(--color-surface-soft);
+    padding: clamp(2rem, 6vw, 4rem);
+    text-align: center;
+}
+
+.section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--color-rausch);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.section-label::before {
+    width: 1.4rem;
+    height: 2px;
+    background: currentColor;
+    content: "";
+}
+
+/* =========================================================================
+   Forms
+   ========================================================================= */
+
+input:not([type="radio"]):not([type="checkbox"]),
+textarea,
+select {
+    border-color: var(--color-hairline);
+    border-radius: 0.5rem; /* rounded.sm 8px */
+    background: #ffffff;
+}
+
+input:not([type="radio"]):not([type="checkbox"]):hover,
+textarea:hover,
+select:hover {
+    border-color: var(--color-border-strong);
+}
+
+input:not([type="radio"]):not([type="checkbox"]):focus,
+textarea:focus,
+select:focus {
+    border-color: var(--color-ink);
+    border-width: 2px;
+    box-shadow: none;
+    outline: none;
+}
+
+button:not(:disabled):active,
+a.rounded-full:active,
+a.rounded-xl:active {
+    transform: translateY(1px) scale(0.99);
+}
+
+/* =========================================================================
+   Responsive
+   ========================================================================= */
 
 @media (max-width: 640px) {
     .site-header nav {
@@ -299,7 +459,7 @@ a.rounded-xl:active {
     }
 
     .hero-shell::after {
-        background: linear-gradient(180deg, rgb(253 251 247 / 0.86), rgb(253 251 247 / 0.42));
+        background: linear-gradient(180deg, rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.4));
     }
 
     .hero-content {
@@ -325,109 +485,7 @@ a.rounded-xl:active {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
     }
-}
 
-/* Reusable product surfaces for public, learning, and admin screens. */
-.section-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    color: var(--color-coral);
-    font-size: 0.8rem;
-    font-weight: 900;
-    letter-spacing: 0.01em;
-}
-
-.section-label::before {
-    width: 1.4rem;
-    height: 2px;
-    background: currentColor;
-    content: "";
-}
-
-.interactive-card {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    background: rgb(255 255 255 / 0.48);
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset;
-}
-
-.interactive-card::before {
-    position: absolute;
-    inset: 0 auto auto 0;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, var(--color-coral), var(--color-sun));
-    content: "";
-    opacity: 0;
-    transition: opacity 180ms ease;
-}
-
-.interactive-card:hover {
-    border-color: rgb(194 65 12 / 0.5);
-    box-shadow: var(--broca-shadow-lift);
-    transform: translateY(-4px);
-}
-
-.interactive-card:hover::before {
-    opacity: 1;
-}
-
-.surface-panel {
-    border: 1px solid rgb(28 27 25 / 0.1);
-    border-radius: var(--broca-radius-lg);
-    background: rgb(255 255 255 / 0.55);
-    box-shadow: var(--broca-shadow-soft);
-}
-
-.metric-card {
-    position: relative;
-    min-height: 9.5rem;
-    overflow: hidden;
-    border: 1px solid rgb(28 27 25 / 0.1);
-    border-radius: var(--broca-radius-lg);
-    background: rgb(255 255 255 / 0.58);
-    padding: 1.5rem;
-}
-
-.metric-card::after {
-    position: absolute;
-    inset: auto -2rem -3rem auto;
-    width: 8rem;
-    height: 8rem;
-    border: 1px solid rgb(194 65 12 / 0.14);
-    border-radius: 999px;
-    content: "";
-}
-
-.metric-card.is-highlight {
-    border-color: transparent;
-    background: var(--color-sun);
-}
-
-.metric-card.is-success {
-    border-color: rgb(15 118 110 / 0.18);
-    background: rgb(15 118 110 / 0.08);
-}
-
-.form-panel {
-    border: 1px solid rgb(28 27 25 / 0.1);
-    border-radius: var(--broca-radius-lg);
-    background: rgb(255 255 255 / 0.62);
-    padding: clamp(1.25rem, 4vw, 2.5rem);
-    box-shadow: var(--broca-shadow-soft);
-}
-
-.empty-state {
-    border: 1px dashed rgb(28 27 25 / 0.25);
-    border-radius: var(--broca-radius-lg);
-    background: rgb(255 255 255 / 0.38);
-    padding: clamp(2rem, 6vw, 4rem);
-    text-align: center;
-}
-
-@media (prefers-reduced-motion: reduce) {
     .interactive-card:hover,
     .site-nav-links a:hover,
     .site-nav-links button:hover {

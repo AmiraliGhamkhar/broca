@@ -36,4 +36,8 @@ ZarinPal's sandbox endpoints.
 - Missing SQLite file → `touch database/database.sqlite`.
 - Asset compile errors → `npm ci` again; ensure Node ≥ 18.
 - Fonts 404 → the Vazirmatn woff2 files live in `public/fonts/vazirmatn/` (OFL-licensed).
-- Video placeholder 404 → drop any small MP4 at `public/videos/sample.mp4`; the signed playback chain streams it after entitlement checks.
+- Media 404s → run `php artisan broca:provision-media` (or re-seed); it copies the
+  committed placeholders from `database/placeholder-media/` into
+  `public/videos/` (playback) and `storage/app/private/notes/` (note downloads).
+  Swap the files in `database/placeholder-media/` for the real assets and
+  re-run the command — nothing in the code changes.

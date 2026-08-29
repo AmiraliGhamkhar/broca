@@ -29,6 +29,18 @@ class DashboardController extends Controller
             ->latest('enrolled_at')
             ->get();
 
+        // Effective free status (flag AND global cap) for the badges —
+        // same rule the playback/download endpoints enforce.
+        $entitlements = app(\App\Services\EntitlementService::class);
+        $enrollments->each(function ($enrollment) use ($entitlements): void {
+            $enrollment->course->videos->each(function ($video) use ($entitlements): void {
+                $video->is_free_available = $entitlements->isFree($video);
+            });
+            $enrollment->course->notes->each(function ($note) use ($entitlements): void {
+                $note->is_free_available = $entitlements->isFree($note);
+            });
+        });
+
         // Enrolled Course IDs
         $enrolledCourseIds = $enrollments->pluck('course_id')->all();
 
@@ -77,17 +89,9 @@ class DashboardController extends Controller
             ->limit(3)
             ->get();
 
-        // Active Subscription details
-        $activeSubscription = $user->subscriptions()
-            ->where('status', 'active')
-            ->whereNotNull('activated_at')
-            ->whereNotNull('starts_at')
-            ->where('starts_at', '<=', now())
-            ->where(function ($query): void {
-                $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
-            })
-            ->with('plan')
-            ->first();
+        // Active Subscription details (single source of truth — see
+        // User::activeSubscription(); never re-implement the expiry logic).
+        $activeSubscription = $user->activeSubscription();
 
         return view('learner.dashboard', [
             'user' => $user,
@@ -99,7 +103,7 @@ class DashboardController extends Controller
             'recentAttempts' => $recentAttempts,
             'completedVideos' => $watchedVideosCount,
             'recentProgress' => $recentProgress,
-            'hasSubscription' => $user->hasActiveSubscription(),
+            'hasSubscription' => (bool) $activeSubscription,
             'activeSubscription' => $activeSubscription,
         ]);
     }

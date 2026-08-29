@@ -44,8 +44,20 @@ class CatalogController extends Controller
     {
         abort_unless($course->status === 'published' && $course->published_at?->isPast(), 404);
         $course->load(['subject', 'author', 'reviewer']);
-        $course->setRelation('videos', $course->videos()->published()->orderBy('sort_order')->get());
-        $course->setRelation('notes', $course->notes()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get());
+
+        $entitlements = app(\App\Services\EntitlementService::class);
+
+        // The "رایگان" badge must reflect the EFFECTIVE entitlement (flag
+        // AND global cap), not the bare flag — otherwise the page promises
+        // free access the playback endpoint will 403 on.
+        $videos = $course->videos()->published()->orderBy('sort_order')->get();
+        $videos->each(fn ($video) => $video->is_free_available = $entitlements->isFree($video));
+        $course->setRelation('videos', $videos);
+
+        $notes = $course->notes()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get();
+        $notes->each(fn ($note) => $note->is_free_available = $entitlements->isFree($note));
+        $course->setRelation('notes', $notes);
+
         $course->setRelation('decks', $course->decks()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get());
         $course->setRelation('quizzes', $course->quizzes()->where('status', 'published')->where('published_at', '<=', now())->get());
 
