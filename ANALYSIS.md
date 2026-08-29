@@ -353,6 +353,26 @@ All eight functional gaps above were addressed in the `arena/01a04cca-broca` bra
 
 **Verification:** the PHP toolchain is unavailable in the authoring sandbox (no PHP/composer; package mirrors unreachable), so the new/updated tests in `tests/Feature/AdminTwoFactorTest.php`, `PaymentTest.php`, `SubscriptionEntitlementTest.php`, `PlaybackTest.php` must be executed locally (`composer test`) before merge.
 
+### Second audit — fix status (2026-08-29)
+
+A follow-up audit (CRITICAL 1 / HIGH 2 / MEDIUM 8 / LOW 7) was delivered in chat; all CRITICAL/HIGH/MEDIUM items were fixed in commit `940ad1b`:
+
+| # | Severity | Finding | Fix |
+|---|---|---|---|
+| 1 | CRITICAL | JSON-LD `</script>` breakout (`courses/show.blade.php`, `layouts/app.blade.php`) | `JSON_HEX_TAG \| JSON_HEX_AMP \| JSON_HEX_APOS \| JSON_HEX_QUOT` on all three blocks; `JsonLdEscapingTest` now green by construction + new valid-JSON case |
+| 2 | HIGH | Plaintext 2FA recovery codes (`User.php`) | `storeRecoveryCodes` persists `hash('sha256', strtoupper($code))`; `consumeRecoveryCode` compares `hash_equals` and deletes; plaintext is flashed once at generation only. `totp_secret` gets the `encrypted` cast + `text` column (migration `2026_08_29_000005`) |
+| 3 | HIGH | Unthrottled 2FA enable/disable | `throttle:10,1` on enable/disable/recovery-codes (matches the login challenge) |
+| 4 | MEDIUM | 2FA lifecycle not audited | `admin.audit` on the management routes (start/enable/disable/recovery-codes); challenge/verify/recover deliberately un-audited (one-time codes) |
+| 5 | MEDIUM | Session cookie not Secure; proxy not trusted | `SESSION_SECURE_COOKIE` documented + config falls back to `APP_FORCE_HTTPS`; `TRUSTED_PROXIES` env drives `trustProxies(at: ...)` so `ForceSecureConnections`/HSTS work behind cPanel/shared-hosting TLS proxies |
+| 6 | MEDIUM | CSP was decorative | Real policy: `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'` (inline Alpine + JSON-LD require `'unsafe-inline'`); Vite allowed only in `local` with `public/hot` |
+| 7 | MEDIUM | Static `public/robots.txt` shadowed the dynamic route | File deleted; `SeoController::robots()` serves; regression asserts the file never returns |
+| 8 | MEDIUM | Free-cap copy/badges disagree with the global cap | Badges on `courses/show` + learner dashboard now render through `EntitlementService::isFree()` (`is_free_available`); plans/welcome copy says "per account, across the whole archive" |
+| 9 | MEDIUM | N+1 on four admin index queries | **Retracted during implementation** — all four queries (`Admin/Course|Video|Note|QuizController::index`) already eager-load (`with('course'/'subject','author','reviewer')`); the earlier grep missed the `->with(...)` lines |
+| 10 | MEDIUM | Cascade-delete financial FKs | Migration `2026_08_29_000004` flips `payment_transactions.invoice_id` + `subscriptions.invoice_id` to `restrictOnDelete()` (new migration, safe on deployed DBs) |
+| 11 | MEDIUM | Security-critical logic untested | New tests: `AdminTwoFactorManagementTest` (throttle ×3, lifecycle audit, redaction), `SecurityHeadersTest` (CSP, secure cookie, robots/sitemap), `EntitlementBadgeTest` (cap-aware badges ×4), `PaymentLifecycleTest` (expire + reconcile ×4), `AdminCrudSmokeTest`; extended `AdminTwoFactorTest`, `JsonLdEscapingTest`, `PaymentTest` (NULL `ends_at` stacking guard); `APP_KEY` added to `phpunit.xml` (required by the encrypted cast) |
+
+**Verification (honest):** tests still cannot run in this sandbox — no PHP/composer binary and `repo.packagist.org`/`getcomposer.org` unreachable (one attempt, both `000`). All 212 repo PHP files parse clean on PHP 8.4.23 (`token_get_all(TOKEN_PARSE)` via php-wasm, 0 failures); the production asset build is byte-identical to the committed one. Run `composer test` locally (MySQL 8 or sqlite) to execute the suite — the previously-red `JsonLdEscapingTest` should now pass, and the new tests exercise every changed code path.
+
 ---
 
 ## 11. Verdict
