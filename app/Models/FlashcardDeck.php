@@ -12,7 +12,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class FlashcardDeck extends Model
 {
     use SoftDeletes;
+
     protected function casts(): array { return ['published_at' => 'datetime']; }
+
     public function course(): BelongsTo { return $this->belongsTo(Course::class); }
+
+    public function author(): BelongsTo { return $this->belongsTo(Contributor::class, 'author_id'); }
+
+    public function reviewer(): BelongsTo { return $this->belongsTo(Contributor::class, 'reviewer_id'); }
+
     public function cards(): HasMany { return $this->hasMany(Flashcard::class); }
 }

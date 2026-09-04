@@ -50,12 +50,81 @@ vendor/bin/pint --test # code style
 
 The money paths are covered first-class: freemium gating (`ContentAccessTest`) and payment callback/idempotency (`PaymentTest`), plus quiz grading (`QuizTest`) and the SM-2 scheduler (`SrsServiceTest`).
 
+## Telegram admin bot
+
+This repo now includes a webhook-driven **Telegram admin bot** for Persian operators.
+
+### What it can do
+
+- Manage **subscription plans**
+- Create, edit, review, publish, archive, and delete **blog posts**
+- Create, edit, review, publish, archive, and delete **courses**
+- Upload or update **videos**
+- Upload or update **notes/booklets**
+- Create, edit, review, publish, archive, and delete **flashcard decks/cards**
+- Create, edit, review, publish, archive, and delete **quizzes/questions**
+- Change **course/blog cover images**
+- Trigger a **database backup** and send the dump file back in Telegram
+
+The UX is primarily an **inline-button wizard**: admins navigate, pick items, confirm deletes, and approve publication with inline buttons; they only type when actual field values/content are needed.
+
+### Environment variables
+
+Set these in `.env`:
+
+```env
+TELEGRAM_BOT_ENABLED=true
+TELEGRAM_BOT_TOKEN=123456:telegram-token
+TELEGRAM_WEBHOOK_SECRET=some-random-secret
+TELEGRAM_ADMIN_IDS=11111111,22222222
+BROCA_EXTERNAL_VIDEO_ORIGINS=https://cdn.example.com,https://videos.example.org
+```
+
+### Webhook setup
+
+Once your `APP_URL` points to the public site, register the webhook:
+
+```bash
+php artisan broca:telegram-set-webhook
+```
+
+You can also permanently allow extra admins in the database:
+
+```bash
+php artisan broca:telegram-admin 11111111 --first-name="Admin"
+```
+
+Telegram will call `POST /telegram/webhook` with the secret-token header. The route is CSRF-exempt on purpose.
+
+For shared-hosting deployment and cPanel-specific webhook steps, see `docs/CPANEL_DEPLOYMENT.md`.
+
+### First use in Telegram
+
+Normally admins just send `/start` or `/help` once and continue from the inline menus.
+
+Fallback slash commands still exist for direct access:
+
+- `/plans`, `/plan_new`, `/plan_edit {id}`
+- `/blogs`, `/blog_new`, `/blog_edit {id}`
+- `/subjects`, `/courses`, `/course_new`, `/course_edit {id}`
+- `/videos`, `/video_new`, `/video_edit {id}`
+- `/notes`, `/note_new`, `/note_edit {id}`
+- `/decks`, `/deck_new`, `/deck_edit {id}`
+- `/card_new {deck_id}`, `/card_edit {id}`
+- `/quizzes`, `/quiz_new`, `/quiz_edit {id}`
+- `/question_new {quiz_id}`, `/question_edit {id}`
+- `/set_course_cover {id}`, `/set_blog_cover {id}`
+- `/backup_db`, `/cancel`
+
+The bot sends a form template; fill it in and send it back. For video/note uploads, you can either attach the file directly or use `source_mode: url` with a file URL. Direct publish from the form is blocked for medical content; move items through the review/publish buttons instead.
+
 ## Docs
 
 - `SPEC.md` — original product/technical specification
 - `DECISIONS.md` — running log of decisions and open questions
 - `docs/PROJECT_STATUS.md` — what's done / in-progress / pending
 - `docs/RUNNING_LOCALLY.md` — setup details
+- `docs/CPANEL_DEPLOYMENT.md` — shared hosting / cPanel deployment + Telegram webhook checklist
 
 ## Security posture
 

@@ -1,148 +1,154 @@
 @extends('layouts.app')
 
 @section('title', 'مدیریت آزمون‌ها و بانک سوالات — ' . __('app.name'))
-
 @section('robots', 'noindex, follow')
 
 @section('content')
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<section class="section-shell section-stack section-stack-tight-top">
     @include('admin.nav')
 
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-ink">آزمون‌ها و بانک سؤالات چندگزینه‌ای</h2>
-            <p class="text-xs text-muted mt-1">طراحی آزمون‌های تشخیصی، تعیین حدنصاب قبولی، تنظیم گزینه‌ها و پاسخ‌های تشریحی</p>
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.8fr)] xl:items-end">
+        <div class="section-intro">
+            <span class="eyebrow">آزمون و بانک سؤال</span>
+            <h1 class="section-title mt-4">مدیریت آزمون‌ها و سؤالات</h1>
+            <p class="section-copy mt-5">از این صفحه می‌توانید آزمون‌ها را انتخاب کنید، سؤالات هر آزمون را ببینید و چرخه طراحی، بازبینی و دسترسی رایگان را یک‌جا کنترل کنید.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('admin.quizzes.create') }}" class="rounded-full bg-ink px-5 py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all shadow-sm">
-                + ساخت آزمون جدید
-            </a>
-            @if ($selectedQuiz)
-                <a href="{{ route('admin.quizzes.questions.create', ['quiz_id' => $selectedQuiz->id]) }}" class="rounded-full bg-surface-soft px-5 py-2.5 text-xs font-bold text-ink hover:bg-cream transition-all shadow-sm">
-                    + افزودن سؤال به «{{ $selectedQuiz->title }}»
-                </a>
-            @endif
+
+        <div class="editorial-card is-soft flex items-start gap-3">
+            <span class="icon-frame"><x-ui.icon name="quiz" class="size-5" /></span>
+            <div>
+                <p class="text-sm font-extrabold text-ink">اصل مهم این بخش</p>
+                <p class="mt-2 text-xs leading-7 text-muted">ساختار سؤال، پاسخ درست و توضیح تشریحی باید از همان ابتدا روشن باشد تا سنجش یادگیری پایدار و حرفه‌ای بماند.</p>
+            </div>
         </div>
     </div>
 
-    <!-- 2 Column Layout: Quizzes list on Left, Questions of selected quiz on Right -->
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Quizzes List -->
-        <div class="space-y-4">
-            <h3 class="text-sm font-bold text-ink flex items-center justify-between pb-2 border-b border-hairline-soft">
-                <span>📝 آزمون‌های دوره‌ها</span>
-                <span class="text-xs text-muted">{{ $quizzes->total() }} آزمون</span>
-            </h3>
+    <div class="flex flex-wrap gap-3 mt-10">
+        <a href="{{ route('admin.quizzes.create') }}" class="button-primary">
+            <x-ui.icon name="quiz" class="size-4" />
+            ساخت آزمون جدید
+        </a>
+        @if ($selectedQuiz)
+            <a href="{{ route('admin.quizzes.questions.create', ['quiz_id' => $selectedQuiz->id]) }}" class="button-secondary">
+                <x-ui.icon name="document" class="size-4" />
+                افزودن سؤال به «{{ $selectedQuiz->title }}»
+            </a>
+        @endif
+    </div>
 
-            <div class="space-y-2.5">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 mt-8">
+        <div class="space-y-4 lg:col-span-1">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-extrabold text-ink">آزمون‌ها</h2>
+                <span class="badge-soft">{{ $quizzes->total() }} آزمون</span>
+            </div>
+
+            <div class="space-y-3">
                 @forelse ($quizzes as $quiz)
-                    <div class="p-4 rounded-2xl border transition-all {{ ($selectedQuiz && $selectedQuiz->id === $quiz->id) ? 'border-rausch bg-rausch/5 shadow-sm' : 'border-hairline-soft bg-white hover:bg-white' }}">
-                        <div class="flex items-start justify-between gap-2">
+                    <article class="editorial-card {{ ($selectedQuiz && $selectedQuiz->id === $quiz->id) ? 'ring-2 ring-rausch/25 border-rausch/20' : '' }}">
+                        <div class="flex items-start justify-between gap-3">
                             <div>
-                                <span class="text-[11px] font-bold text-rausch">{{ $quiz->course->title ?? '—' }}</span>
-                                <h4 class="text-sm font-bold text-ink mt-0.5">{{ $quiz->title }}</h4>
-                                <span class="text-[11px] text-muted block mt-1">حدنصاب: {{ $quiz->pass_threshold_percent ?: 70 }}٪ · {{ $quiz->questions_count }} سؤال</span>
+                                <p class="text-[11px] font-bold text-rausch">{{ $quiz->course->title ?? '—' }}</p>
+                                <h3 class="mt-2 text-sm font-black text-ink">{{ $quiz->title }}</h3>
+                                <p class="mt-2 text-[11px] leading-6 text-muted">حد قبولی {{ $quiz->pass_threshold_percent ?: 70 }}٪ · {{ $quiz->questions_count }} سؤال</p>
                             </div>
-                            <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $quiz->status === 'published' ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
-                                {{ $quiz->status }}
-                            </span>
+                            <span class="{{ $quiz->status === 'published' ? 'badge-success' : ($quiz->status === 'in_review' ? 'badge-neutral' : 'badge-soft') }}">{{ $quiz->status === 'published' ? 'منتشر شده' : ($quiz->status === 'in_review' ? 'در بازبینی' : ($quiz->status === 'draft' ? 'پیش‌نویس' : 'بایگانی')) }}</span>
                         </div>
 
-                        <div class="mt-4 pt-3 border-t border-hairline-soft flex items-center justify-between text-xs">
-                            <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="font-bold text-rausch underline">
-                                سوالات آزمون ({{ $quiz->questions_count }}) →
-                            </a>
+                        <div class="flex items-center justify-between gap-3 mt-5 pt-5 border-t border-hairline-soft text-xs">
+                            <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="font-bold text-rausch underline">مشاهده سؤال‌ها</a>
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('admin.quizzes.edit', $quiz) }}" class="text-muted hover:text-ink font-bold">ویرایش</a>
+                                <a href="{{ route('admin.quizzes.edit', $quiz) }}" class="button-soft">ویرایش</a>
                                 <form method="post" action="{{ route('admin.quizzes.destroy', $quiz) }}" onsubmit="return confirm('حذف آزمون؟');">
-                                    @csrf @method('delete')
-                                    <button type="submit" class="text-rausch hover:underline font-bold">حذف</button>
+                                    @csrf
+                                    @method('delete')
+                                    <button type="submit" class="rounded-full border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </article>
                 @empty
-                    <p class="text-xs text-muted p-4 text-center">هنوز آزمونی ساخته نشده است.</p>
+                    <div class="empty-state">
+                        <h2 class="empty-state-title">هنوز آزمونی ساخته نشده است</h2>
+                        <p class="empty-state-copy">اولین آزمون را ایجاد کنید تا مدیریت سؤال‌ها و سنجش یادگیری آغاز شود.</p>
+                    </div>
                 @endforelse
             </div>
+
             <div class="mt-4">{{ $quizzes->links() }}</div>
         </div>
 
-        <!-- Questions List of Selected Quiz -->
         <div class="lg:col-span-2">
             @if ($selectedQuiz)
-                <div class="surface-panel p-6">
-                    <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-hairline-soft">
+                <div class="form-panel p-7 sm:p-8">
+                    <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-hairline-soft">
                         <div>
-                            <span class="text-xs font-bold text-rausch">{{ $selectedQuiz->course->title ?? '' }}</span>
-                            <h3 class="text-lg font-bold text-ink">سؤالات آزمون: {{ $selectedQuiz->title }}</h3>
+                            <p class="text-xs font-bold text-rausch">{{ $selectedQuiz->course->title ?? '' }}</p>
+                            <h2 class="text-xl font-black text-ink mt-2">سؤالات آزمون: {{ $selectedQuiz->title }}</h2>
                         </div>
-                        <a href="{{ route('admin.quizzes.questions.create', ['quiz_id' => $selectedQuiz->id]) }}"
-                           class="rounded-full bg-ink px-4 py-2 text-xs font-bold text-white hover:bg-rausch transition-all">
-                            + افزودن سؤال چهارگزینه‌ای
+                        <a href="{{ route('admin.quizzes.questions.create', ['quiz_id' => $selectedQuiz->id]) }}" class="button-primary">
+                            <x-ui.icon name="document" class="size-4" />
+                            افزودن سؤال
                         </a>
                     </div>
 
-                    <div class="mt-4 space-y-4">
+                    <div class="space-y-4 mt-6">
                         @forelse ($questions as $idx => $question)
-                            <div class="p-4 rounded-2xl bg-surface-soft border border-hairline-soft">
+                            <article class="rounded-3xl border border-hairline-soft bg-surface-soft p-5">
                                 <div class="flex items-start justify-between gap-4">
-                                    <div class="space-y-2 flex-1">
-                                        <p class="text-xs font-bold text-ink leading-5">
-                                            <span class="text-rausch">{{ $idx + 1 }}.</span> {{ $question->prompt }}
-                                        </p>
-
-                                        <!-- Options list -->
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                    <div class="flex-1 space-y-3">
+                                        <p class="text-sm font-black leading-7 text-ink"><span class="text-rausch">{{ $idx + 1 }}.</span> {{ $question->prompt }}</p>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             @foreach ($question->options as $opt)
-                                                <div class="p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 {{ $opt->is_correct ? 'bg-teal/15 text-teal border border-teal/30' : 'bg-surface-soft text-muted' }}">
-                                                    <span>{{ $opt->is_correct ? '✓' : '•' }}</span>
-                                                    <span>{{ $opt->label }}</span>
+                                                <div class="rounded-2xl px-3 py-3 text-xs font-bold {{ $opt->is_correct ? 'border border-teal/25 bg-teal/10 text-teal' : 'border border-hairline-soft bg-white text-muted' }}">
+                                                    {{ $opt->is_correct ? '✓' : '•' }} {{ $opt->label }}
                                                 </div>
                                             @endforeach
                                         </div>
-
                                         @if ($question->explanation)
-                                            <div class="mt-2 p-2.5 rounded-xl bg-surface-soft/30 text-xs text-ink/80 leading-5">
-                                                <span class="font-bold text-ink">پاسخ تشریحی:</span> {{ $question->explanation }}
+                                            <div class="meta-card is-soft">
+                                                <p class="text-[11px] font-bold text-ink">پاسخ تشریحی</p>
+                                                <p class="mt-2 text-xs leading-6 text-muted">{{ $question->explanation }}</p>
                                             </div>
                                         @endif
                                     </div>
 
                                     <div class="flex flex-col items-end gap-2 shrink-0">
                                         <form method="post" action="{{ route('admin.free-items.update', ['type' => 'quiz_questions', 'id' => $question->id]) }}">
-                                            @csrf @method('patch')
+                                            @csrf
+                                            @method('patch')
                                             <input type="hidden" name="designated" value="{{ $question->is_free_designated ? 0 : 1 }}">
-                                            <button type="submit" class="rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all {{ $question->is_free_designated ? 'bg-teal text-white' : 'bg-surface-soft text-muted' }}">
+                                            <button type="submit" class="{{ $question->is_free_designated ? 'badge-success' : 'badge-soft' }}">
                                                 {{ $question->is_free_designated ? 'نمونه رایگان ✓' : 'ویژه اشتراک' }}
                                             </button>
                                         </form>
-
-                                        <div class="flex items-center gap-2 text-xs">
-                                            <a href="{{ route('admin.quizzes.questions.edit', $question) }}" class="px-2.5 py-1 rounded-full border border-ink/20 font-bold hover:bg-surface-soft">ویرایش</a>
+                                        <div class="flex items-center gap-2">
+                                            <a href="{{ route('admin.quizzes.questions.edit', $question) }}" class="button-soft">ویرایش</a>
                                             <form method="post" action="{{ route('admin.quizzes.questions.destroy', $question) }}" onsubmit="return confirm('حذف این سؤال؟');">
-                                                @csrf @method('delete')
-                                                <button type="submit" class="text-rausch font-bold hover:underline">حذف</button>
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit" class="rounded-full border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </article>
                         @empty
-                            <div class="py-12 text-center">
-                                <p class="text-sm font-bold text-muted">این آزمون هنوز سؤالی ندارد.</p>
-                                <a href="{{ route('admin.quizzes.questions.create', ['quiz_id' => $selectedQuiz->id]) }}" class="mt-3 inline-block font-bold text-rausch underline text-xs">
-                                    اولین سؤال را ثبت کنید
+                            <div class="empty-state">
+                                <h2 class="empty-state-title">این آزمون هنوز سؤالی ندارد</h2>
+                                <p class="empty-state-copy">اولین سؤال را با پاسخ درست، توضیح تشریحی و رفرنس علمی ثبت کنید.</p>
+                                <a href="{{ route('admin.quizzes.questions.create', ['quiz_id' => $selectedQuiz->id]) }}" class="button-primary mt-6">
+                                    <x-ui.icon name="document" class="size-4" />
+                                    ثبت اولین سؤال
                                 </a>
                             </div>
                         @endforelse
                     </div>
                 </div>
             @else
-                <div class="surface-panel p-12 text-center text-muted">
-                    <span class="text-4xl block mb-3">👈</span>
-                    <h4 class="text-base font-bold text-ink">یک آزمون را از ستون راست انتخاب کنید</h4>
-                    <p class="text-xs mt-1">برای مشاهده سؤالات، تنظیم گزینه‌های درست و نادرست و توضیحات تشریحی روی یکی از آزمون‌ها کلیک کنید.</p>
+                <div class="empty-state h-full">
+                    <h2 class="empty-state-title">یک آزمون را انتخاب کنید</h2>
+                    <p class="empty-state-copy">برای مشاهده سؤالات و مدیریت گزینه‌ها، ابتدا یکی از آزمون‌ها را از ستون کناری انتخاب کنید.</p>
                 </div>
             @endif
         </div>

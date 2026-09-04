@@ -12,10 +12,34 @@
 2. `composer install` to pull PHP deps.
 3. Copy `.env.example` → `.env`; set `DB_*` for MySQL, or use `DB_CONNECTION=sqlite` and `touch database/database.sqlite`.
 4. `php artisan key:generate`.
-5. `php artisan migrate --seed` — seeds an admin (`admin@broca.test` / `password`), plans, and a sample published course.
-6. `npm ci && npm run dev` (or `npm run build` for production assets).
-7. `php artisan serve` → http://127.0.0.1:8000.
-8. Run tests with `composer test` (alias for `php artisan test`).
+5. `php artisan migrate --seed` — seeds an admin (`admin@broca.test` / `password`), plans, a sample published course, and a blog post.
+6. `php artisan storage:link` — needed for public cover images uploaded through the Telegram bot.
+7. `npm ci && npm run dev` (or `npm run build` for production assets).
+8. `php artisan serve` → http://127.0.0.1:8000.
+9. Run tests with `composer test` (alias for `php artisan test`).
+
+## Telegram admin bot
+
+Set these in `.env` if you want to exercise the webhook locally or on a staging host:
+
+```env
+TELEGRAM_BOT_ENABLED=true
+TELEGRAM_BOT_TOKEN=123456:telegram-token
+TELEGRAM_WEBHOOK_SECRET=some-random-secret
+TELEGRAM_ADMIN_IDS=11111111,22222222
+BROCA_EXTERNAL_VIDEO_ORIGINS=https://cdn.example.com
+```
+
+Once `APP_URL` is publicly reachable, register the webhook with:
+
+```bash
+php artisan broca:telegram-set-webhook
+php artisan broca:telegram-admin 11111111 --first-name="Admin"
+```
+
+The bot now uses an inline-button wizard UI for navigation/confirmation; admins still type actual field values into the sent form templates.
+
+For shared hosting deployment and cPanel webhook setup, see `docs/CPANEL_DEPLOYMENT.md`.
 
 ## Payment sandbox
 

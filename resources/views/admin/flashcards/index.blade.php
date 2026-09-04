@@ -1,144 +1,158 @@
 @extends('layouts.app')
 
 @section('title', 'مدیریت دسته‌ها و فلش‌کارت‌های مرور فاصله‌دار — ' . __('app.name'))
-
 @section('robots', 'noindex, follow')
 
 @section('content')
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<section class="section-shell section-stack section-stack-tight-top">
     @include('admin.nav')
 
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-ink">دسته‌ها و فلش‌کارت‌های مرور فاصله‌دار (SM-2)</h2>
-            <p class="text-xs text-muted mt-1">مدیریت کارت‌های حافظه، روی کارت، پشت کارت، نکات کلیدی و وضعیت سهمیه رایگان</p>
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.8fr)] xl:items-end">
+        <div class="section-intro">
+            <span class="eyebrow">مرور فاصله‌دار و حافظه بلندمدت</span>
+            <h1 class="section-title mt-4">مدیریت دسته‌ها و فلش‌کارت‌ها</h1>
+            <p class="section-copy mt-5">دسته‌های فلش‌کارت و کارت‌های هر دسته را با شفافیت در وضعیت انتشار، سهمیه رایگان و توضیح محتوایی مدیریت کنید.</p>
         </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('admin.flashcards.decks.create') }}" class="rounded-full bg-ink px-5 py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all shadow-sm">
-                + ساخت دسته کارت جدید
-            </a>
-            @if ($selectedDeck)
-                <a href="{{ route('admin.flashcards.cards.create', ['deck_id' => $selectedDeck->id]) }}" class="rounded-full bg-surface-soft px-5 py-2.5 text-xs font-bold text-ink hover:bg-cream transition-all shadow-sm">
-                    + افزودن کارت به «{{ $selectedDeck->title }}»
-                </a>
-            @endif
+
+        <div class="editorial-card is-soft flex items-start gap-3">
+            <span class="icon-frame"><x-ui.icon name="stack" class="size-5" /></span>
+            <div>
+                <p class="text-sm font-extrabold text-ink">استاندارد مرور</p>
+                <p class="mt-2 text-xs leading-7 text-muted">کارت خوب باید یک مفهوم روشن، پاسخ دقیق و در صورت نیاز یک سرنخ کوتاه داشته باشد تا مرور سریع و موثر بماند.</p>
+            </div>
         </div>
     </div>
 
-    <!-- 2 Column Layout: Decks on Left/Top, Cards of selected deck on Right -->
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Decks List -->
-        <div class="space-y-4">
-            <h3 class="text-sm font-bold text-ink flex items-center justify-between pb-2 border-b border-hairline-soft">
-                <span>🗂 دسته‌های کارت (Decks)</span>
-                <span class="text-xs text-muted">{{ $decks->total() }} دسته</span>
-            </h3>
+    <div class="flex flex-wrap gap-3 mt-10">
+        <a href="{{ route('admin.flashcards.decks.create') }}" class="button-primary">
+            <x-ui.icon name="stack" class="size-4" />
+            ساخت دسته کارت جدید
+        </a>
+        @if ($selectedDeck)
+            <a href="{{ route('admin.flashcards.cards.create', ['deck_id' => $selectedDeck->id]) }}" class="button-secondary">
+                <x-ui.icon name="document" class="size-4" />
+                افزودن کارت به «{{ $selectedDeck->title }}»
+            </a>
+        @endif
+    </div>
 
-            <div class="space-y-2.5">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 mt-8">
+        <div class="space-y-4 lg:col-span-1">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-extrabold text-ink">دسته‌های کارت</h2>
+                <span class="badge-soft">{{ $decks->total() }} دسته</span>
+            </div>
+
+            <div class="space-y-3">
                 @forelse ($decks as $deck)
-                    <div class="p-4 rounded-2xl border transition-all {{ ($selectedDeck && $selectedDeck->id === $deck->id) ? 'border-rausch bg-rausch/5 shadow-sm' : 'border-hairline-soft bg-white hover:bg-white' }}">
-                        <div class="flex items-start justify-between gap-2">
+                    <article class="editorial-card {{ ($selectedDeck && $selectedDeck->id === $deck->id) ? 'ring-2 ring-rausch/25 border-rausch/20' : '' }}">
+                        <div class="flex items-start justify-between gap-3">
                             <div>
-                                <span class="text-[11px] font-bold text-rausch">{{ $deck->course->title ?? '—' }}</span>
-                                <h4 class="text-sm font-bold text-ink mt-0.5">{{ $deck->title }}</h4>
-                                <span class="text-[11px] text-muted block mt-1">{{ $deck->cards_count }} کارت مرور</span>
+                                <p class="text-[11px] font-bold text-rausch">{{ $deck->course->title ?? '—' }}</p>
+                                <h3 class="mt-2 text-sm font-black text-ink">{{ $deck->title }}</h3>
+                                <p class="mt-2 text-[11px] leading-6 text-muted">{{ $deck->cards_count }} کارت مرور</p>
                             </div>
-                            <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $deck->status === 'published' ? 'bg-teal/10 text-teal' : 'bg-surface-soft text-ink' }}">
-                                {{ $deck->status }}
-                            </span>
+                            <span class="{{ $deck->status === 'published' ? 'badge-success' : ($deck->status === 'in_review' ? 'badge-neutral' : 'badge-soft') }}">{{ $deck->status === 'published' ? 'منتشر شده' : ($deck->status === 'in_review' ? 'در بازبینی' : ($deck->status === 'draft' ? 'پیش‌نویس' : 'بایگانی')) }}</span>
                         </div>
 
-                        <div class="mt-4 pt-3 border-t border-hairline-soft flex items-center justify-between text-xs">
-                            <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="font-bold text-rausch underline">
-                                مدیریت کارت‌ها ({{ $deck->cards_count }}) →
-                            </a>
+                        <div class="flex items-center justify-between gap-3 mt-5 pt-5 border-t border-hairline-soft text-xs">
+                            <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="font-bold text-rausch underline">مدیریت کارت‌ها</a>
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('admin.flashcards.decks.edit', $deck) }}" class="text-muted hover:text-ink font-bold">ویرایش</a>
+                                <a href="{{ route('admin.flashcards.decks.edit', $deck) }}" class="button-soft">ویرایش</a>
                                 <form method="post" action="{{ route('admin.flashcards.decks.destroy', $deck) }}" onsubmit="return confirm('حذف دسته کارت؟');">
-                                    @csrf @method('delete')
-                                    <button type="submit" class="text-rausch hover:underline font-bold">حذف</button>
+                                    @csrf
+                                    @method('delete')
+                                    <button type="submit" class="rounded-full border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </div>
-                    </div>
+                    </article>
                 @empty
-                    <p class="text-xs text-muted p-4 text-center">هنوز دسته‌ای ساخته نشده است.</p>
+                    <div class="empty-state">
+                        <h2 class="empty-state-title">هنوز دسته‌ای ساخته نشده است</h2>
+                        <p class="empty-state-copy">اولین دسته فلش‌کارت را ایجاد کنید تا مرور فاصله‌دار دوره‌ها آغاز شود.</p>
+                    </div>
                 @endforelse
             </div>
+
             <div class="mt-4">{{ $decks->links() }}</div>
         </div>
 
-        <!-- Cards of Selected Deck -->
         <div class="lg:col-span-2">
             @if ($selectedDeck)
-                <div class="surface-panel p-6">
-                    <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-hairline-soft">
+                <div class="form-panel p-7 sm:p-8">
+                    <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-hairline-soft">
                         <div>
-                            <span class="text-xs font-bold text-rausch">{{ $selectedDeck->course->title ?? '' }}</span>
-                            <h3 class="text-lg font-bold text-ink">کارت‌های دسته: {{ $selectedDeck->title }}</h3>
+                            <p class="text-xs font-bold text-rausch">{{ $selectedDeck->course->title ?? '' }}</p>
+                            <h2 class="text-xl font-black text-ink mt-2">کارت‌های دسته: {{ $selectedDeck->title }}</h2>
                         </div>
-                        <a href="{{ route('admin.flashcards.cards.create', ['deck_id' => $selectedDeck->id]) }}"
-                           class="rounded-full bg-ink px-4 py-2 text-xs font-bold text-white hover:bg-rausch transition-all">
-                            + افزودن کارت جدید
+                        <a href="{{ route('admin.flashcards.cards.create', ['deck_id' => $selectedDeck->id]) }}" class="button-primary">
+                            <x-ui.icon name="document" class="size-4" />
+                            افزودن کارت
                         </a>
                     </div>
 
-                    <div class="mt-4 divide-y divide-broca-sand">
+                    <div class="divide-y divide-broca-sand mt-4">
                         @forelse ($cards as $card)
-                            <div class="py-4">
+                            <article class="py-5">
                                 <div class="flex items-start justify-between gap-4">
-                                    <div class="space-y-1.5 flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-xs font-bold text-muted">سوال/مفهوم (روی کارت):</span>
-                                            <span class="text-xs font-bold text-ink">{{ $card->front }}</span>
+                                    <div class="flex-1 space-y-3">
+                                        <div>
+                                            <p class="text-[11px] font-bold text-muted">روی کارت</p>
+                                            <p class="mt-1 text-sm font-black leading-7 text-ink">{{ $card->front }}</p>
                                         </div>
-                                        <div class="flex items-start gap-2 text-xs text-muted">
-                                            <span class="font-bold">پاسخ (پشت کارت):</span>
-                                            <span class="text-ink/80 leading-5">{{ $card->back }}</span>
+                                        <div>
+                                            <p class="text-[11px] font-bold text-muted">پشت کارت</p>
+                                            <p class="mt-1 text-xs leading-6 text-ink">{{ $card->back }}</p>
                                         </div>
                                         @if ($card->hint)
-                                            <p class="text-[11px] text-rausch font-bold">نکته راهنما: {{ $card->hint }}</p>
+                                            <div class="meta-card is-soft">
+                                                <p class="text-[11px] font-bold text-ink">سرنخ</p>
+                                                <p class="mt-2 text-xs leading-6 text-muted">{{ $card->hint }}</p>
+                                            </div>
                                         @endif
                                     </div>
 
                                     <div class="flex flex-col items-end gap-2 shrink-0">
                                         <form method="post" action="{{ route('admin.free-items.update', ['type' => 'flashcards', 'id' => $card->id]) }}">
-                                            @csrf @method('patch')
+                                            @csrf
+                                            @method('patch')
                                             <input type="hidden" name="designated" value="{{ $card->is_free_designated ? 0 : 1 }}">
-                                            <button type="submit" class="rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-all {{ $card->is_free_designated ? 'bg-teal text-white' : 'bg-surface-soft text-muted' }}">
-                                                {{ $card->is_free_designated ? 'رایگان ✓' : 'ویژه' }}
+                                            <button type="submit" class="{{ $card->is_free_designated ? 'badge-success' : 'badge-soft' }}">
+                                                {{ $card->is_free_designated ? 'رایگان ✓' : 'ویژه اشتراک' }}
                                             </button>
                                         </form>
-
-                                        <div class="flex items-center gap-2 text-xs">
-                                            <a href="{{ route('admin.flashcards.cards.edit', $card) }}" class="px-2.5 py-1 rounded-full border border-ink/20 font-bold hover:bg-surface-soft">ویرایش</a>
+                                        <div class="flex items-center gap-2">
+                                            <a href="{{ route('admin.flashcards.cards.edit', $card) }}" class="button-soft">ویرایش</a>
                                             <form method="post" action="{{ route('admin.flashcards.cards.destroy', $card) }}" onsubmit="return confirm('حذف این کارت؟');">
-                                                @csrf @method('delete')
-                                                <button type="submit" class="text-rausch font-bold hover:underline">حذف</button>
+                                                @csrf
+                                                @method('delete')
+                                                <button type="submit" class="rounded-full border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </article>
                         @empty
-                            <div class="py-12 text-center">
-                                <p class="text-sm font-bold text-muted">این دسته هنوز کارتی ندارد.</p>
-                                <a href="{{ route('admin.flashcards.cards.create', ['deck_id' => $selectedDeck->id]) }}" class="mt-3 inline-block font-bold text-rausch underline text-xs">
-                                    اولین کارت را ایجاد کنید
+                            <div class="empty-state my-4">
+                                <h2 class="empty-state-title">این دسته هنوز کارتی ندارد</h2>
+                                <p class="empty-state-copy">اولین کارت را با روی کارت روشن، پشت کارت دقیق و سرنخ اختیاری اضافه کنید.</p>
+                                <a href="{{ route('admin.flashcards.cards.create', ['deck_id' => $selectedDeck->id]) }}" class="button-primary mt-6">
+                                    <x-ui.icon name="document" class="size-4" />
+                                    ثبت اولین کارت
                                 </a>
                             </div>
                         @endforelse
                     </div>
 
                     @if ($cards instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                        <div class="mt-4">{{ $cards->links() }}</div>
+                        <div class="mt-6">{{ $cards->links() }}</div>
                     @endif
                 </div>
             @else
-                <div class="surface-panel p-12 text-center text-muted">
-                    <span class="text-4xl block mb-3">👈</span>
-                    <h4 class="text-base font-bold text-ink">یک دسته کارت را از ستون راست انتخاب کنید</h4>
-                    <p class="text-xs mt-1">برای مشاهده، افزودن و مدیریت تک‌تک کارت‌های حافظه، ابتدا روی یکی از دسته‌ها کلیک کنید.</p>
+                <div class="empty-state h-full">
+                    <h2 class="empty-state-title">یک دسته کارت را انتخاب کنید</h2>
+                    <p class="empty-state-copy">برای مشاهده و مدیریت کارت‌ها، ابتدا یکی از دسته‌ها را از ستون کناری انتخاب کنید.</p>
                 </div>
             @endif
         </div>

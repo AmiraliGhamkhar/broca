@@ -17,4 +17,6 @@ return [
     // Force every request to HTTPS (production). Set APP_FORCE_HTTPS=true
     // once TLS is live at the host; local dev stays on plain HTTP.
     'force_https' => (bool) env('APP_FORCE_HTTPS', false),
+
+    'external_video_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('BROCA_EXTERNAL_VIDEO_ORIGINS', ''))))),
 ];

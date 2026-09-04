@@ -42,13 +42,20 @@ class SetSecurityHeaders
      */
     private function contentSecurityPolicy(): string
     {
+        $mediaOrigins = collect(config('broca.external_video_origins', []))
+            ->filter(fn ($origin) => is_string($origin) && $origin !== '')
+            ->map(fn (string $origin) => trim($origin))
+            ->implode(' ');
+
+        $mediaSrc = trim("'self' ".$mediaOrigins);
+
         $csp = "default-src 'self'; "
             ."script-src 'self' 'unsafe-inline'; "
             ."style-src 'self' 'unsafe-inline'; "
             ."img-src 'self' data:; "
             ."font-src 'self'; "
             ."connect-src 'self'; "
-            ."media-src 'self'; "
+            ."media-src {$mediaSrc}; "
             ."frame-ancestors 'self'; "
             ."base-uri 'self'; "
             ."form-action 'self'; "

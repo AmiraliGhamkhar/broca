@@ -1,295 +1,689 @@
-# Broca Design System
+# Broca Website Design
 
-## 1. Product character
+## 1. Product summary
 
-Broca is a Persian, RTL-first medical-education platform. The visual language should feel:
+**Broca** is a Persian, RTL-first medical education platform built for three main audiences:
 
-- **Calm:** a warm cream canvas and generous whitespace reduce cognitive load.
-- **Trustworthy:** charcoal typography, structured information, clear status feedback, and restrained color use support medical learning and payments.
-- **Human:** rounded cards, conversational Persian copy, and soft supporting colors make the product approachable.
-- **Focused:** content and learning actions should be more visually prominent than navigation or decoration.
+1. **Guests** discovering courses, plans, and blog content
+2. **Learners** consuming videos, notes, flashcards, and quizzes
+3. **Admins** managing content, publication flow, plans, and operations
 
-The interface is server-rendered with Blade and enhanced with Alpine.js. Design decisions should work without JavaScript wherever possible.
+The site should feel:
 
-## 2. Design principles
+- **trustworthy** enough for medical-learning content
+- **simple** enough for fast scanning in Persian
+- **premium** without becoming visually heavy
+- **structured** so content hierarchy is always clearer than decoration
 
-1. **RTL by default** — Persian is the primary language; every layout, icon, form, and interaction must be checked in RTL.
-2. **Content before decoration** — visual treatment should clarify course structure, learning progress, and next actions.
-3. **One clear primary action** — each page should have one dominant action, such as enrolling, starting a video, submitting an answer, or downloading a note.
-4. **Progressive disclosure** — keep secondary information in supporting text, metadata rows, or expandable sections.
-5. **Trust through transparency** — show prices, payment states, expiry dates, validation errors, and learning status explicitly.
-6. **Accessible by construction** — use semantic HTML first, then add ARIA only where the native element is insufficient.
-7. **Fail visibly and recoverably** — every asynchronous action needs loading, success, failure, and retry states.
+This is a server-rendered Laravel + Blade product with light Alpine.js enhancement, so the design must remain strong even without complex frontend behavior.
 
-## 3. Brand tokens
+---
 
-The current palette is implemented in `resources/css/app.css` using Tailwind v4 theme tokens. These values are the current working palette and may be refined when the final brand file is supplied.
+## 2. Design direction
 
-| Token | Hex | Role |
-|---|---:|---|
-| `cream` / `broca-cream` | `#FDFBF7` | Main page background and light surfaces |
-| `ink` / `broca-ink` | `#1C1B19` | Primary text, dark surfaces, primary buttons |
-| `broca-slate` | `#4B5563` | Secondary text and muted metadata |
-| `coral` / `broca-accent` | `#C2410C` | Brand accent, links, warnings, attention states |
-| `broca-sand` | `#E7DED2` | Borders, dividers, subtle navigation surfaces |
-| `sun` | `#F5E6C4` | Learning highlights, cards, positive emphasis |
-| `teal` | `#0F766E` | Success, completion, confirmation |
-| `plum` | `#6B2D5C` | Secondary emphasis and media/playback metadata |
+The current implementation is an **Airbnb-inspired, high-clarity interface** adapted for a medical-learning brand.
 
-### Color usage
+### Core visual traits
 
-- Use `ink` for the highest-priority text and primary actions.
-- Use `coral` sparingly for links, section eyebrows, warnings, and destructive/error emphasis.
-- Use `teal` for confirmed success only; do not use it as a general decorative color.
-- Use `sun` for learning content and active study surfaces.
-- Use `plum` as a supporting accent, not for long text blocks.
-- Do not communicate state by color alone. Pair color with text, an icon, or a status label.
-- Verify contrast for the final palette before production. Especially check muted text such as `text-ink/65` and `text-ink/50`.
+- **Pure white canvas** for a clean clinical feel
+- **Dark ink typography** for trust and readability
+- **One strong accent color** (`rausch`) for CTA emphasis and active states
+- **Rounded cards and pill controls** for friendliness
+- **Thin borders over heavy shadows** for a calm, modern layout
+- **RTL-first composition** across all pages and components
 
-## 4. Typography
+### Brand personality
 
-### Typeface
+- **Clinical, not cold**
+- **Premium, not luxurious**
+- **Educational, not corporate**
+- **Warm enough for students, disciplined enough for medical topics**
 
-Use the self-hosted **Vazirmatn** family from `public/fonts/vazirmatn`:
+---
 
-- 400 — regular body copy
-- 500 — medium supporting text
-- 700 — bold labels and controls
-- 900 — headings, metrics, and major actions
+## 3. Visual system
 
-Never introduce a third-party font CDN for the core interface.
+### 3.1 Color palette
 
-### Type hierarchy
+These are the implemented tokens in `resources/css/app.css`.
 
-| Element | Current treatment | Guidance |
+| Token | Value | Usage |
 |---|---|---|
-| Display heading | `text-5xl` to `text-7xl`, `font-black` | Use for landing, course, dashboard, and learning page titles |
-| Page heading | `text-4xl` to `text-5xl`, `font-black` | Keep one `h1` per page |
-| Section heading | `text-2xl` to `text-3xl`, `font-black` | Use to group related content |
-| Body | `text-base`, `leading-7` or `leading-8` | Prefer comfortable line length and spacing |
-| Metadata | `text-sm`, `font-bold`, muted color | Subject, duration, status, and supporting information |
-| Eyebrow | `text-sm`, `font-black`, `text-coral` | Short context label above a heading |
-| Metrics | `text-3xl` to `text-7xl`, `font-black` | Use for dashboard counts and quiz scores |
+| `canvas` | `#ffffff` | page background |
+| `surface-soft` | `#f7f7f7` | subtle card/input backgrounds |
+| `surface-strong` | `#f2f2f2` | pressed/denser surfaces |
+| `ink` | `#222222` | primary text, dark buttons, dark panels |
+| `body` | `#3f3f3f` | long-form body text |
+| `muted` | `#6a6a6a` | secondary copy, metadata |
+| `muted-soft` | `#929292` | low-emphasis text |
+| `hairline` | `#dddddd` | borders |
+| `hairline-soft` | `#ebebeb` | soft dividers and table rules |
+| `border-strong` | `#c1c1c1` | stronger form borders |
+| `rausch` | `#ff385c` | primary accent, CTA, active state |
+| `rausch-active` | `#e00b41` | hover/pressed accent |
+| `rausch-disabled` | `#ffd1da` | disabled accent surfaces |
+| `rausch-tint` | `#fff1f3` | tinted badge/panel backgrounds |
+| `teal` | `#0f766e` | success/published state |
+| `error-text` | `#c13515` | error feedback |
+| `legal-link` | `#428bff` | legal/support link emphasis |
 
-Persian body copy should use relaxed line height. Avoid all-caps styling, excessive letter spacing, and dense blocks of untranslated technical language.
+### Color rules
 
-## 5. Layout and spacing
+- Use **ink** for the primary interface structure.
+- Use **rausch** only where the UI needs a clear “this matters” signal.
+- Use **teal** for success, publication, confirmation, or healthy state.
+- Avoid multi-accent competition. The system works because one accent dominates.
+- Never rely on color alone to communicate state.
 
-- Root document: `lang="fa" dir="rtl"`.
-- Main page background: warm cream.
-- Header and footer use full-width borders with centered content.
-- Standard content widths:
-  - `max-w-6xl` for navigation, dashboards, and general pages.
-  - `max-w-5xl` for learning content and video pages.
-  - `max-w-4xl` for quizzes and focused forms.
-  - `max-w-3xl` for legal and long-form reading.
-  - `max-w-xl` for authentication and compact admin forms.
-- Use responsive horizontal padding equivalent to `px-5 sm:px-8 lg:px-12`.
-- Use large vertical rhythm on public and learning pages, generally `py-20` to `py-28`.
-- Prefer Tailwind logical properties (`ms`, `me`, `ps`, `pe`) when adding directional spacing.
-- Avoid fixed heights for text content. Reserve dimensions only for media, progress indicators, and known visual regions.
+---
 
-## 6. Surfaces and shape language
+### 3.2 Typography
 
-The product uses a soft but structured shape language:
+#### Fonts
 
-- Large feature surfaces: `rounded-[2rem]`.
-- Standard cards and forms: `rounded-2xl`.
-- Controls and pills: `rounded-full`.
-- Borders: thin `ink`/`sand` borders with low opacity for secondary separation.
-- Primary learning and payment cards may use a stronger border or dark surface to establish hierarchy.
-- Avoid adding shadows by default; use borders, spacing, and background contrast first.
-- Dark media surfaces use `ink` with cream text.
+- **Display / headings:** `Lalezar`
+- **Body / UI / forms:** `Vazirmatn`
 
-## 7. Navigation
+Both are self-hosted and already part of the current implementation.
 
-The global header contains:
+#### Hierarchy
 
-- Broca wordmark linking to the home page.
-- Catalog link.
-- Plans link.
-- Guest actions: login and registration.
-- Authenticated actions: dashboard, admin panel for admins, and logout.
+| Role | Typical treatment |
+|---|---|
+| Hero headline | `font-display`, `text-4xl` to `text-6xl` |
+| Page title | `font-display`, `text-3xl` to `text-5xl` |
+| Section title | `text-xl` to `text-3xl`, bold |
+| Card title | `text-base` to `text-lg`, bold |
+| Body copy | `text-sm` to `text-base`, relaxed line-height |
+| Metadata | `text-xs` / `text-[11px]`, muted |
+| Pills / tags | bold, compact, rounded-full |
 
-Navigation should remain compact and wrap safely on narrow screens. Every interactive item must have a visible keyboard focus state. Logout remains a POST form with CSRF protection, not a normal link.
+#### Type behavior
 
-## 8. Component patterns
+- Persian body text should stay open and readable.
+- Headlines can be expressive, but paragraphs should remain calm.
+- Long medical content should use generous line height.
+- LTR formatting should be applied to dates, prices, numeric totals, IDs, and codes where useful.
 
-### Buttons and links
+---
 
-Primary button:
+### 3.3 Shape, radius, and depth
 
-```html
-<button class="rounded-full bg-ink px-7 py-4 font-black text-cream
-               focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">
-    Action
-</button>
-```
+#### Radius
+
+- **Hero / major cards:** `rounded-3xl`
+- **Panels / forms:** `rounded-2xl`
+- **Inputs:** `rounded-xl`
+- **Buttons / filters / tags:** `rounded-full`
+
+#### Shadow
+
+The design uses a restrained floating shadow, mainly for:
+
+- hero support cards
+- dropdowns
+- form panels
+- premium CTAs
+
+Most structure should come from:
+
+- borders
+- whitespace
+- contrast
+- grouping
+
+not from stacked shadow layers.
+
+---
+
+## 4. Layout system
+
+### Global frame
+
+The site uses a consistent full-page structure:
+
+1. **Top announcement bar**
+2. **Sticky navigation header**
+3. **Main page content**
+4. **Feedback/toast region**
+5. **Footer with medical and legal context**
+
+### Widths
+
+- Primary public pages: `max-w-7xl`
+- Forms and focused editing: `max-w-4xl`
+- Reading/prose areas: narrower content blocks inside page shells
+
+### Spacing principles
+
+- Large breathing room on marketing/public pages
+- Tighter but still clean density in admin areas
+- Repeated section rhythm using strong top/bottom padding and border separators
+
+### Responsive behavior
+
+- Desktop navigation collapses into a mobile drawer
+- Pill filters become horizontally scrollable on smaller screens
+- Multi-column cards stack cleanly without changing content priority
+- Hero becomes vertically centered and more text-led on mobile
+
+---
+
+## 5. Information architecture
+
+### Public-facing areas
+
+- **Home**
+- **Catalog**
+- **Course detail**
+- **Plans**
+- **Blog**
+- **Legal pages**
+- **Auth pages**
+
+### Learner areas
+
+- **Dashboard**
+- **Video learning page**
+- **Note download page**
+- **Flashcard study flow**
+- **Quiz and result views**
+
+### Admin areas
+
+- **Admin dashboard**
+- **Subjects**
+- **Courses**
+- **Videos**
+- **Notes**
+- **Flashcard decks/cards**
+- **Quizzes/questions**
+- **Plans**
+- **Blog CRUD**
+- **Activity logs**
+- **2FA/security**
+
+---
+
+## 6. Key page designs
+
+### 6.1 Home page
+
+The home page is the brand and product pitch.
+
+#### Structure
+
+- Large hero with two-column composition
+- Four specialty/course category cards
+- Four-pillar learning methodology section
+- Faculty/reviewer trust section
+- Final freemium CTA block
+
+#### Hero behavior
+
+The hero combines:
+
+- a Persian educational headline
+- a short value proposition
+- primary and secondary CTAs
+- trust micro-signals
+- a supporting “atlas” card showing sample learning modules
+
+#### Intent
+
+The homepage should answer these questions immediately:
+
+- What is Broca?
+- Is it serious and medically credible?
+- What can I learn here?
+- Can I start for free?
+
+---
+
+### 6.2 Catalog page
+
+The catalog is the main browsing experience.
+
+#### Main elements
+
+- page title and short context copy
+- search form
+- horizontal subject filter pills
+- responsive course card grid
+- clear empty state when nothing matches
+
+#### Course card anatomy
+
+- optional cover image
+- subject label
+- level pill
+- course title
+- summary/excerpt
+- author/reviewer metadata
+- single CTA to enter the course
+
+#### Intent
+
+The catalog should feel like a **structured learning library**, not a generic store.
+
+---
+
+### 6.3 Course detail / learning entry
+
+The course page should guide a learner into the learning stack:
+
+- overview
+- published content only
+- video lessons
+- notes
+- flashcards
+- quizzes
+
+Design emphasis should remain on:
+
+- progression
+- credibility
+- access state
+- one clear next action per content type
+
+---
+
+### 6.4 Plans page
+
+The plans page is a pricing + trust page.
+
+#### Structure
+
+- centered intro
+- 3-column plan comparison layout
+- highlighted preferred paid plan
+- explicit distinction between free and paid access
+- checkout or fallback state depending on auth/subscription/config
+
+#### Pricing design rules
+
+- show **Toman** as the user-facing primary amount
+- show **Rial** as supporting exactness when useful
+- clearly indicate active subscription lockout
+- never present a dead purchase CTA when checkout is disabled
+
+#### Tone
+
+This page should feel:
+
+- transparent
+- low-pressure
+- trustworthy
+- easy to compare
+
+---
+
+### 6.5 Blog
+
+The blog extends the educational brand into editorial content.
+
+#### Index page
+
+- hero-like page intro
+- responsive article grid
+- category pills
+- title + excerpt
+- author display
+- simple “read article” CTA
+
+#### Post detail
+
+The post page should prioritize:
+
+- title
+- category/context
+- author/reviewer trust
+- cover image if present
+- readable long-form Persian body content
+
+The blog should look like an integrated part of the learning ecosystem, not a separate marketing CMS.
+
+---
+
+### 6.6 Auth pages
+
+Login, registration, and recovery views should be compact, calm, and confidence-building.
+
+#### Visual goals
+
+- minimal distractions
+- strong labels
+- obvious primary action
+- clear validation feedback
+- support for Persian inputs and machine-readable values
+
+---
+
+### 6.7 Learner dashboard
+
+The learner dashboard should answer:
+
+- What do I have access to?
+- What should I do next?
+- How far have I progressed?
+
+#### Typical modules
+
+- active subscription state
+- enrolled/current courses
+- due flashcards
+- quiz results/progress
+- recent activity and next step
+
+The experience should feel more like a **study cockpit** than a social dashboard.
+
+---
+
+### 6.8 Admin dashboard
+
+The admin UI is a “studio” rather than a generic back office.
+
+#### Structure
+
+- studio header + quick links
+- pill-based admin navigation
+- key metric cards
+- high-contrast quick-action banner
+- recent content/activity panels
+- infrastructure/health side panel
+
+#### Admin tone
+
+- denser than public UI
+- still branded and consistent
+- optimized for scanning and repeated use
+- visibly operational, not decorative
+
+---
+
+## 7. Component library
+
+### 7.1 Header
+
+Includes:
+
+- announcement strip
+- logo/wordmark
+- desktop nav pills
+- search bar
+- auth actions or user menu
+- mobile menu trigger
+
+The header should always feel lightweight and sticky, never bulky.
+
+### 7.2 Buttons
+
+#### Primary
+
+- `bg-rausch text-white`
+- used for signup, important submit, and purchase actions
+
+#### Dark secondary
+
+- `bg-ink text-white`
+- used for strong but non-primary actions
+
+#### Outline / neutral
+
+- bordered, white or soft background
+- used for secondary navigation and management actions
+
+#### Rules
+
+- one strongest action per region
+- maintain visible hover/focus states
+- use destructive styling only for truly destructive actions
+
+### 7.3 Cards
+
+Core card families:
+
+- specialty cards
+- course cards
+- blog cards
+- pricing cards
+- admin metric cards
+- form panels
+
+All cards follow the same system:
+
+- clear title hierarchy
+- muted support text
+- thin borders
+- rounded corners
+- optional hover lift for discoverability
+
+### 7.4 Pills, tags, and badges
+
+Used for:
+
+- subject filters
+- content category markers
+- level indicators
+- status labels
+- quick metadata
+
+These help scanning and should remain compact and bold.
+
+### 7.5 Forms
+
+Forms are used heavily in auth and admin flows.
 
 Rules:
 
-- Use a button for an action and an anchor for navigation.
-- Primary action: dark ink background with cream text.
-- Secondary action: cream/transparent background with ink border.
-- Highlight action: sun background with ink text.
-- Destructive action: coral treatment with explicit confirmation where appropriate.
-- Preserve a visible `focus-visible` ring.
-- Disabled states must communicate both visually and semantically.
-- Use touch targets of at least 44px where practical; never rely on tiny text links for primary actions.
+- visible labels
+- compact but readable Persian inputs
+- strong borders on focus
+- preserved values after validation
+- inline or top-level error feedback
+- safe support for dates, status values, numeric fields, URLs, and text blocks
 
-### Cards
+### 7.6 Tables
 
-Cards should expose a clear hierarchy:
+Admin listing views use soft table styling:
 
-1. Context or subject.
-2. Title.
-3. Description or metadata.
-4. Primary action.
+- tinted headers
+- thin row dividers
+- muted metadata
+- pill-like actions beside each record
 
-Do not mix unrelated administrative actions into the same content card. For lists, keep card heights flexible so Persian text does not clip.
+### 7.7 Toasts and feedback
 
-### Forms
+The global layout already supports:
 
-- Every field has a visible, programmatically associated label.
-- Use `required`, suitable input types, and appropriate `autocomplete` values.
-- Show validation errors next to the relevant field using `role="alert"`.
-- Preserve submitted values after validation failures.
-- Use `dir="ltr"` for phone numbers, prices, codes, dates, and other machine-oriented values.
-- Keep consent text adjacent to its checkbox and explain what acceptance means.
+- success messages
+- error alerts
+- dismiss actions
 
-### Status and feedback
+Feedback should be immediate, readable, and placed near the top of the content flow.
 
-Use:
+### 7.8 Empty states
 
-- `role="status"` for successful non-error updates.
-- `role="alert"` for errors requiring attention.
-- `aria-live="polite"` for async progress that should not interrupt the user.
-- Explicit loading labels such as `در حال آماده‌سازی…`.
+Empty states use:
 
-Every payment, review, playback, enrollment, and form submission must have a recoverable failure state.
+- soft dashed borders
+- icon/emoji anchors
+- short explanation
+- single recovery action
 
-### Learning content
+This keeps the product from feeling broken when there is no content yet.
 
-Learning pages should prioritize the content itself:
+---
 
-- Video pages: title, course context, playback surface, progress, completion threshold, and playback status.
-- Notes: title, type/size metadata, and one clear download action.
-- Flashcards: front first, answer reveal second, review quality actions third.
-- Quizzes: one question per fieldset, options as labels/radio controls, clear submission action, and a private result page.
+## 8. Content and voice
 
-Use semantic elements such as `video`, `fieldset`, `legend`, `label`, `progressbar` semantics, and `details` rather than recreating native behavior with generic `div` elements.
+### Language
 
-## 9. Page-level direction
+- Primary UI language: **Persian**
+- Layout direction: **RTL**
+- Technical/admin docs may remain English, but the product UI should stay Persian
 
-### Landing page
+### Voice
 
-- Warm cream background.
-- Large centered hero with Broca name, Persian tagline, and two clear entry actions.
-- Hero media is optional until the final heart asset is supplied.
-- Use the poster/static composition as a complete fallback; do not allow missing video files to degrade the experience.
-- Keep the hero visually calm and avoid competing calls to action.
+The copy style should be:
 
-### Catalog and course pages
+- direct
+- warm
+- confident
+- medically responsible
+- student-friendly
 
-- Use subject context and strong course titles.
-- Show published content only.
-- Use consistent metadata and action placement.
-- Preserve filters and search state across pagination.
+Avoid:
 
-### Plans and payments
+- excessive marketing exaggeration
+- unexplained technical jargon in learner-facing UI
+- vague or ambiguous payment or access wording
 
-- Show each plan’s duration, description, price in تومان, and exact Rial value where useful.
-- Never hardcode prices in templates.
-- When checkout is disabled, show an explicit availability message instead of a dead purchase button.
-- Payment success and failure pages must clearly state the result, invoice number, amount, and next action.
+---
 
-### Learner dashboard
+## 9. Medical trust design rules
 
-- Put due flashcards, completed videos, subscription state, and recent attempts in a scannable metric grid.
-- Follow metrics with the learner’s active course list.
-- Use a clear next-step action rather than presenting only historical data.
+Because this is a medical-learning platform, trust cues are part of the design system.
 
-### Admin
+### Required trust signals
 
-- Use a denser layout than learner pages but preserve the same palette and focus states.
-- Make security state visible: mandatory TOTP enrollment/challenge and session status.
-- Separate content management, plans, publication, and audit history.
-- Never expose secrets, recovery codes, or sensitive payment payloads in rendered tables.
+- author/reviewer visibility where relevant
+- educational disclaimer in footer/legal areas
+- explicit publication/review states in admin
+- transparent payment and subscription states
+- structured content hierarchy
 
-### Legal pages
+### Forbidden patterns
 
-- Use a readable narrow column and generous line height.
-- No placeholder legal copy may remain before production checkout is enabled.
-- Display the current legal/consent version where the product requires it.
+- flashy gamification that weakens credibility
+- unexplained health claims
+- casual ambiguity around access, payment, or publication state
+- publication flows that bypass review for medical content
 
-## 10. Motion and interaction
+---
 
-- Motion should clarify state, not decorate every transition.
-- Respect `prefers-reduced-motion: reduce`.
-- Do not autoplay a large visual experience for users who request reduced motion.
-- Preserve user control over video playback.
-- For async actions, disable duplicate submission while in flight and restore retry capability after failure.
-- Alpine islands must remain usable if JavaScript fails or is delayed; use `x-cloak` only to hide content that has a safe non-JavaScript fallback.
+## 10. Accessibility baseline
 
-## 11. Accessibility baseline
+The website should maintain a practical WCAG AA baseline.
 
-Target WCAG 2.2 AA:
+### Minimum expectations
 
-- 1.1.1 — informative images have meaningful alt text; decorative images are hidden from assistive technology.
-- 1.3.1 — structure is expressed semantically and form relationships are programmatic.
-- 1.4.3 / 1.4.11 — text and UI component contrast meet AA requirements.
-- 2.1.1 — all interactions work with a keyboard.
-- 2.4.3 / 2.4.7 — focus order is logical and focus is visible.
-- 2.5.8 — interactive targets meet minimum target-size expectations or have adequate spacing.
-- 3.3.1 / 3.3.2 — errors and instructions are clear, visible, and associated with fields.
-- 4.1.2 — custom controls have correct names, roles, and values.
+- semantic headings and landmarks
+- keyboard-usable navigation and menus
+- visible focus states
+- readable contrast
+- clear error feedback
+- adequate tap targets
+- meaningful alt text for informative images
+- no state communicated by color alone
 
-Test every new screen with keyboard-only navigation, zoom, a narrow viewport, and a screen reader or automated accessibility checker.
+### RTL accessibility notes
 
-## 12. Performance baseline
+- ensure focus order still makes sense in Persian layouts
+- ensure numeric/LTR content is readable and intentionally aligned
+- avoid tight line lengths in long Persian paragraphs
 
-The current application is a small Blade/Alpine site, so keep the client bundle simple.
+---
 
-- **LCP:** use an optimized, correctly sized hero poster; avoid making a large video the only meaningful above-the-fold content.
-- **INP:** avoid expensive synchronous work on input or repeated large DOM updates.
-- **CLS:** reserve media dimensions and avoid late layout shifts from fonts, banners, or injected content.
-- Keep Vazirmatn self-hosted with `font-display: swap`.
-- Add route-specific bundles only after measuring a real bundle or interaction problem.
-- Paginate growing admin and activity lists.
+## 11. Motion and interaction
 
-## 13. Content voice
+Motion should support clarity, not spectacle.
 
-Persian copy should be:
+### Acceptable motion
 
-- Clear, warm, and direct.
-- Appropriate for medical students and learners.
-- Consistent in terminology across catalog, learning, payment, and account pages.
-- Free of internal implementation terms such as “endpoint,” “payload,” or “provider” unless shown in an admin/technical context.
-- Honest about unavailable features, payment status, and placeholder assets.
+- gentle hover lift on cards
+- button hover color changes
+- dropdown reveal
+- lightweight menu transitions
 
-Use familiar action wording such as:
+### Rules
 
-- `ثبت‌نام کن`
-- `رفتن به داشبورد`
-- `خرید و پرداخت`
-- `دریافت جزوه`
-- `دریافت مجوز پخش`
-- `ثبت پاسخ‌ها`
+- respect `prefers-reduced-motion`
+- avoid large distracting transitions
+- don’t make learning tasks depend on animation
+- keep content stable to avoid layout shift
 
-## 14. Asset rules
+---
 
-- Store production fonts and public images locally.
-- Keep private notes and protected media outside public storage.
-- Do not reference nonexistent hero or video files.
-- Every important image needs a deliberate fallback and dimensions.
-- Use SVG or optimized raster assets for interface decoration; do not add large decorative assets without a measured benefit.
+## 12. Imagery and media
 
-## 15. Source of truth
+### Cover images
 
-- Design tokens: `resources/css/app.css`.
-- Global layout: `resources/views/layouts/app.blade.php`.
-- Public and learner composition: `resources/views/`.
-- Persian product copy: `lang/fa/app.php` and page templates.
-- Product constraints and pending visual decisions: `SPEC.md`, `DECISIONS.md`, and `docs/PROJECT_STATUS.md`.
+- Course and blog covers should read well in wide-card ratios
+- Current card usage suggests a **16:10-style presentation**
+- Images should support the topic, not overpower text
 
-When the final client design file arrives, update the tokens and component treatments here first, then apply the smallest possible template changes. Keep RTL, accessibility, payment transparency, and reduced-motion behavior as non-negotiable requirements.
+### Visual direction
+
+Imagery should feel:
+
+- academic
+- anatomical / scientific where relevant
+- clean and high-quality
+- not stock-photo generic if avoidable
+
+### Fallbacks
+
+- every important media block should degrade gracefully
+- missing images must not collapse card structure
+- long text should still communicate enough value without art
+
+---
+
+## 13. Admin-specific design notes
+
+The admin panel should stay visually connected to the public site while becoming more operational.
+
+### Key admin characteristics
+
+- pill-tab navigation
+- dashboard metrics first
+- fast CRUD access
+- clear publication states
+- safe destructive actions
+- visible security posture
+
+### Blog admin
+
+The new blog admin should support:
+
+- CRUD management
+- search/filter
+- transition-based publication flow
+- delete actions
+- cover preview
+- visible author/reviewer metadata
+
+---
+
+## 14. Implementation source of truth
+
+These files represent the current implemented design most directly:
+
+- `resources/css/app.css` — design tokens and shared visual behavior
+- `resources/views/layouts/app.blade.php` — global layout shell
+- `resources/views/components/landing-hero.blade.php` — homepage hero direction
+- `resources/views/welcome.blade.php` — public homepage composition
+- `resources/views/catalog/index.blade.php` — catalog browsing pattern
+- `resources/views/plans.blade.php` — plan/pricing pattern
+- `resources/views/blog/index.blade.php` and `resources/views/blog/show.blade.php` — editorial pattern
+- `resources/views/admin/*` — admin visual system
+- `docs/DESIGN-airbnb.md` — implementation-level inspiration/spec reference
+
+---
+
+## 15. Practical design summary
+
+If someone redesigns or extends Broca, they should preserve these non-negotiables:
+
+1. **RTL-first Persian experience**
+2. **White + ink + single-accent visual system**
+3. **Lalezar for display, Vazirmatn for body**
+4. **Rounded, airy, trust-first interface**
+5. **Clear educational hierarchy over decoration**
+6. **Transparent access/payment/publication states**
+7. **Public, learner, and admin areas that feel like one product**
+
+In one sentence:
+
+> **Broca should look like a modern Persian medical-learning studio: clean, credible, focused, and easy to navigate.**

@@ -96,6 +96,9 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache
 php artisan queue:restart
 ```
 
+For shared hosting / cPanel specifics, including document-root setup and
+Telegram webhook registration, see `docs/CPANEL_DEPLOYMENT.md`.
+
 Rollback: `git checkout <previous-tag> && composer install && php artisan migrate:rollback`
 (migrations are reversible; verify with `php artisan migrate:status`).
 

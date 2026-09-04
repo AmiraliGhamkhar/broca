@@ -12,9 +12,18 @@ class CatalogController extends Controller
     public function index(Request $request): View
     {
         $subjects = Subject::query()->where('is_visible', true)->orderBy('sort_order')->get();
+        $selectedSubject = $request->filled('subject')
+            ? $subjects->firstWhere('slug', (string) $request->string('subject'))
+            : null;
 
         $courses = Course::query()
             ->with(['subject', 'author', 'reviewer'])
+            ->withCount([
+                'videos as published_videos_count' => fn ($query) => $query->published(),
+                'notes as published_notes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+                'decks as published_decks_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+                'quizzes as published_quizzes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+            ])
             ->published()
             ->when(
                 $request->filled('q'),
@@ -29,13 +38,23 @@ class CatalogController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        return view('catalog.index', compact('courses', 'subjects'));
+        return view('catalog.index', compact('courses', 'subjects', 'selectedSubject'));
     }
 
     public function subject(Subject $subject): View
     {
         abort_unless($subject->is_visible, 404);
-        $courses = $subject->courses()->with(['author', 'reviewer'])->published()->orderBy('sort_order')->paginate(12);
+        $courses = $subject->courses()
+            ->with(['author', 'reviewer'])
+            ->withCount([
+                'videos as published_videos_count' => fn ($query) => $query->published(),
+                'notes as published_notes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+                'decks as published_decks_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+                'quizzes as published_quizzes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+            ])
+            ->published()
+            ->orderBy('sort_order')
+            ->paginate(12);
 
         return view('catalog.subject', compact('subject', 'courses'));
     }

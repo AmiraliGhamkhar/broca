@@ -12,7 +12,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Quiz extends Model
 {
     use SoftDeletes;
+
     protected function casts(): array { return ['published_at' => 'datetime', 'is_free_designated' => 'boolean']; }
+
     public function course(): BelongsTo { return $this->belongsTo(Course::class); }
+
+    public function author(): BelongsTo { return $this->belongsTo(Contributor::class, 'author_id'); }
+
+    public function reviewer(): BelongsTo { return $this->belongsTo(Contributor::class, 'reviewer_id'); }
+
     public function questions(): HasMany { return $this->hasMany(QuizQuestion::class); }
 }

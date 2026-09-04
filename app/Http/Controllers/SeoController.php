@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Subject;
 use Illuminate\Http\Response;
@@ -59,11 +60,19 @@ class SeoController extends Controller
         ];
 
         Subject::query()->where('is_visible', true)->each(function (Subject $subject) use (&$urls): void {
-            $urls[] = ['loc' => route('subjects.show', $subject), 'priority' => '0.6'];
+            $urls[] = [
+                'loc' => route('subjects.show', $subject),
+                'priority' => '0.6',
+                'lastmod' => optional($subject->updated_at)->toDateString(),
+            ];
         });
 
         Course::query()->published()->each(function (Course $course) use (&$urls): void {
             $urls[] = ['loc' => route('courses.show', $course), 'priority' => '0.8', 'lastmod' => optional($course->updated_at)->toDateString()];
+        });
+
+        BlogPost::query()->published()->each(function (BlogPost $post) use (&$urls): void {
+            $urls[] = ['loc' => route('blog.show', $post->slug), 'priority' => '0.7', 'lastmod' => optional($post->updated_at)->toDateString()];
         });
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";

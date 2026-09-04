@@ -20,6 +20,13 @@ class PlaceholderVideoProvider implements VideoProvider
 {
     public function authorize(Video $video): array
     {
+        if ($video->playback_provider === 'external' && filter_var($video->playback_asset_id, FILTER_VALIDATE_URL)) {
+            return [
+                'playback_url' => $video->playback_asset_id,
+                'expires_at' => now()->addMinutes(5)->toIso8601String(),
+            ];
+        }
+
         if (! $video->manifest_reference) {
             throw new RuntimeException('مرجع پخش ویدیو ثبت نشده است.');
         }
