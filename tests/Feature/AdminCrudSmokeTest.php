@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\FlashcardDeck;
 use App\Models\Note;
@@ -28,6 +29,7 @@ class AdminCrudSmokeTest extends TestCase
         Video::factory()->count(3)->for($course)->create();
         Quiz::factory()->count(2)->for($course)->create();
         FlashcardDeck::factory()->count(2)->for($course)->create();
+        BlogPost::factory()->published()->create();
 
         $contributor = \App\Models\Contributor::factory()->create();
         Note::create([
@@ -52,6 +54,7 @@ class AdminCrudSmokeTest extends TestCase
             'admin.notes.index',
             'admin.quizzes.index',
             'admin.flashcards.index',
+            'admin.blogs.index',
         ];
 
         foreach ($routes as $route) {

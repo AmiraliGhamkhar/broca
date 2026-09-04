@@ -1,6 +1,6 @@
 # Project status
 
-Updated 2026-08-26 after the full codebase audit and remediation pass.
+Updated 2026-09-04 after the Telegram admin/workflow and blog CMS pass.
 
 ## Completed
 
@@ -11,17 +11,19 @@ Updated 2026-08-26 after the full codebase audit and remediation pass.
 - **Flashcards:** SM-2-compatible scheduler (pure `review()` + persisting `apply()`), throttled review endpoint, per-user schedules with first-insert race handling, study page interactivity fixed (`@stack('scripts')`).
 - **Quizzes:** submission keyed by question IDs (the previous build 422'd on every attempt), option-belongs-to-question validation, transactional attempt scoring, private result pages.
 - **Monetization:** `invoices` migration (previously missing — `php artisan migrate` failed on MySQL), plan-driven integer-Rial amounts, ZarinPal gateway rewritten against the real `shetabit/payment` v7 API (amount-bound verification), idempotent callback (row-lock + unique `gateway_reference` + replay-safe), invoice reuse, free-plan short-circuit, `broca:expire-subscriptions` command (also expires stale gateway invoices).
-- **Admin:** real-metrics dashboard, videos CRUD (course binding, Persian-safe slugs, quota-aware free designation), publication workflow (draft→review→published→archived with byline enforcement).
+- **Admin:** real-metrics dashboard, videos CRUD (course binding, Persian-safe slugs, quota-aware free designation), publication workflow (draft→review→published→archived with byline enforcement), plus web-admin blog CRUD with safer transition-based publishing.
+- **Telegram admin bot:** Persian webhook-driven admin bot with allowlisted admins, database-backed chat sessions, inline-button wizard navigation, delete confirmations, publication transition confirmations, cover-image updates, file/url upload flows for media, and database backup delivery back to Telegram.
 - **SEO/GEO:** robots.txt (AI crawlers explicitly allowed on public pages), sitemap.xml, JSON-LD Organization/WebSite/Course.
 - **Tests:** payment flow with fake gateway (checkout, success, failure, idempotency, replay, privacy), freemium gating matrix, quiz grading, SRS unit tests, phone normalization, auth edge cases (invalid phone ≠ 500, mass-assignment privesc attempt, suspended session).
 
 ## In progress
 
 - CI pipeline (none exists yet — see follow-ups in DECISIONS.md).
+- End-to-end verification of the latest Telegram inline workflow changes on a real PHP/Composer-enabled environment.
 
 ## Pending / future
 
-- Blog CMS (authoring + SEO fields + Trix in admin).
+- Rich-text/editor enhancements for blog/admin forms (current implementation is plain textarea-based).
 - FSRS port (`devdch/fsrs`) and/or Filament admin panel and/or Livewire — all require `composer` installs.
 - Zibal secondary gateway (driver configured; needs callback route + param mapping).
 - Lenis + GSAP landing scroll experience once the client's 3D-heart video asset arrives.

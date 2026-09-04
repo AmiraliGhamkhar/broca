@@ -1,210 +1,234 @@
 @extends('layouts.app')
 
 @section('title', __('app.name') . ' — ' . __('app.tagline'))
+@section('meta_description', 'بروکا، پلتفرم فارسی آموزش پزشکی با ویدیوهای ساخت‌یافته، جزوات PDF، فلش‌کارت مرور فاصله‌دار، آزمون و شفافیت نویسنده و بازبین علمی.')
+@section('canonical', route('home'))
 
 @section('content')
-    <!-- Hero Section -->
-    <x-landing-hero />
+@php
+    $trustSignals = [
+        ['title' => 'بازبینی علمی برای محتوای آموزشی', 'copy' => 'هر محتوای پزشکی پیش از انتشار می‌تواند مسیر نویسنده و بازبین علمی را طی کند.'],
+        ['title' => 'شروع رایگان برای ارزیابی کیفیت', 'copy' => 'پیش از خرید می‌توان با نمونه‌درس، جزوه و فلش‌کارت منتخب، کیفیت آموزش را در عمل ارزیابی کرد.'],
+        ['title' => 'یادگیری چندرسانه‌ای در یک محیط', 'copy' => 'ویدیو، PDF، فلش‌کارت و آزمون به‌جای پراکندگی، در یک تجربه منسجم جمع شده‌اند.'],
+        ['title' => 'پرداخت شفاف و پیگیری‌پذیر', 'copy' => 'تعرفه‌ها، وضعیت اشتراک و مسیر پرداخت به‌صورت واضح و قابل پیگیری نمایش داده می‌شود.'],
+    ];
 
-    <!-- Section 1: Core Medical Specialties & Courses -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-b border-hairline-soft">
-        <div class="text-right space-y-2 max-w-2xl">
-            <span class="text-xs font-bold text-rausch">شاخه‌های جامع آموزش پزشکی</span>
-            <h2 class="font-display text-2xl sm:text-3xl text-ink">سرفصل‌های علوم پایه و آمادگی آزمون‌های بالینی</h2>
-            <p class="text-xs sm:text-sm text-muted leading-7">
-                تمامی دروس توسط اساتید مجرب و با تمرکز بر مفاهیم کلیدی و تفکر بالینی تدوین و بازبینی شده‌اند.
-            </p>
+    $specialties = [
+        ['label' => 'قلب و عروق', 'title' => 'فیزیولوژی قلب و همودینامیک', 'copy' => 'از پتانسیل عمل و گره‌های هدایتی تا همودینامیک عروق و تحلیل نوار قلب.', 'meta' => 'درس‌های ساخت‌یافته + جزوه PDF', 'link' => route('catalog', ['subject' => 'cardiovascular-physiology']), 'icon' => 'play'],
+        ['label' => 'نورولوژی', 'title' => 'نوروآناتومی و ناحیه بروکا', 'copy' => 'ساختار قشر مخ، مسیرهای عصبی، کالبدشناسی زبانی و ارتباط با سناریوهای بالینی.', 'meta' => 'اطلس آموزشی + مرور مفهومی', 'link' => route('catalog', ['subject' => 'neuroanatomy']), 'icon' => 'book'],
+        ['label' => 'آناتومی بالینی', 'title' => 'قفسه سینه و ساختارهای کلیدی', 'copy' => 'مرور استخوان‌بندی، عضلات، اعصاب و لندمارک‌های مهم با تمرکز بر فهم بالینی.', 'meta' => 'ویدیو + راهنمای مطالعه', 'link' => route('catalog', ['subject' => 'clinical-anatomy']), 'icon' => 'stack'],
+        ['label' => 'فیزیولوژی سلولی', 'title' => 'غشا، انتقال و سیناپس', 'copy' => 'مبانی انتقال یونی، تنظیم پتانسیل غشا و ارتباط آن با عملکرد عصبی و عضلانی.', 'meta' => 'مرور پایه برای آزمون‌ها', 'link' => route('catalog', ['subject' => 'cellular-physiology']), 'icon' => 'quiz'],
+    ];
+
+    $pillars = [
+        ['title' => 'ویدیوهای آموزشی کوتاه و هدفمند', 'copy' => 'هر درس با ساختار مشخص و قابل پیگیری ارائه می‌شود تا فراگیر دقیقاً بداند از کجا شروع کند و به کجا برسد.', 'icon' => 'play'],
+        ['title' => 'جزوات قابل دانلود برای جمع‌بندی', 'copy' => 'خلاصه‌های PDF برای مرور شب امتحان، مطالعه آفلاین و رجوع سریع به نکات کلیدی طراحی شده‌اند.', 'icon' => 'document'],
+        ['title' => 'مرور فاصله‌دار برای تثبیت', 'copy' => 'کارت‌ها بر اساس کیفیت یادآوری زمان‌بندی می‌شوند تا دانسته‌ها ماندگار شوند، نه موقت.', 'icon' => 'refresh'],
+        ['title' => 'آزمون برای سنجش واقعی یادگیری', 'copy' => 'ارزیابی فقط یک نمره نیست؛ بخشی از حلقه یادگیری است تا ضعف‌ها زودتر مشخص شوند.', 'icon' => 'chart'],
+    ];
+
+    $faculty = [
+        ['name' => 'دکتر سارا احمدی', 'role' => 'فیزیولوژی قلب و عروق', 'copy' => 'تدوین مسیرهای آموزشی علوم پایه با تمرکز بر فهم مفهومی و ارتباط با سناریوهای بالینی.'],
+        ['name' => 'دکتر رضا کریمی', 'role' => 'بازبین علمی و داخلی', 'copy' => 'بازبینی علمی محتوای پزشکی برای حفظ دقت، شفافیت و سلامت اطلاعات ارائه‌شده به فراگیر.'],
+        ['name' => 'دکتر نیما راد', 'role' => 'آناتومی بالینی', 'copy' => 'تأکید بر یادگیری تصویری، لندمارک‌های جراحی و مسیرهای ساختاری مهم در آموزش آناتومی.'],
+        ['name' => 'دکتر مریم حسینی', 'role' => 'علوم اعصاب', 'copy' => 'مرور ساختارهای زبانی، قشری و عملکردی با نگاه پژوهشی و آموزشی منظم.'],
+    ];
+
+    $faqs = [
+        ['q' => 'آیا قبل از خرید می‌توان کیفیت محتوا را ارزیابی کرد؟', 'a' => 'بله. مدل دسترسی بروکا برای شروع رایگان طراحی شده تا فراگیر پیش از خرید، سبک تدریس، ساختار جزوات و کیفیت تجربه آموزشی را ببیند.'],
+        ['q' => 'چرا نمایش نویسنده و بازبین علمی مهم است؟', 'a' => 'برای محتوای پزشکی، شفافیت در تولید و بازبینی یکی از مهم‌ترین عوامل اعتماد است. کاربر باید بداند محتوا چگونه و با چه سطحی از مسئولیت علمی منتشر شده است.'],
+        ['q' => 'آیا مسیر یادگیری فقط ویدیومحور است؟', 'a' => 'خیر. طراحی بروکا بر پایه ترکیب ویدیو، جزوه، فلش‌کارت و آزمون است تا یادگیری صرفاً مصرف محتوا نباشد و به تثبیت دانسته‌ها برسد.'],
+        ['q' => 'برای خرید اشتراک چه حس اطمینانی به کاربر داده می‌شود؟', 'a' => 'تعرفه شفاف، وضعیت دسترسی مشخص، پرداخت امن از طریق زرین‌پال و نمایش واضح وضعیت اشتراک، پایه اعتماد در تجربه خرید هستند.'],
+    ];
+@endphp
+
+<x-landing-hero />
+
+<section class="section-shell section-stack">
+    <div class="trust-strip">
+        @foreach ($trustSignals as $item)
+            <div class="trust-card">
+                <strong>{{ $item['title'] }}</strong>
+                <span>{{ $item['copy'] }}</span>
+            </div>
+        @endforeach
+    </div>
+</section>
+
+<section class="section-shell section-stack">
+    <div class="section-intro">
+        <span class="eyebrow">حوزه‌های کلیدی آموزش</span>
+        <h2 class="section-title mt-4">کتابخانه‌ای منسجم برای علوم پایه و آمادگی بالینی</h2>
+        <p class="section-copy">به‌جای ارائه فهرستی پراکنده از محتوا، بروکا هر حوزه را با درس، مرور، جزوه و ارزیابی در یک چارچوب آموزشی یکپارچه ارائه می‌کند.</p>
+    </div>
+
+    <div class="subtle-grid cols-4 mt-10">
+        @foreach ($specialties as $item)
+            <article class="feature-card h-full flex flex-col justify-between gap-5">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="icon-frame">
+                            <x-ui.icon :name="$item['icon']" class="size-5" />
+                        </span>
+                        <span class="badge-neutral">{{ $item['label'] }}</span>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-extrabold text-ink leading-7">{{ $item['title'] }}</h3>
+                        <p class="mt-3">{{ $item['copy'] }}</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-hairline-soft flex items-center justify-between gap-4">
+                    <span class="text-xs font-bold text-muted">{{ $item['meta'] }}</span>
+                    <a href="{{ $item['link'] }}" class="text-xs font-bold text-rausch hover:underline">ورود به مجموعه ←</a>
+                </div>
+            </article>
+        @endforeach
+    </div>
+</section>
+
+<section class="section-shell section-stack">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+        <div class="lg:col-span-5 section-intro">
+            <span class="eyebrow">متد یادگیری بروکا</span>
+            <h2 class="section-title mt-4">طراحی برای فهم، مرور و سنجش؛ نه فقط تماشای محتوا</h2>
+            <p class="section-copy">یک تجربه آموزشی حرفه‌ای زمانی شکل می‌گیرد که محتوای اصلی، مرور فعال و ارزیابی در یک مسیر مشخص کنار هم قرار بگیرند.</p>
         </div>
 
-        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Card 1: Cardio -->
-            <div class="interactive-card surface-panel p-6 flex flex-col justify-between space-y-4 rounded-3xl">
-                <div class="space-y-3">
-                    <span class="grid size-12 place-items-center rounded-2xl bg-rausch-tint text-rausch text-2xl">
-                        🫀
+        <div class="lg:col-span-7 subtle-grid cols-2">
+            @foreach ($pillars as $item)
+                <div class="feature-card">
+                    <span class="icon-frame-soft mb-4">
+                        <x-ui.icon :name="$item['icon']" class="size-5" />
                     </span>
-                    <h3 class="text-lg  text-ink">فیزیولوژی قلب و عروق</h3>
-                    <p class="text-xs text-muted leading-6">
-                        الکتروفیزیولوژی میوکارد، پتانسیل عمل گره SA/AV، چرخه قلبی، صداهای قلب و همودینامیک عروق محیطی.
-                    </p>
+                    <h3 class="text-base font-extrabold text-ink">{{ $item['title'] }}</h3>
+                    <p class="mt-3">{{ $item['copy'] }}</p>
                 </div>
-                <div class="pt-4 border-t border-hairline-soft flex items-center justify-between text-xs">
-                    <span class="font-bold text-teal">۴ درس + جزوه PDF</span>
-                    <a href="{{ route('catalog') }}?subject=cardiovascular-physiology" class="text-rausch font-bold hover:underline">مشاهده دوره ←</a>
-                </div>
-            </div>
-
-            <!-- Card 2: Neuro -->
-            <div class="interactive-card surface-panel p-6 flex flex-col justify-between space-y-4 rounded-3xl">
-                <div class="space-y-3">
-                    <span class="grid size-12 place-items-center rounded-2xl bg-surface-soft text-rausch text-2xl">
-                        🧠
-                    </span>
-                    <h3 class="text-lg  text-ink">نوروآناتومی و ناحیه بروکا</h3>
-                    <p class="text-xs text-muted leading-6">
-                        ساختار قشر مخ، نواحی ۴۴ و ۴۵ برودمن، دسته فیبرهای قوسی، مسیرهای حرکتی و کالبدشناسی سیستم عصبی.
-                    </p>
-                </div>
-                <div class="pt-4 border-t border-hairline-soft flex items-center justify-between text-xs">
-                    <span class="font-bold text-teal">۳ درس + اطلس رنگی</span>
-                    <a href="{{ route('catalog') }}?subject=neuroanatomy" class="text-rausch font-bold hover:underline">مشاهده دوره ←</a>
-                </div>
-            </div>
-
-            <!-- Card 3: Thorax & Skeleton -->
-            <div class="interactive-card surface-panel p-6 flex flex-col justify-between space-y-4 rounded-3xl">
-                <div class="space-y-3">
-                    <span class="grid size-12 place-items-center rounded-2xl bg-surface-soft text-ink text-2xl">
-                        🩻
-                    </span>
-                    <h3 class="text-lg  text-ink">آناتومی بالینی قفسه سینه</h3>
-                    <p class="text-xs text-muted leading-6">
-                        کالبدشناسی استخوان‌بندی توراکس، عضلات بین‌دنده‌ای، دیافراگم، لندمارک‌های جراحی و عصب‌دهی محیطی.
-                    </p>
-                </div>
-                <div class="pt-4 border-t border-hairline-soft flex items-center justify-between text-xs">
-                    <span class="font-bold text-teal">۳ درس + راهنما</span>
-                    <a href="{{ route('catalog') }}?subject=clinical-anatomy" class="text-rausch font-bold hover:underline">مشاهده دوره ←</a>
-                </div>
-            </div>
-
-            <!-- Card 4: Cellular -->
-            <div class="interactive-card surface-panel p-6 flex flex-col justify-between space-y-4 rounded-3xl">
-                <div class="space-y-3">
-                    <span class="grid size-12 place-items-center rounded-2xl bg-teal/10 text-teal text-2xl">
-                        🧬
-                    </span>
-                    <h3 class="text-lg  text-ink">فیزیولوژی سلولی و سیناپس</h3>
-                    <p class="text-xs text-muted leading-6">
-                        انتقال فعال و غیرفعال یونی، پمپ‌های غشایی، پتانسیل غشا و انتقال پیام در سیناپس‌های عصبی-عضلانی.
-                    </p>
-                </div>
-                <div class="pt-4 border-t border-hairline-soft flex items-center justify-between text-xs">
-                    <span class="font-bold text-teal">۲ درس + فلش‌کارت</span>
-                    <a href="{{ route('catalog') }}?subject=cellular-physiology" class="text-rausch font-bold hover:underline">مشاهده دوره ←</a>
-                </div>
-            </div>
+            @endforeach
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Section 2: Learning Methodology (4 Pillars) -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-b border-hairline-soft">
-        <div class="text-center space-y-2 max-w-xl mx-auto">
-            <span class="text-xs font-bold text-rausch">متدولوژی یادگیری فعال</span>
-            <h2 class="font-display text-2xl sm:text-3xl text-ink">چهار رکن موفقیت در آزمون‌های پزشکی</h2>
-            <p class="text-xs sm:text-sm text-muted">
-                یادگیری در بروکا بر اساس اصول علمی تثبیت حافظه و درک مفهومی ساختاربندی شده است.
-            </p>
+<section class="section-shell section-stack">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+        <div class="lg:col-span-4 section-intro">
+            <span class="eyebrow">اعتماد علمی</span>
+            <h2 class="section-title mt-4">ترکیب نویسنده، بازبین و مسیر انتشار مسئولانه</h2>
+            <p class="section-copy">در آموزش پزشکی، اعتماد صرفاً از ظاهر خوب به‌دست نمی‌آید. مخاطب باید بداند محتوا چه کسی نوشته، چه کسی بازبینی کرده و با چه معیارهایی منتشر شده است.</p>
         </div>
 
-        <div class="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div class="p-6 rounded-3xl bg-white/70 border border-hairline-soft space-y-3">
-                <span class="text-3xl block">🎥</span>
-                <h3 class="text-base  text-ink">۱. ویدیوهای بالینی و مفهومی</h3>
-                <p class="text-xs text-muted leading-6">
-                    ویدیوهای فشرده با تدریس اساتید و ثبت خودکار آستانه مشاهده ۷۰٪ جهت اطمینان از پیشرفت واقعی.
-                </p>
-            </div>
-
-            <div class="p-6 rounded-3xl bg-white/70 border border-hairline-soft space-y-3">
-                <span class="text-3xl block">📄</span>
-                <h3 class="text-base  text-ink">۲. جزوات و خلاصه‌های PDF</h3>
-                <p class="text-xs text-muted leading-6">
-                    فایل‌های خلاصه نموداری و مصور جهت دانلود در فضای امن و مرور سریع در ایام امتحانات.
-                </p>
-            </div>
-
-            <div class="p-6 rounded-3xl bg-white/70 border border-hairline-soft space-y-3">
-                <span class="text-3xl block">🗂</span>
-                <h3 class="text-base  text-ink">۳. مرور فاصله‌دار هوشمند (SM-2)</h3>
-                <p class="text-xs text-muted leading-6">
-                    الگوریتم بازتنظیم فواصل زمانی مرور بر اساس یادآوری شما؛ حفظ دائمی مباحث بدون فراموشی.
-                </p>
-            </div>
-
-            <div class="p-6 rounded-3xl bg-white/70 border border-hairline-soft space-y-3">
-                <span class="text-3xl block">📝</span>
-                <h3 class="text-base  text-ink">۴. آزمون‌های تشخیصی و تحلیلی</h3>
-                <p class="text-xs text-muted leading-6">
-                    سؤالات استاندارد چهارگزینه‌ای همراه با تحلیل تشریحی گزینه‌ها و ثبت کارنامه پیشرفت.
-                </p>
-            </div>
+        <div class="lg:col-span-8 subtle-grid cols-2">
+            @foreach ($faculty as $person)
+                <article class="editorial-card">
+                    <div class="flex items-start gap-4">
+                        <span class="icon-frame-soft icon-frame-lg icon-frame-round">
+                            <x-ui.icon name="users" class="size-5" />
+                        </span>
+                        <div>
+                            <h3 class="text-base font-extrabold text-ink">{{ $person['name'] }}</h3>
+                            <p class="mt-1 text-xs font-bold text-rausch">{{ $person['role'] }}</p>
+                            <p class="mt-3 text-sm leading-7 text-muted">{{ $person['copy'] }}</p>
+                        </div>
+                    </div>
+                </article>
+            @endforeach
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Section 3: Faculty & Medical Reviewers -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-b border-hairline-soft">
-        <div class="text-right space-y-2 max-w-2xl">
-            <span class="text-xs font-bold text-rausch">صحت و اعتبار علمی محتوا</span>
-            <h2 class="font-display text-2xl sm:text-3xl text-ink">هیئت علمی و اساتید بازبین بروکا</h2>
-            <p class="text-xs sm:text-sm text-muted leading-7">
-                مطابق استانداردهای YMYL، هر سرفصل توسط اساتید صاحب‌نام تدوین و توسط متخصصین مستقل بازبینی می‌شود.
-            </p>
-        </div>
-
-        <div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Contributor 1 -->
-            <div class="surface-panel p-6 text-center space-y-3 rounded-3xl">
-                <div class="size-16 rounded-full bg-ink text-white mx-auto grid place-items-center text-xl shadow-sm">
-                    👩‍⚕️
-                </div>
-                <h3 class="text-base  text-ink">دکتر سارا احمدی</h3>
-                <p class="text-xs font-bold text-rausch">پزشک و دکترای فیزیولوژی</p>
-                <p class="text-[11px] text-muted leading-5">مدرس فیزیولوژی قلب و عروق و الکتروفیزیولوژی دانشگاه علوم پزشکی.</p>
-            </div>
-
-            <!-- Contributor 2 -->
-            <div class="surface-panel p-6 text-center space-y-3 rounded-3xl">
-                <div class="size-16 rounded-full bg-ink text-white mx-auto grid place-items-center text-xl shadow-sm">
-                    👨‍⚕️
-                </div>
-                <h3 class="text-base  text-ink">دکتر رضا کریمی</h3>
-                <p class="text-xs font-bold text-rausch">متخصص بیماری‌های داخلی</p>
-                <p class="text-[11px] text-muted leading-5">عضو هیئت علمی و بازبین ارشد علمی و بالینی آکادمی بروکا.</p>
-            </div>
-
-            <!-- Contributor 3 -->
-            <div class="surface-panel p-6 text-center space-y-3 rounded-3xl">
-                <div class="size-16 rounded-full bg-ink text-white mx-auto grid place-items-center text-xl shadow-sm">
-                    👨‍⚕️
-                </div>
-                <h3 class="text-base  text-ink">دکتر نیما راد</h3>
-                <p class="text-xs font-bold text-rausch">استادیار آناتومی بالینی</p>
-                <p class="text-[11px] text-muted leading-5">مؤلف کتب تشریح و مدرس کورس‌های کالبدشناسی قفسه سینه و اسکلتی.</p>
-            </div>
-
-            <!-- Contributor 4 -->
-            <div class="surface-panel p-6 text-center space-y-3 rounded-3xl">
-                <div class="size-16 rounded-full bg-ink text-white mx-auto grid place-items-center text-xl shadow-sm">
-                    👩‍⚕️
-                </div>
-                <h3 class="text-base  text-ink">دکتر مریم حسینی</h3>
-                <p class="text-xs font-bold text-rausch">متخصص مغز و اعصاب</p>
-                <p class="text-[11px] text-muted leading-5">پژوهشگر علوم اعصاب شناختی و مدرس کورتکس زبانی و ناحیه بروکا.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section 4: Freemium Transparency & Ready to Start CTA -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div class="rounded-3xl bg-ink p-8 sm:p-14 text-white text-center space-y-6 shadow-float">
-            <span class="inline-flex items-center gap-2 rounded-full bg-rausch px-4 py-1 text-xs font-bold text-white">
-                <span>🎓</span> شروع یادگیری بدون پیش‌نیاز مالی
-            </span>
-            <h2 class="font-display text-2xl sm:text-4xl max-w-2xl mx-auto leading-tight">
-                همین حالا ثبت‌نام کنید و به دروس و فلش‌کارت‌های رایگان دسترسی پیدا کنید
-            </h2>
-            <p class="text-xs sm:text-sm text-white/70 max-w-lg mx-auto leading-7">
-                در حساب رایگان، در کل آرشیو و تمام دوره‌ها، به ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت مرور و ۱ نمونه‌سؤال تشخیصی به‌صورت کاملاً رایگان دسترسی دارید.
-            </p>
-            <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
-                <a href="{{ route('register') }}" class="px-8 py-4 rounded-full bg-rausch text-white text-xs sm:text-sm font-bold hover:bg-rausch-active transition-colors shadow-float">
-                    ساخت حساب کاربری رایگان ←
-                </a>
-                <a href="{{ route('plans') }}" class="px-8 py-4 rounded-full bg-white/10 border border-white/20 text-white text-xs sm:text-sm font-bold hover:bg-white/20 transition-colors">
+<section class="section-shell section-stack">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div class="lg:col-span-7 editorial-card">
+            <span class="eyebrow">جریان شروع حرفه‌ای</span>
+            <h2 class="text-2xl font-black text-ink mt-4">از ساخت حساب رایگان تا تصمیم خرید، مسیر باید روشن باشد</h2>
+            <p class="section-copy max-w-2xl">برای ایجاد اعتماد، ابتدا تجربه واقعی یادگیری نمایش داده می‌شود. سپس پلن‌ها، سطح دسترسی، جزئیات پرداخت و وضعیت اشتراک با زبان روشن و بدون دعوت‌به‌اقدام‌های مبهم توضیح داده می‌شوند.</p>
+            <div class="flex flex-wrap gap-3 mt-6">
+                <a href="{{ route('plans') }}" class="button-primary">
+                    <x-ui.icon name="wallet" class="size-4" />
                     مشاهده پلن‌های اشتراک
                 </a>
+                <a href="{{ route('blog.index') }}" class="button-secondary">
+                    <x-ui.icon name="document" class="size-4" />
+                    مشاهده مقالات آموزشی
+                </a>
             </div>
         </div>
-    </section>
+
+        <div class="lg:col-span-5 editorial-card is-soft">
+            <h3 class="text-lg font-extrabold text-ink">چرا این طراحی حرفه‌ای‌تر حس می‌شود؟</h3>
+            <div class="trust-list mt-5">
+                <div class="trust-list-item">
+                    <span class="icon-frame"><x-ui.icon name="shield" class="size-5" /></span>
+                    <div>
+                        <strong>تمرکز بر اعتماد و مسئولیت</strong>
+                        <span>اطلاعات مهم مثل وضعیت انتشار، بازبینی علمی و محدودیت‌های دسترسی پنهان نمی‌شوند.</span>
+                    </div>
+                </div>
+                <div class="trust-list-item">
+                    <span class="icon-frame"><x-ui.icon name="chart" class="size-5" /></span>
+                    <div>
+                        <strong>وضوح اطلاعاتی بالا</strong>
+                        <span>سطوح محتوا، مسیر یادگیری، آمار و تفاوت پلن‌ها قابل اسکن و سریع‌فهم هستند.</span>
+                    </div>
+                </div>
+                <div class="trust-list-item">
+                    <span class="icon-frame"><x-ui.icon name="spark" class="size-5" /></span>
+                    <div>
+                        <strong>حس محصول بالغ</strong>
+                        <span>به‌جای تزئینات زیاد، از نظم بصری، فاصله‌گذاری و مؤلفه‌های یکپارچه استفاده می‌شود.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-shell section-stack">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+        <div class="lg:col-span-4 section-intro">
+            <span class="eyebrow">پرسش‌های متداول</span>
+            <h2 class="section-title mt-4">چند سؤال مهم پیش از شروع</h2>
+            <p class="section-copy">این بخش هم به تصمیم‌گیری آگاهانه کمک می‌کند و هم بخشی از تصویر حرفه‌ای و شفاف محصول است.</p>
+        </div>
+
+        <div class="lg:col-span-8 space-y-4">
+            @foreach ($faqs as $item)
+                <details class="faq-item">
+                    <summary>{{ $item['q'] }}</summary>
+                    <p>{{ $item['a'] }}</p>
+                </details>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<section class="section-shell section-stack section-stack-no-top">
+    <div class="editorial-card is-dark text-center space-y-5">
+        <span class="badge-on-dark">شروع آگاهانه یادگیری</span>
+        <h2 class="text-2xl sm:text-4xl font-black text-white max-w-3xl mx-auto leading-tight">همین حالا حساب رایگان بسازید و کیفیت تجربه یادگیری بروکا را از نزدیک ارزیابی کنید</h2>
+        <p class="max-w-2xl mx-auto text-sm leading-8 text-white/70">نمونه‌درس‌ها، بخشی از جزوات، فلش‌کارت‌های منتخب و محتوای وبلاگ برای آشنایی اولیه در دسترس‌اند تا تصمیم خرید بر پایه تجربه واقعی گرفته شود.</p>
+        <div class="flex flex-wrap justify-center gap-3 pt-2">
+            <a href="{{ route('register') }}" class="button-primary">ساخت حساب رایگان</a>
+            <a href="{{ route('catalog') }}" class="button-secondary bg-white text-ink">بررسی دوره‌ها</a>
+        </div>
+    </div>
+</section>
+
+@push('scripts')
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'FAQPage',
+        'mainEntity' => collect($faqs)->map(fn ($item) => [
+            '@type' => 'Question',
+            'name' => $item['q'],
+            'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text' => $item['a'],
+            ],
+        ])->all(),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    </script>
+@endpush
 @endsection

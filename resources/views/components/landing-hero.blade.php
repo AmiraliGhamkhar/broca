@@ -1,108 +1,109 @@
-{{-- High-end Airbnb-style Hero Section (video/poster kept, restyled) --}}
-<section class="hero-shell">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[min(720px,calc(100vh-4.75rem))] py-16 lg:py-0">
+<section class="hero-shell border-b border-hairline-soft">
+    <div class="section-shell relative z-10">
+        <div class="grid grid-cols-1 gap-10 py-16 lg:grid-cols-12 lg:items-center lg:py-20">
+            <div class="lg:col-span-7 text-right space-y-6">
+                <span class="eyebrow">پلتفرم بازبینی‌شده آموزش پزشکی</span>
 
-            <!-- Hero Text Column -->
-            <div class="lg:col-span-7 space-y-6 text-right">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-hairline-soft text-xs font-bold text-ink shadow-float">
-                    <span class="size-2 rounded-full bg-rausch"></span>
-                    <span>آکادمی آموزش پیشرفته علوم پایه و بالینی پزشکی</span>
+                <div class="space-y-4 max-w-3xl">
+                    <h1 class="section-title">
+                        یادگیری عمیق علوم پزشکی،
+                        <span class="text-rausch">منظم</span>
+                        و
+                        <span class="text-rausch">قابل اعتماد</span>
+                    </h1>
+                    <p class="section-copy text-sm sm:text-base max-w-2xl">
+                        بروکا محتوای ویدیویی، جزوات ساخت‌یافته، فلش‌کارت‌های مرور فاصله‌دار و آزمون‌های تحلیلی را در یک محیط فارسی، علمی و حرفه‌ای کنار هم می‌آورد؛ با مسیر یادگیری روشن، بازبینی علمی و دسترسی رایگان برای شروع.
+                    </p>
                 </div>
 
-                <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl text-ink leading-[1.2]">
-                    آموزش عمیق پزشکی با
-                    <span class="text-rausch">بروکا</span>
-                </h1>
-
-                <p class="text-sm sm:text-base text-body leading-8 max-w-2xl">
-                    سامانه هوشمند آموزش و آماده‌سازی دانشجویان پزشکی؛ دوره‌های ویدیویی فوق‌تخصصی، جزوات خلاصه نموداری، فلش‌کارت‌های مرور فاصله‌دار (SM-2) و آزمون‌های تشخیصی با نظارت هیئت علمی.
-                </p>
-
-                <!-- Action CTAs -->
-                <div class="flex flex-wrap items-center gap-3 pt-2">
-                    <a href="{{ route('register') }}"
-                       class="px-7 py-4 rounded-full bg-rausch text-white text-xs sm:text-sm font-bold hover:bg-rausch-active transition-colors shadow-float">
-                        شروع رایگان و دسترسی به دروس ←
+                <div class="flex flex-wrap items-center gap-3 pt-1">
+                    <a href="{{ route('register') }}" class="button-primary">
+                        <x-ui.icon name="graduation" class="size-4" />
+                        شروع رایگان و ساخت حساب
                     </a>
-                    <a href="{{ route('catalog') }}"
-                       class="px-6 py-4 rounded-full border border-ink bg-white text-ink text-xs sm:text-sm font-bold hover:bg-surface-soft transition-colors">
-                        کاتالوگ دوره‌ها
+                    <a href="{{ route('catalog') }}" class="button-secondary">
+                        <x-ui.icon name="book" class="size-4" />
+                        مشاهده کاتالوگ دوره‌ها
                     </a>
                 </div>
 
-                <!-- Trust Micro-Signals -->
-                <div class="grid grid-cols-3 gap-4 pt-6 border-t border-hairline-soft max-w-lg text-xs font-bold text-muted">
-                    <div class="space-y-0.5">
-                        <span class="text-ink font-bold text-sm block">۱۰۰٪ علمی</span>
-                        <span>بازبینی دوگانه پزشکی</span>
-                    </div>
-                    <div class="space-y-0.5">
-                        <span class="text-ink font-bold text-sm block">الگوریتم SM-2</span>
-                        <span>تثبیت در حافظه بلندمدت</span>
-                    </div>
-                    <div class="space-y-0.5">
-                        <span class="text-ink font-bold text-sm block">دسترسی رایگان</span>
-                        <span>۲ ویدیو + ۱ جزوه در هر درس</span>
-                    </div>
+                <div class="hero-evidence">
+                    <span class="badge-outline">
+                        <x-ui.icon name="shield" class="size-3.5" />
+                        بازبینی علمی و انتشار کنترل‌شده
+                    </span>
+                    <span class="badge-outline">
+                        <x-ui.icon name="wallet" class="size-3.5" />
+                        پرداخت امن و صدور فاکتور
+                    </span>
+                    <span class="badge-outline">
+                        <x-ui.icon name="refresh" class="size-3.5" />
+                        مرور هوشمند با الگوریتم SM-2
+                    </span>
                 </div>
             </div>
 
-            <!-- Hero Visual Column -->
             <div class="lg:col-span-5">
-                <div class="relative rounded-[1.25rem] border border-hairline-soft bg-white p-6 sm:p-8 shadow-float space-y-5">
-                    <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
+                <div class="editorial-card is-dark space-y-5">
+                    <div class="flex items-start justify-between gap-4 pb-4 border-b border-white/10">
                         <div class="flex items-center gap-3">
-                            <span class="brand-mark">🫀</span>
+                            <span class="icon-frame-ghost">
+                                <x-ui.icon name="spark" class="size-5" />
+                            </span>
                             <div>
-                                <span class="text-xs font-bold text-ink block">نمای اطلس یادگیری بروکا</span>
-                                <span class="text-[11px] text-muted">فیزیولوژی، نورولوژی و آناتومی قفسه سینه</span>
+                                <p class="text-xs font-bold text-white">نمای سریع تجربه یادگیری بروکا</p>
+                                <p class="mt-1 text-[11px] muted-on-dark">از آشنایی اولیه تا مرور نهایی و سنجش، همه‌چیز در یک جریان پیوسته قرار می‌گیرد.</p>
                             </div>
                         </div>
-                        <span class="rounded-full px-2.5 py-1 text-[11px] font-bold bg-rausch-tint text-rausch">
-                            آنلاین و فعال
-                        </span>
+                        <span class="badge-on-dark">پروفایل آموزشی فعال</span>
                     </div>
 
-                    <!-- Visual Module Highlights -->
-                    <div class="space-y-3 text-xs">
-                        <div class="p-3.5 rounded-xl bg-surface-soft border border-hairline-soft flex items-center justify-between">
-                            <div class="flex items-center gap-2.5">
-                                <span class="text-base">🎥</span>
-                                <div>
-                                    <span class="font-bold text-ink block">الکتروفیزیولوژی و پتانسیل عمل میوکارد</span>
-                                    <span class="text-[11px] text-muted">درس ۱: ساختار غشای سلولی (رایگان)</span>
-                                </div>
+                    <div class="trust-list">
+                        <div class="trust-list-item is-dark">
+                            <span class="icon-frame-ghost">
+                                <x-ui.icon name="play" class="size-5" />
+                            </span>
+                            <div>
+                                <strong class="text-white">درس‌های ویدیویی ساخت‌یافته</strong>
+                                <span class="muted-on-dark">موضوعات بالینی و علوم پایه با آستانه مشاهده و پیگیری پیشرفت واقعی.</span>
                             </div>
-                            <span class="text-xs font-bold text-rausch">۱۵ دقیقه</span>
                         </div>
-                        <div class="p-3.5 rounded-xl bg-surface-soft border border-hairline-soft flex items-center justify-between">
-                            <div class="flex items-center gap-2.5">
-                                <span class="text-base">📄</span>
-                                <div>
-                                    <span class="font-bold text-ink block">جزوهٔ خلاصهٔ الکتروفیزیولوژی و نوار قلب</span>
-                                    <span class="text-[11px] text-muted">PDF قابل دانلود</span>
-                                </div>
+
+                        <div class="trust-list-item is-dark">
+                            <span class="icon-frame-ghost">
+                                <x-ui.icon name="document" class="size-5" />
+                            </span>
+                            <div>
+                                <strong class="text-white">جزوات و خلاصه‌های استاندارد</strong>
+                                <span class="muted-on-dark">فایل‌های PDF آموزشی برای مرور سریع، مطالعه جمع‌بندی و دسترسی آفلاین.</span>
                             </div>
-                            <span class="text-xs font-bold text-teal">رایگان</span>
                         </div>
-                        <div class="p-3.5 rounded-xl bg-surface-soft border border-hairline-soft flex items-center justify-between">
-                            <div class="flex items-center gap-2.5">
-                                <span class="text-base">🗂</span>
-                                <div>
-                                    <span class="font-bold text-ink block">مرور فاصله‌دار کارت‌های قلب</span>
-                                    <span class="text-[11px] text-muted">۱۰ کارت رایگان با الگوریتم SM-2</span>
-                                </div>
+
+                        <div class="trust-list-item is-dark">
+                            <span class="icon-frame-ghost">
+                                <x-ui.icon name="stack" class="size-5" />
+                            </span>
+                            <div>
+                                <strong class="text-white">مرور فاصله‌دار و آزمون تحلیلی</strong>
+                                <span class="muted-on-dark">فلش‌کارت و آزمون در کنار هم تا یادگیری فقط مصرف محتوا نباشد، بلکه تثبیت شود.</span>
                             </div>
-                            <span class="text-xs font-bold text-rausch">آماده مرور</span>
                         </div>
                     </div>
 
-                    <!-- Mini CTA -->
-                    <a href="{{ route('register') }}"
-                       class="block w-full py-3 rounded-full bg-ink text-white text-center text-xs font-bold hover:bg-rausch transition-colors">
-                        ساخت حساب رایگان و شروع یادگیری
-                    </a>
+                    <div class="grid grid-cols-3 gap-3 pt-2">
+                        <div class="rounded-2xl bg-white/5 p-3 border border-white/10">
+                            <small class="text-[11px] font-bold text-white/60">فرمت محتوا</small>
+                            <strong class="mt-2 block text-sm font-bold text-white">ویدیو + PDF + SRS</strong>
+                        </div>
+                        <div class="rounded-2xl bg-white/5 p-3 border border-white/10">
+                            <small class="text-[11px] font-bold text-white/60">مدل اعتماد</small>
+                            <strong class="mt-2 block text-sm font-bold text-white">نویسنده + بازبین</strong>
+                        </div>
+                        <div class="rounded-2xl bg-white/5 p-3 border border-white/10">
+                            <small class="text-[11px] font-bold text-white/60">شروع اولیه</small>
+                            <strong class="mt-2 block text-sm font-bold text-white">حساب رایگان</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

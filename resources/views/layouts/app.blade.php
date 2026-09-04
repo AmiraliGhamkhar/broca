@@ -3,10 +3,28 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="{{ __('app.tagline') }} — پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی">
+    <meta name="description" content="@yield('meta_description', __('app.tagline') . ' — پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی')">
+    @hasSection('meta_author')
+        <meta name="author" content="@yield('meta_author')">
+    @endif
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="@yield('robots', 'index, follow')">
     <link rel="canonical" href="@yield('canonical', url()->current())">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:site_name" content="{{ __('app.name') }}">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:title" content="@yield('title', __('app.name') . ' — ' . __('app.tagline'))">
+    <meta property="og:description" content="@yield('meta_description', __('app.tagline') . ' — پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی')">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+    @hasSection('article_published_time')
+        <meta property="article:published_time" content="@yield('article_published_time')">
+    @endif
+    @hasSection('article_modified_time')
+        <meta property="article:modified_time" content="@yield('article_modified_time')">
+    @endif
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', __('app.name') . ' — ' . __('app.tagline'))">
+    <meta name="twitter:description" content="@yield('meta_description', __('app.tagline') . ' — پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی')">
     <title>@yield('title', __('app.name') . ' — ' . __('app.tagline'))</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -33,16 +51,20 @@
 <body class="bg-canvas text-ink font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileNav: false }">
 
     <!-- Top Announcement Bar -->
-    <aside class="bg-ink text-white text-xs py-2 px-4" aria-label="اطلاعیه">
+    <aside class="bg-ink text-white text-xs py-2.5 px-4" aria-label="اطلاعیه">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
-                <span class="inline-flex size-2 rounded-full bg-rausch animate-pulse" aria-hidden="true"></span>
-                <span class="font-bold">سامانه آموزش تخصصی پزشکی بروکا — دسترسی به دروس نمونه، جزوات و فلش‌کارت‌ها بدون هزینه فعال است.</span>
+            <div class="flex items-center gap-2.5">
+                <span class="icon-frame-ghost icon-frame-sm icon-frame-round">
+                    <x-ui.icon name="shield" class="size-4" />
+                </span>
+                <span class="font-bold">محتوای بروکا با بازبینی علمی، دسترسی آزمایشی رایگان و پرداخت امن زرین‌پال ارائه می‌شود.</span>
             </div>
             <div class="hidden sm:flex items-center gap-4 text-[11px] text-white/70">
-                <span>تأییدیه علمی اعضای هیئت علمی</span>
+                <span>بازبینی دو مرحله‌ای پزشکی</span>
                 <span>•</span>
-                <a href="{{ route('plans') }}" class="text-white font-bold hover:underline">مشاهده تعرفه اشتراک‌ها ←</a>
+                <span>شروع رایگان برای نمونه‌درس‌ها</span>
+                <span>•</span>
+                <a href="{{ route('plans') }}" class="text-white font-bold hover:underline">جزئیات دسترسی و اشتراک ←</a>
             </div>
         </div>
     </aside>
@@ -258,7 +280,9 @@
         <!-- Medical Disclaimer Banner -->
         <div class="bg-surface-soft border-b border-hairline-soft py-4 px-4">
             <div class="max-w-7xl mx-auto flex items-center gap-3 text-xs text-ink/80 leading-6">
-                <span class="text-lg">⚖️</span>
+                <span class="icon-frame-soft icon-frame-lg icon-frame-round">
+                    <x-ui.icon name="shield" class="size-4" />
+                </span>
                 <p>
                     <strong class="text-ink font-bold">بیانیه مسئولیت پزشکی:</strong>
                     محتوای آموزشی سامانه بروکا صرفاً برای ارتقای دانش دانشجویان و فراگیران علوم پزشکی تدوین شده و هیچ‌گونه توصیه، تشخیص یا درمان بالینی برای بیماران ارائه نمی‌دهد.
@@ -282,11 +306,13 @@
                     <p class="text-muted leading-7 text-xs max-w-sm">
                         بروکا پلتفرم پیشرو در آموزش تخصصی علوم پایه، فیزیولوژی، آناتومی و نورولوژی با تکیه بر متدهای یادگیری فعال، مرور فاصله‌دار (Spaced Repetition) و نظارت اعضای هیئت علمی دانشگاه‌های علوم پزشکی است.
                     </p>
-                    <div class="flex items-center gap-2 pt-2">
-                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rausch-tint text-rausch font-bold text-[11px]">
-                            ✓ تأییدیه بازبینی پزشکی (YMYL)
+                    <div class="flex items-center gap-2 pt-2 flex-wrap">
+                        <span class="badge-soft">
+                            <x-ui.icon name="badge-check" class="size-3.5" />
+                            تأییدیه بازبینی پزشکی (YMYL)
                         </span>
-                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface-soft text-ink font-bold text-[11px]">
+                        <span class="badge-neutral">
+                            <x-ui.icon name="refresh" class="size-3.5" />
                             الگوریتم یادگیری SM-2
                         </span>
                     </div>

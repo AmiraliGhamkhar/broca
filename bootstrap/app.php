@@ -31,6 +31,10 @@ return Application::configure(basePath: dirname(__DIR__))
             $middleware->trustProxies(at: array_map('trim', explode(',', $proxies)));
         }
 
+        $middleware->validateCsrfTokens(except: [
+            'telegram/webhook',
+        ]);
+
         $middleware->web(append: [
             ForceSecureConnections::class,
             SetSecurityHeaders::class,

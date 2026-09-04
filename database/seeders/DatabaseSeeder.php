@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\BlogPost;
 use App\Models\Contributor;
 use App\Models\Course;
 use App\Models\Flashcard;
@@ -398,6 +399,8 @@ class DatabaseSeeder extends Seeder
             'reviewer_id' => $drReza->id,
         ]);
 
+        $this->seedBlogPosts();
+
         // Student automatically enrolled in Course 1 for immediate testing
         $student->enrollments()->create([
             'course_id' => $course1->id,
@@ -438,6 +441,25 @@ class DatabaseSeeder extends Seeder
         foreach ($plans as $p) {
             Plan::updateOrCreate(['code' => $p['code']], $p + ['is_active' => true]);
         }
+    }
+
+    private function seedBlogPosts(): void
+    {
+        BlogPost::updateOrCreate(
+            ['slug' => 'broca-area-and-aphasia'],
+            [
+                'title' => 'کالبدشناسی ناحیه بروکا و مقایسه بالینی آفازی‌های حرکتی و حسی',
+                'category' => 'نورولوژی و علوم اعصاب',
+                'author_name' => 'دکتر مریم حسینی',
+                'reviewer_name' => 'دکتر رضا کریمی',
+                'excerpt' => 'مروری کاربردی بر جایگاه ناحیه بروکا، تفاوت آفازی بروکا و ورنیکه و اهمیت بالینی آن در نورولوژی.',
+                'content' => "ناحیه بروکا یکی از کلیدی‌ترین مراکز تولید گفتار در قشر مخ است. این ناحیه در لوب فرونتال نیمکره غالب قرار دارد و در سازمان‌دهی گفتار، تولید کلمات و ساختار دستوری جمله نقش مهمی ایفا می‌کند.\n\nاز نظر بالینی، آسیب این ناحیه معمولاً با آفازی بروکا همراه است؛ بیمار معنی را تا حد زیادی می‌فهمد اما بیان گفتار او کند، شکسته و با تلاش زیاد است.\n\nدر مقابل، در آفازی ورنیکه روانی گفتار حفظ می‌شود اما محتوای کلام بی‌معنا یا نامرتبط می‌گردد. تمایز این دو الگو برای دانشجویان پزشکی و کارورزان نورولوژی اهمیت بالایی دارد.\n\nدر بروکا تلاش می‌کنیم این مفاهیم را با ویدیو، فلش‌کارت و آزمون‌های بالینی ساده‌تر و ماندگارتر کنیم.",
+                'status' => 'published',
+                'published_at' => now()->subDays(2),
+                'meta_title' => 'ناحیه بروکا و آفازی‌ها',
+                'meta_description' => 'مقاله آموزشی فارسی درباره ناحیه بروکا، آفازی بروکا و ورنیکه و نکات بالینی مرتبط.',
+            ],
+        );
     }
 
     /**

@@ -1,56 +1,131 @@
 @extends('layouts.app')
 
-@section('title', $subject->name . ' — ' . __('app.name'))
+@section('title', 'دوره‌های ' . $subject->name . ' — ' . __('app.name'))
+@section('meta_description', \Illuminate\Support\Str::limit($subject->description ?: ('مشاهده دوره‌های ' . $subject->name . ' در بروکا همراه با مدرس، بازبین علمی، ویدیو، جزوه، فلش‌کارت و آزمون.'), 155))
+@section('canonical', route('subjects.show', $subject))
 
 @section('content')
-<section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-    <div class="space-y-3 pb-8 border-b border-hairline-soft">
-        <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch hover:underline">
-            ← بازگشت به تمامی درس‌نامه‌ها
-        </a>
-        <h1 class="font-display text-3xl sm:text-5xl text-ink">{{ $subject->name }}</h1>
-        <p class="text-xs sm:text-sm text-muted max-w-2xl leading-7">
-            {{ $subject->description }}
-        </p>
+<section class="section-shell section-stack">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
+        <div class="lg:col-span-8 section-intro">
+            <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch hover:underline">← بازگشت به کاتالوگ اصلی</a>
+            <h1 class="section-title mt-4">دوره‌های {{ $subject->name }}</h1>
+            <p class="section-copy max-w-3xl">{{ $subject->description ?: 'این مبحث مجموعه‌ای از دوره‌های ساخت‌یافته، ویدیوهای آموزشی، جزوات و ابزارهای مرور را در یک مسیر روشن گرد هم می‌آورد.' }}</p>
+        </div>
+        <div class="lg:col-span-4">
+            <div class="trust-banner">
+                <div class="flex items-start gap-3">
+                    <span class="icon-frame"><x-ui.icon name="book" class="size-5" /></span>
+                    <div>
+                        <p class="text-sm font-extrabold text-ink">دروس این شاخه با همان استاندارد بروکا</p>
+                        <p class="mt-2 text-xs leading-7 text-muted">هر دوره با نمایش مدرس، بازبین علمی، وضعیت انتشار و ابزارهای یادگیری مکمل معرفی می‌شود.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         @forelse ($courses as $course)
-            <div class="interactive-card surface-panel p-6 rounded-3xl flex flex-col justify-between hover:shadow-lg transition-all">
-                <div class="space-y-3">
-                    <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-surface-soft text-ink">
-                        {{ $course->level ?: 'علوم پایه' }}
-                    </span>
-                    <h2 class="text-lg font-bold text-ink leading-7">
-                        <a href="{{ route('courses.show', $course) }}" class="hover:text-rausch transition-colors">
-                            {{ $course->title }}
-                        </a>
-                    </h2>
-                    <p class="text-xs text-muted leading-6 line-clamp-3">
-                        {{ $course->excerpt ?: $course->description }}
-                    </p>
-                </div>
+            <article class="course-card">
+                @if ($course->cover_image_path)
+                    <img src="{{ $course->cover_image_path }}" alt="{{ $course->title }}" class="aspect-[16/10] w-full object-cover">
+                @else
+                    <div class="aspect-[16/10] w-full bg-surface-soft border-b border-hairline-soft flex items-center justify-center">
+                        <span class="icon-frame-soft icon-frame-xl icon-frame-round"><x-ui.icon name="graduation" class="size-6" /></span>
+                    </div>
+                @endif
 
-                <div class="mt-8 pt-4 border-t border-hairline-soft space-y-3">
-                    <div class="flex items-center justify-between text-xs text-muted">
-                        <span class="font-bold text-ink">استاد: {{ $course->author->name ?? 'هیئت علمی' }}</span>
-                        <span>بازبین: {{ $course->reviewer->name ?? 'متخصص' }}</span>
+                <div class="course-card__body">
+                    <div class="course-card__meta">
+                        <span class="badge-soft">{{ $subject->name }}</span>
+                        <span class="badge-neutral">{{ $course->level ?: 'علوم پایه پزشکی' }}</span>
                     </div>
 
-                    <a href="{{ route('courses.show', $course) }}"
-                       class="block w-full py-2.5 rounded-full bg-surface-soft hover:bg-ink hover:text-white text-center text-xs font-bold text-ink transition-colors">
-                        مشاهده سرفصل‌ها و دروس ←
-                    </a>
+                    <div>
+                        <h2 class="text-lg font-extrabold text-ink leading-7">
+                            <a href="{{ route('courses.show', $course) }}" class="hover:text-rausch transition-colors">{{ $course->title }}</a>
+                        </h2>
+                        <p class="mt-3 text-sm leading-7 text-muted">{{ $course->excerpt ?: $course->description }}</p>
+                    </div>
+
+                    <div class="rounded-2xl bg-surface-soft p-3.5 space-y-2 text-xs">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-bold text-ink">مدرس / نویسنده</span>
+                            <span class="text-muted">{{ $course->author->name ?? 'هیئت علمی بروکا' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="font-bold text-ink">بازبین علمی</span>
+                            <span class="text-muted">{{ $course->reviewer->name ?? 'متخصص ناظر' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="course-card__stats">
+                        <div>
+                            <strong>{{ number_format($course->published_videos_count) }} درس</strong>
+                            <span>ویدیو</span>
+                        </div>
+                        <div>
+                            <strong>{{ number_format($course->published_notes_count) }} جزوه</strong>
+                            <span>PDF</span>
+                        </div>
+                        <div>
+                            <strong>{{ number_format($course->published_decks_count) }} دِک</strong>
+                            <span>فلش‌کارت</span>
+                        </div>
+                        <div>
+                            <strong>{{ number_format($course->published_quizzes_count) }} آزمون</strong>
+                            <span>سنجش</span>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('courses.show', $course) }}" class="button-soft mt-1">مشاهده صفحه دوره ←</a>
                 </div>
-            </div>
+            </article>
         @empty
-            <div class="col-span-3 surface-panel p-12 text-center text-muted space-y-2">
-                <p class="text-sm font-bold text-ink">دوره‌ای در این درس‌نامه منتشر نشده است.</p>
-                <a href="{{ route('catalog') }}" class="text-xs text-rausch font-bold underline">مشاهده سایر شاخه‌ها</a>
+            <div class="col-span-3 empty-state">
+                <h2 class="empty-state-title">هنوز دوره‌ای در این مبحث منتشر نشده است</h2>
+                <p class="empty-state-copy">می‌توانید سایر موضوعات آموزشی را در کاتالوگ بروکا بررسی کنید یا بعداً دوباره به این صفحه سر بزنید.</p>
+                <a href="{{ route('catalog') }}" class="button-secondary mt-5">مشاهده سایر شاخه‌ها</a>
             </div>
         @endforelse
     </div>
 
     <div class="mt-10">{{ $courses->links() }}</div>
 </section>
+
+@push('scripts')
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'CollectionPage',
+        'name' => 'دوره‌های ' . $subject->name,
+        'description' => $subject->description ?: ('مشاهده دوره‌های ' . $subject->name . ' در بروکا.'),
+        'url' => route('subjects.show', $subject),
+        'breadcrumb' => [
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                ['@type' => 'ListItem', 'position' => 1, 'name' => __('app.name'), 'item' => route('home')],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'کاتالوگ', 'item' => route('catalog')],
+                ['@type' => 'ListItem', 'position' => 3, 'name' => $subject->name, 'item' => route('subjects.show', $subject)],
+            ],
+        ],
+        'inLanguage' => 'fa-IR',
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    </script>
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'ItemList',
+        'name' => 'دوره‌های ' . $subject->name,
+        'numberOfItems' => $courses->count(),
+        'itemListElement' => $courses->values()->map(fn ($course, $index) => [
+            '@type' => 'ListItem',
+            'position' => $index + 1,
+            'url' => route('courses.show', $course),
+            'name' => $course->title,
+        ])->all(),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    </script>
+@endpush
 @endsection

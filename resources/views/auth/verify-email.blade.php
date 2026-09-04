@@ -1,24 +1,36 @@
 @extends('layouts.app')
 
 @section('title', 'تأیید آدرس ایمیل — ' . __('app.name'))
+@section('meta_description', 'تأیید ایمیل برای فعال‌سازی کامل حساب بروکا و ادامه دسترسی به تجربه آموزشی.')
 
 @section('content')
-<section class="mx-auto max-w-lg px-4 sm:px-6 py-20 sm:py-28 text-center">
-    <div class="form-panel p-8 sm:p-12 space-y-6">
-        <span class="grid size-16 place-items-center rounded-3xl bg-rausch-tint text-rausch text-2xl font-bold mx-auto shadow-md">
-            ✉️
+<section class="section-shell section-stack">
+    <div class="max-w-3xl mx-auto editorial-card text-center space-y-6">
+        <span class="icon-frame icon-frame-xl icon-frame-round mx-auto">
+            <x-ui.icon name="document" class="size-6" />
         </span>
 
-        <div class="space-y-2">
-            <h1 class="font-display text-2xl sm:text-3xl text-ink">ایمیل خود را تأیید کنید</h1>
-            <p class="text-xs text-muted leading-6 max-w-sm mx-auto">
-                لینک تأیید حساب به آدرس ایمیل شما ارسال شد. لطفاً صندوق ورودی (یا پوشه Spam) را بررسی و روی لینک فعال‌سازی بزنید.
-            </p>
+        <div class="space-y-3">
+            <span class="eyebrow">تأیید هویت ایمیلی</span>
+            <h1 class="section-title mt-3">ایمیل خود را تأیید کنید</h1>
+            <p class="text-sm leading-7 text-muted max-w-xl mx-auto">لینک تأیید حساب به ایمیل شما ارسال شده است. برای فعال‌سازی کامل حساب، صندوق ورودی یا پوشه Spam را بررسی کنید و روی لینک تأیید بزنید.</p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 text-right">
+            <div class="meta-card is-soft">
+                <p class="text-xs font-bold text-ink">چرا این مرحله مهم است؟</p>
+                <p class="mt-2 text-xs leading-6 text-muted">برای اطمینان از دسترسی شما به پیام‌های مهم حساب، اطلاعیه‌های امنیتی و بازیابی گذرواژه.</p>
+            </div>
+            <div class="meta-card is-soft">
+                <p class="text-xs font-bold text-ink">اگر ایمیل را پیدا نکردید</p>
+                <p class="mt-2 text-xs leading-6 text-muted">می‌توانید از دکمه زیر برای ارسال دوباره لینک استفاده کنید یا آدرس ایمیل واردشده را بررسی نمایید.</p>
+            </div>
         </div>
 
         <form method="post" action="{{ route('verification.send') }}" class="pt-2">
             @csrf
-            <button type="submit" class="rounded-full bg-rausch px-7 py-3 font-bold text-white text-xs hover:bg-rausch-active transition-colors shadow-float">
+            <button type="submit" class="button-primary">
+                <x-ui.icon name="document" class="size-4" />
                 ارسال دوباره لینک تأیید
             </button>
         </form>

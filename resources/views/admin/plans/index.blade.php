@@ -1,50 +1,74 @@
 @extends('layouts.app')
 
 @section('title', 'مدیریت پلن‌های اشتراک — ' . __('app.name'))
-
 @section('robots', 'noindex, follow')
 
 @section('content')
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<section class="section-shell section-stack section-stack-tight-top">
     @include('admin.nav')
 
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-ink">پلن‌های اشتراک و قیمت‌گذاری</h2>
-            <p class="text-xs text-muted mt-1">تنظیم قیمت ریالی، مدت زمان دسترسی و فعال/غیرفعال‌سازی پلن‌ها در درگاه پرداخت</p>
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] xl:items-end">
+        <div class="section-intro">
+            <span class="eyebrow">تعرفه و دسترسی مالی</span>
+            <h1 class="section-title mt-4">پلن‌های اشتراک و قیمت‌گذاری</h1>
+            <p class="section-copy mt-5">قیمت ریالی، مدت اعتبار، توضیح مزایا و وضعیت فعال بودن پلن‌ها در این بخش کنترل می‌شود تا فرایند خرید و تمدید برای کاربران شفاف بماند.</p>
+        </div>
+
+        <div class="editorial-card is-soft flex items-start gap-3">
+            <span class="icon-frame"><x-ui.icon name="wallet" class="size-5" /></span>
+            <div>
+                <p class="text-sm font-extrabold text-ink">اصل مهم قیمت‌گذاری</p>
+                <p class="mt-2 text-xs leading-7 text-muted">نام پلن، قیمت و مدت باید به‌صورت هم‌راستا در سایت، پرداخت و تلگرام نمایش داده شوند تا اختلافی در تجربه کاربر ایجاد نشود.</p>
+            </div>
         </div>
     </div>
 
-    <div class="surface-panel mt-6 overflow-x-auto">
-        <table class="w-full text-xs">
-            <thead class="bg-surface-soft text-right text-muted border-b border-hairline-soft">
+    <div class="grid gap-4 md:grid-cols-3 mt-10">
+        <div class="meta-card is-soft">
+            <p class="text-xs font-bold text-ink">تعداد پلن‌ها</p>
+            <p class="mt-3 text-3xl font-black text-ink">{{ number_format($plans->count()) }}</p>
+        </div>
+        <div class="meta-card is-soft">
+            <p class="text-xs font-bold text-ink">پلن‌های فعال</p>
+            <p class="mt-3 text-3xl font-black text-teal">{{ number_format($plans->where('is_active', true)->count()) }}</p>
+        </div>
+        <div class="meta-card is-soft">
+            <p class="text-xs font-bold text-ink">واحد ذخیره‌سازی</p>
+            <p class="mt-3 text-sm font-bold leading-7 text-ink">همه مبالغ به ریال ذخیره می‌شوند و معادل تومانی برای مدیریت سریع نمایش داده می‌شود.</p>
+        </div>
+    </div>
+
+    <div class="surface-panel mt-8 overflow-x-auto">
+        <table class="min-w-full text-xs">
+            <thead class="border-b border-hairline-soft bg-surface-soft text-right text-muted">
                 <tr>
-                    <th class="p-3.5 font-bold">عنوان پلن</th>
-                    <th class="p-3.5 font-bold">کد شناسه</th>
-                    <th class="p-3.5 font-bold text-center">مدت اعتبار</th>
-                    <th class="p-3.5 font-bold text-left">قیمت (تومان)</th>
-                    <th class="p-3.5 font-bold text-left">قیمت (ریال درگاه)</th>
-                    <th class="p-3.5 font-bold">وضعیت</th>
-                    <th class="p-3.5 font-bold text-left">عملیات</th>
+                    <th class="p-4 font-bold">پلن</th>
+                    <th class="p-4 font-bold">کد</th>
+                    <th class="p-4 font-bold text-center">مدت اعتبار</th>
+                    <th class="p-4 font-bold text-left">قیمت تومان</th>
+                    <th class="p-4 font-bold text-left">قیمت ریال</th>
+                    <th class="p-4 font-bold">وضعیت</th>
+                    <th class="p-4 font-bold text-left">عملیات</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-broca-sand">
                 @foreach ($plans as $plan)
-                    <tr class="hover:bg-white/40">
-                        <td class="p-3.5 font-bold text-ink text-sm">{{ $plan->name }}</td>
-                        <td class="p-3.5 font-mono text-[11px] text-muted" dir="ltr">{{ $plan->code }}</td>
-                        <td class="p-3.5 text-center font-bold text-ink">{{ $plan->duration_months ? $plan->duration_months . ' ماه' : 'همیشگی' }}</td>
-                        <td class="p-3.5 text-left font-bold text-sm text-teal" dir="ltr">{{ number_format((int) $plan->price_irr / 10) }} تومان</td>
-                        <td class="p-3.5 text-left font-mono text-muted" dir="ltr">{{ number_format((int) $plan->price_irr) }} IRR</td>
-                        <td class="p-3.5">
-                            <span class="rounded-full px-2.5 py-1 text-[11px] font-bold {{ $plan->is_active ? 'bg-teal/10 text-teal' : 'bg-rausch-tint text-rausch' }}">
-                                {{ $plan->is_active ? 'فعال در پرداخت ✓' : 'غیرفعال' }}
-                            </span>
+                    <tr class="align-top hover:bg-white/50">
+                        <td class="p-4">
+                            <p class="text-sm font-black text-ink">{{ $plan->name }}</p>
+                            @if ($plan->description)
+                                <p class="mt-1 text-[11px] leading-6 text-muted">{{ \Illuminate\Support\Str::limit($plan->description, 100) }}</p>
+                            @endif
                         </td>
-                        <td class="p-3.5 text-left">
-                            <a href="{{ route('admin.plans.edit', $plan) }}" class="px-3 py-1.5 rounded-full border border-ink/20 font-bold hover:bg-surface-soft">
-                                ویرایش تعرفه
-                            </a>
+                        <td class="p-4 font-mono text-[11px] text-muted" dir="ltr">{{ $plan->code }}</td>
+                        <td class="p-4 text-center font-bold text-ink">{{ $plan->duration_months ? $plan->duration_months . ' ماه' : 'همیشگی' }}</td>
+                        <td class="p-4 text-left font-black text-teal" dir="ltr">{{ number_format((int) $plan->price_irr / 10) }} تومان</td>
+                        <td class="p-4 text-left font-mono text-muted" dir="ltr">{{ number_format((int) $plan->price_irr) }} IRR</td>
+                        <td class="p-4">
+                            <span class="{{ $plan->is_active ? 'badge-success' : 'badge-soft' }}">{{ $plan->is_active ? 'فعال برای خرید' : 'غیرفعال' }}</span>
+                        </td>
+                        <td class="p-4 text-left">
+                            <a href="{{ route('admin.plans.edit', $plan) }}" class="button-soft">ویرایش تعرفه</a>
                         </td>
                     </tr>
                 @endforeach

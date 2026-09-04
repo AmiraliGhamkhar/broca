@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FlashcardController as AdminFlashcardController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\TelegramWebhookController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -214,6 +216,15 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admi
     Route::get('/plans/{plan}/edit', [AdminPlanController::class, 'edit'])->name('admin.plans.edit');
     Route::patch('/plans/{plan}', [AdminPlanController::class, 'update'])->name('admin.plans.update');
 
+    // Blog posts
+    Route::get('/blogs', [AdminBlogController::class, 'index'])->name('admin.blogs.index');
+    Route::get('/blogs/create', [AdminBlogController::class, 'create'])->name('admin.blogs.create');
+    Route::post('/blogs', [AdminBlogController::class, 'store'])->name('admin.blogs.store');
+    Route::get('/blogs/{blog}/edit', [AdminBlogController::class, 'edit'])->name('admin.blogs.edit');
+    Route::patch('/blogs/{blog}', [AdminBlogController::class, 'update'])->name('admin.blogs.update');
+    Route::patch('/blogs/{blog}/transition', [AdminBlogController::class, 'transition'])->name('admin.blogs.transition');
+    Route::delete('/blogs/{blog}', [AdminBlogController::class, 'destroy'])->name('admin.blogs.destroy');
+
     // Activity Log
     Route::get('/activity', [ActivityLogController::class, 'index'])->name('admin.activity.index');
 
@@ -221,6 +232,8 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admi
     Route::patch('/free-items/{type}/{id}', [FreeItemController::class, 'update'])->name('admin.free-items.update');
     Route::patch('/publication/{type}/{id}', [PublicationController::class, 'update'])->name('admin.publication.update');
 });
+
+Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
 
 /*
 |--------------------------------------------------------------------------

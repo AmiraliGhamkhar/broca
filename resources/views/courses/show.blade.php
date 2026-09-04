@@ -1,96 +1,152 @@
 @extends('layouts.app')
 
 @section('title', $course->title . ' — ' . __('app.name'))
-
+@section('meta_description', \Illuminate\Support\Str::limit($course->excerpt ?: $course->description ?: ('آشنایی با دوره «' . $course->title . '» در بروکا، همراه با ویدیوها، جزوات، فلش‌کارت‌ها و آزمون‌های آموزشی.'), 155))
+@section('meta_author', $course->reviewer?->name ?: ($course->author?->name ?: __('app.name')))
 @section('canonical', route('courses.show', $course))
 
 @section('content')
-<section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-    <div class="space-y-4">
-        <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch hover:underline">
-            ← بازگشت به کاتالوگ دوره‌ها
-        </a>
-        <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-rausch">{{ $course->subject->name ?? 'عمومی' }}</span>
-            <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-surface-soft text-ink">
-                {{ $course->level ?: 'علوم پایه پزشکی' }}
-            </span>
-        </div>
-        <h1 class="font-display text-3xl sm:text-5xl text-ink leading-tight">{{ $course->title }}</h1>
-        <p class="text-xs sm:text-sm text-muted max-w-3xl leading-7">
-            {{ $course->description ?: $course->excerpt }}
-        </p>
+<section class="section-shell section-stack">
+    <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch hover:underline">← بازگشت به کاتالوگ دوره‌ها</a>
 
-        <!-- Faculty Byline Pills -->
-        <div class="flex flex-wrap items-center gap-3 pt-2 text-xs font-bold">
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-white border border-hairline-soft px-4 py-2 text-ink shadow-float">
-                <span>👨‍⚕️ استاد:</span>
-                <span class="text-rausch">{{ $course->author?->name ?: 'هیئت علمی بروکا' }}</span>
-                <span class="text-[11px] text-muted font-normal">({{ $course->author?->credentials ?: 'متخصص بالینی' }})</span>
-            </span>
-
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-teal/10 border border-teal/20 px-4 py-2 text-teal shadow-float">
-                <span>✓ بازبین علمی:</span>
-                <span>{{ $course->reviewer?->name ?: 'متخصص ناظر' }}</span>
-                <span class="text-[11px] font-normal">({{ $course->reviewer?->credentials ?: 'هیئت علمی' }})</span>
-            </span>
-        </div>
-
-        <!-- Enrollment Call to Action -->
-        <div class="pt-4">
-            @guest
-                <a href="{{ route('register') }}" class="inline-block rounded-full bg-rausch px-8 py-4 font-bold text-white text-xs hover:bg-rausch-active transition-colors shadow-float">
-                    برای ثبت‌نام و دسترسی رایگان وارد شوید ←
-                </a>
-            @else
-                @if ($isEnrolled)
-                    <div class="inline-flex items-center gap-2 rounded-full bg-teal/10 border border-teal/30 px-6 py-3 font-bold text-teal text-xs">
-                        <span>✓</span>
-                        <span>شما در این دوره ثبت‌نام کرده‌اید. دسترسی به دروس فعال است.</span>
-                    </div>
-                @else
-                    <form method="post" action="{{ route('courses.enroll', $course) }}" class="inline-block">
-                        @csrf
-                        <button type="submit" class="rounded-full bg-rausch px-8 py-4 font-bold text-white text-xs hover:bg-rausch-active transition-colors shadow-float">
-                            ثبت‌نام رایگان در این دوره ←
-                        </button>
-                    </form>
+    <div class="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+        <div class="lg:col-span-7 space-y-5">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="badge-soft">{{ $course->subject->name ?? 'عمومی' }}</span>
+                <span class="badge-neutral">{{ $course->level ?: 'علوم پایه پزشکی' }}</span>
+                @if ($course->published_at)
+                    <span class="badge-outline" dir="ltr">انتشار: {{ $course->published_at->timezone(config('broca.display_timezone'))->format('Y/m/d') }}</span>
                 @endif
-            @endguest
+            </div>
+
+            <div class="section-intro max-w-4xl">
+                <h1 class="section-title">{{ $course->title }}</h1>
+                <p class="section-copy max-w-3xl">{{ $course->description ?: $course->excerpt }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="meta-card">
+                    <div class="flex items-start gap-3">
+                        <span class="icon-frame"><x-ui.icon name="users" class="size-5" /></span>
+                        <div>
+                            <p class="text-[11px] font-bold text-muted">مدرس / نویسنده</p>
+                            <p class="mt-1 text-sm font-extrabold text-ink">{{ $course->author?->name ?: 'هیئت علمی بروکا' }}</p>
+                            <p class="mt-1 text-xs text-muted leading-6">{{ $course->author?->credentials ?: 'محتوای آموزشی با ساختار حرفه‌ای برای فراگیران علوم پزشکی.' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meta-card">
+                    <div class="flex items-start gap-3">
+                        <span class="icon-frame-soft"><x-ui.icon name="shield" class="size-5" /></span>
+                        <div>
+                            <p class="text-[11px] font-bold text-muted">بازبین علمی</p>
+                            <p class="mt-1 text-sm font-extrabold text-ink">{{ $course->reviewer?->name ?: 'متخصص ناظر' }}</p>
+                            <p class="mt-1 text-xs text-muted leading-6">{{ $course->reviewer?->credentials ?: 'تأکید بر شفافیت علمی و انتشار مسئولانه محتوای پزشکی.' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trust-banner">
+                <div class="flex items-start gap-3">
+                    <span class="icon-frame"><x-ui.icon name="badge-check" class="size-5" /></span>
+                    <div>
+                        <p class="text-sm font-extrabold text-ink">این دوره بخشی از یک تجربه آموزشی چندلایه است</p>
+                        <p class="mt-2 text-xs leading-7 text-muted">یادگیری در بروکا فقط به مشاهده ویدیو محدود نیست. این صفحه ویدیوها، جزوات، مرور فاصله‌دار و ارزیابی را در یک مسیر آموزشی واحد کنار هم قرار می‌دهد.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                @guest
+                    <a href="{{ route('register') }}" class="button-primary">
+                        <x-ui.icon name="graduation" class="size-4" />
+                        ثبت‌نام و شروع استفاده رایگان
+                    </a>
+                @else
+                    @if ($isEnrolled)
+                        <div class="badge-success px-4 py-3 text-xs">
+                            <x-ui.icon name="badge-check" class="size-4" />
+                            شما در این دوره ثبت‌نام کرده‌اید و مسیر یادگیری فعال است.
+                        </div>
+                    @else
+                        <form method="post" action="{{ route('courses.enroll', $course) }}" class="inline-block">
+                            @csrf
+                            <button type="submit" class="button-primary">
+                                <x-ui.icon name="graduation" class="size-4" />
+                                ثبت‌نام رایگان در این دوره
+                            </button>
+                        </form>
+                    @endif
+                @endguest
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 space-y-4">
+            @if ($course->cover_image_path)
+                <img src="{{ $course->cover_image_path }}" alt="{{ $course->title }}" class="w-full rounded-[2rem] object-cover max-h-[28rem] border border-hairline-soft shadow-float">
+            @endif
+
+            <div class="meta-card">
+                <dl>
+                    <div>
+                        <dt>ویدیوهای منتشرشده</dt>
+                        <dd>{{ number_format($course->videos->count()) }} درس</dd>
+                    </div>
+                    <div>
+                        <dt>جزوات و فایل‌های PDF</dt>
+                        <dd>{{ number_format($course->notes->count()) }} فایل</dd>
+                    </div>
+                    <div>
+                        <dt>فلش‌کارت‌های مرور</dt>
+                        <dd>{{ number_format($course->decks->count()) }} دِک</dd>
+                    </div>
+                    <div>
+                        <dt>آزمون‌های دوره</dt>
+                        <dd>{{ number_format($course->quizzes->count()) }} آزمون</dd>
+                    </div>
+                    <div>
+                        <dt>تاریخ انتشار</dt>
+                        <dd>{{ $course->published_at?->timezone(config('broca.display_timezone'))->format('Y/m/d') ?: 'در دسترس عمومی' }}</dd>
+                    </div>
+                    <div>
+                        <dt>آخرین به‌روزرسانی</dt>
+                        <dd>{{ $course->updated_at?->timezone(config('broca.display_timezone'))->format('Y/m/d H:i') ?: '—' }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="meta-card is-soft">
+                <p class="text-[11px] font-bold text-muted">بیانیه آموزشی</p>
+                <p class="mt-2 text-sm leading-7 text-ink">این محتوا برای آموزش و ارتقای دانش فراگیران علوم پزشکی تهیه شده است و جایگزین تصمیم یا اقدام بالینی برای بیمار نیست.</p>
+            </div>
         </div>
     </div>
 
-    <!-- Course Content Grid -->
     <div class="mt-14 grid gap-8 lg:grid-cols-2">
-
-        <!-- Module 1: Video Lessons -->
-        <div class="surface-panel p-6 sm:p-8 space-y-4">
+        <div class="editorial-card space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-hairline-soft">
-                <h2 class="text-base font-bold text-ink flex items-center gap-2">
-                    <span>🎥</span> ویدیوهای آموزشی دوره
+                <h2 class="text-lg font-extrabold text-ink flex items-center gap-2">
+                    <span class="icon-frame-soft icon-frame-sm"><x-ui.icon name="play" class="size-4" /></span>
+                    ویدیوهای آموزشی دوره
                 </h2>
                 <span class="text-xs text-muted font-bold">{{ $course->videos->count() }} درس</span>
             </div>
 
             <ul class="space-y-3 text-xs">
                 @forelse ($course->videos as $idx => $video)
-                    <li class="p-3.5 rounded-xl bg-white border border-hairline-soft hover:border-hairline transition-all">
-                        <a href="{{ route('videos.show', [$course, $video]) }}" class="flex items-center justify-between font-bold text-ink">
-                            <div class="flex items-center gap-3">
-                                <span class="grid size-7 place-items-center rounded-full bg-surface-soft text-[11px] font-bold text-ink">
-                                    {{ $idx + 1 }}
-                                </span>
-                                <div>
-                                    <span class="block font-bold text-sm text-ink">{{ $video->title }}</span>
+                    <li class="list-row-card">
+                        <a href="{{ route('videos.show', [$course, $video]) }}" class="flex items-center justify-between gap-4 font-bold text-ink">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="icon-frame-soft icon-frame-sm icon-frame-round text-[11px] font-extrabold">{{ $idx + 1 }}</span>
+                                <div class="min-w-0">
+                                    <span class="block text-sm font-extrabold text-ink truncate">{{ $video->title }}</span>
                                     <span class="text-[11px] text-muted font-normal">{{ $video->duration_seconds ? gmdate('i:s', $video->duration_seconds) . ' دقیقه' : 'درس ویدیویی' }}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                @if ($video->is_free_available)
-                                    <span class="rounded-full bg-teal/10 text-teal px-2.5 py-0.5 text-[11px] font-bold">رایگان</span>
-                                @else
-                                    <span class="rounded-full bg-surface-strong text-muted px-2.5 py-0.5 text-[11px] font-bold">ویژه</span>
-                                @endif
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="{{ $video->is_free_available ? 'badge-success' : 'badge-neutral' }}">{{ $video->is_free_available ? 'رایگان' : 'ویژه' }}</span>
                                 <span class="text-rausch">←</span>
                             </div>
                         </a>
@@ -101,32 +157,28 @@
             </ul>
         </div>
 
-        <!-- Module 2: Notes & Handouts -->
-        <div class="surface-panel p-6 sm:p-8 space-y-4">
+        <div class="editorial-card space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-hairline-soft">
-                <h2 class="text-base font-bold text-ink flex items-center gap-2">
-                    <span>📄</span> جزوات و خلاصه دروس (PDF)
+                <h2 class="text-lg font-extrabold text-ink flex items-center gap-2">
+                    <span class="icon-frame-soft icon-frame-sm"><x-ui.icon name="document" class="size-4" /></span>
+                    جزوات و فایل‌های آموزشی
                 </h2>
                 <span class="text-xs text-muted font-bold">{{ $course->notes->count() }} جزوه</span>
             </div>
 
             <ul class="space-y-3 text-xs">
                 @forelse ($course->notes as $note)
-                    <li class="p-3.5 rounded-xl bg-white border border-hairline-soft hover:border-hairline transition-all">
-                        <a href="{{ route('notes.show', [$course, $note]) }}" class="flex items-center justify-between font-bold text-ink">
-                            <div class="flex items-center gap-3">
-                                <span class="text-lg">📑</span>
-                                <div>
-                                    <span class="block font-bold text-sm text-ink">{{ $note->title }}</span>
-                                    <span class="text-[11px] text-muted font-normal">فرمت PDF اختصاصی</span>
+                    <li class="list-row-card">
+                        <a href="{{ route('notes.show', [$course, $note]) }}" class="flex items-center justify-between gap-4 font-bold text-ink">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="icon-frame-soft icon-frame-sm"><x-ui.icon name="document" class="size-4" /></span>
+                                <div class="min-w-0">
+                                    <span class="block text-sm font-extrabold text-ink truncate">{{ $note->title }}</span>
+                                    <span class="text-[11px] text-muted font-normal">فایل PDF برای مرور و جمع‌بندی</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                @if ($note->is_free_available)
-                                    <span class="rounded-full bg-teal/10 text-teal px-2.5 py-0.5 text-[11px] font-bold">رایگان</span>
-                                @else
-                                    <span class="rounded-full bg-surface-strong text-muted px-2.5 py-0.5 text-[11px] font-bold">ویژه</span>
-                                @endif
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="{{ $note->is_free_available ? 'badge-success' : 'badge-neutral' }}">{{ $note->is_free_available ? 'رایگان' : 'ویژه' }}</span>
                                 <span class="text-rausch">دانلود ←</span>
                             </div>
                         </a>
@@ -136,21 +188,20 @@
                 @endforelse
             </ul>
 
-            <!-- Decks and Quizzes Quick Links inside the course -->
             @if ($course->decks->isNotEmpty() || $course->quizzes->isNotEmpty())
-                <div class="pt-6 border-t border-hairline-soft space-y-3">
-                    <h3 class="text-xs font-bold text-ink">کارت‌های مرور و آزمون‌های این دوره:</h3>
+                <div class="soft-divider pt-6 space-y-4">
+                    <h3 class="text-sm font-extrabold text-ink">مرور و ارزیابی تکمیلی این دوره</h3>
                     <div class="flex flex-wrap gap-2">
                         @foreach ($course->decks as $deck)
-                            <a href="{{ route('decks.study', [$course, $deck]) }}"
-                               class="px-4 py-2 rounded-full bg-surface-soft text-ink text-xs font-bold hover:bg-white border border-hairline-soft transition-all">
-                                🗂 {{ $deck->title }}
+                            <a href="{{ route('decks.study', [$course, $deck]) }}" class="button-soft">
+                                <x-ui.icon name="stack" class="size-4" />
+                                {{ $deck->title }}
                             </a>
                         @endforeach
                         @foreach ($course->quizzes as $quiz)
-                            <a href="{{ route('quizzes.show', $quiz) }}"
-                               class="px-4 py-2 rounded-full bg-ink text-white text-xs font-bold hover:bg-rausch transition-colors">
-                                📝 {{ $quiz->title }}
+                            <a href="{{ route('quizzes.show', $quiz) }}" class="button-secondary">
+                                <x-ui.icon name="quiz" class="size-4" />
+                                {{ $quiz->title }}
                             </a>
                         @endforeach
                     </div>
@@ -162,7 +213,7 @@
 
 @push('scripts')
     <script type="application/ld+json">
-    {!! json_encode([
+    {!! json_encode(array_filter([
         '@context' => 'https://schema.org',
         '@type' => 'Course',
         'name' => $course->title,
@@ -170,7 +221,10 @@
         'inLanguage' => 'fa-IR',
         'provider' => ['@type' => 'Organization', 'name' => config('app.name'), 'sameAs' => url('/')],
         'author' => $course->author ? ['@type' => 'Person', 'name' => $course->author->name, 'jobTitle' => $course->author->credentials] : null,
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+        'contributor' => $course->reviewer ? [['@type' => 'Person', 'name' => $course->reviewer->name, 'jobTitle' => $course->reviewer->credentials]] : null,
+        'datePublished' => $course->published_at?->toIso8601String(),
+        'dateModified' => $course->updated_at?->toIso8601String(),
+    ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection
