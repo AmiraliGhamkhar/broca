@@ -314,7 +314,73 @@ Run through this once after go-live:
 - [ ] Backup command works and returns a file
 - [ ] Payment callback URL matches production domain
 
-## 13. Useful maintenance commands
+## 13. Public-page runtime and SEO verification plan
+
+After the code is live, verify these pages in a real browser, not only with curl:
+
+### Homepage `/`
+
+- page title is not empty and matches the product positioning
+- meta description exists in page source
+- canonical points to the production home URL
+- FAQ JSON-LD is present in page source
+- primary CTA buttons lead to register/catalog correctly
+
+### Catalog `/catalog`
+
+- default catalog page is indexable: `robots` should be `index, follow`
+- canonical should point to `/catalog`
+- subject chips work and open the correct subject page
+- filtered/search result pages should expose `noindex, follow`
+- item cards show subject, level, author/reviewer and counts cleanly
+
+### Subject page `/subjects/{slug}`
+
+- title and meta description reflect the selected subject
+- canonical points to that exact subject URL
+- breadcrumb and item-list JSON-LD are present
+- course cards open the right public course pages
+
+### Plans `/plans`
+
+- title/meta/canonical are correct in page source
+- FAQ, breadcrumb and item-list JSON-LD are present
+- CTA behavior matches real state:
+  - guest sees register CTA
+  - subscribed user sees subscription-status CTA
+  - paid plan with disabled checkout shows non-clickable warning path
+- Rial/Toman display is consistent with admin pricing
+
+### Technical spot checks
+
+Run these from SSH if available:
+
+```bash
+curl -I https://example.com/
+curl -I https://example.com/catalog
+curl -I https://example.com/plans
+curl -I https://example.com/robots.txt
+curl -I https://example.com/sitemap.xml
+```
+
+And inspect page source manually for:
+
+- `<link rel="canonical">`
+- `<meta name="description">`
+- `<meta property="og:title">`
+- `<meta property="og:description">`
+- JSON-LD blocks
+
+If any of those point to localhost, the wrong domain, or HTTP instead of HTTPS, fix `APP_URL`, clear caches, and re-test:
+
+```bash
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+## 14. Useful maintenance commands
 
 ```bash
 php artisan optimize:clear
@@ -327,7 +393,7 @@ php artisan broca:telegram-set-webhook
 php artisan broca:telegram-admin 11111111 --first-name="Admin"
 ```
 
-## 14. Common cPanel failure points
+## 15. Common cPanel failure points
 
 ### Blank page or 500 error
 
@@ -373,7 +439,7 @@ Usually:
 - cron fallback missing
 - database queue tables not migrated
 
-## 15. Recommended deployment order for updates
+## 16. Recommended deployment order for updates
 
 For future releases on cPanel:
 

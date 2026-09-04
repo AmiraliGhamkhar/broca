@@ -102,7 +102,62 @@ Telegram webhook registration, see `docs/CPANEL_DEPLOYMENT.md`.
 Rollback: `git checkout <previous-tag> && composer install && php artisan migrate:rollback`
 (migrations are reversible; verify with `php artisan migrate:status`).
 
-## 8. Incident procedures
+## 8. Public runtime verification gates
+
+These are launch gates for the current trust-first public redesign and should
+be checked on the live production domain after every deploy that touches public
+views, metadata, plans, or content discovery.
+
+### Browser checks
+
+- `/` homepage:
+  - title, meta description and canonical are correct
+  - FAQ accordions render correctly
+  - primary CTAs go to register / catalog as expected
+- `/catalog`:
+  - default page is indexable (`robots=index, follow`)
+  - search/filter state works without broken layout
+  - filtered states show `noindex, follow`
+- `/subjects/{slug}`:
+  - subject title/description match the visible subject
+  - course cards and CTAs open the correct public course pages
+- `/plans`:
+  - guest / authenticated / subscribed states each show the correct CTA path
+  - paid-plan checkout buttons only appear when checkout is enabled
+- one `/courses/{slug}` page and one `/blog/{slug}` page:
+  - author/reviewer metadata renders
+  - structured data exists in page source
+
+### Source checks
+
+Inspect page source or devtools and verify:
+
+- canonical URL uses the production HTTPS host
+- `meta description` is present and non-empty
+- Open Graph tags are present
+- JSON-LD is present where expected (course, blog, FAQ, item list, breadcrumb)
+- no page leaks `localhost`, preview domains, or staging URLs
+
+### CLI spot checks
+
+```bash
+curl -I https://example.com/
+curl -I https://example.com/catalog
+curl -I https://example.com/plans
+curl -I https://example.com/robots.txt
+curl -I https://example.com/sitemap.xml
+```
+
+If metadata/canonical values are wrong after deployment, re-clear and rebuild caches:
+
+```bash
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+## 9. Incident procedures
 
 - **Payment incident (users paying without access):** set
   `BROCA_CHECKOUT_ENABLED=false`, run `broca:reconcile-payments`, check
@@ -113,7 +168,7 @@ Rollback: `git checkout <previous-tag> && composer install && php artisan migrat
 - **Data restore:** stop queue worker → restore dump → `php artisan cache:clear`
   → restart worker.
 
-## 9. Pre-launch gates (blocking)
+## 10. Pre-launch gates (blocking)
 
 - [ ] Real legal copy approved for terms / privacy / medical disclaimer
       (current versions are placeholders — unacceptable for a paid medical

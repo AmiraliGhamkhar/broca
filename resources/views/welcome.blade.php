@@ -232,5 +232,3 @@
     </script>
 @endpush
 @endsection
-sh
-@endsection
