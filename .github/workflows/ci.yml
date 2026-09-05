@@ -66,7 +66,20 @@ jobs:
           DB_PASSWORD: root
 
       - name: Run tests
-        run: php artisan test
+        run: |
+          set -o pipefail
+          php artisan test 2>&1 | tee /tmp/test-output.log || {
+            {
+              echo "FAILED TESTS SUMMARY:"
+              grep -E "FAILED|Failed asserting|Expected response status|SQLSTATE|Exception:|Error:" /tmp/test-output.log | grep -v "^\s*✓" | head -60
+              echo "---TAIL---"
+              tail -40 /tmp/test-output.log
+            } | while IFS= read -r line; do
+              line="${line//'%'/'%25'}"
+              echo "::error::${line}"
+            done
+            exit 1
+          }
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
