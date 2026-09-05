@@ -144,30 +144,30 @@ Inspect page source or devtools and verify:
 ### CLI spot checks
 
 ```bash
-curl -I https://example.com/
-curl -I https://example.com/catalog
-curl -I https://example.com/plans
-curl -I https://example.com/robots.txt
-curl -I https://example.com/sitemap.xml
+curl -I https://brocamed.ir/
+curl -I https://brocamed.ir/catalog
+curl -I https://brocamed.ir/plans
+curl -I https://brocamed.ir/robots.txt
+curl -I https://brocamed.ir/sitemap.xml
 ```
 
 LLM/answer-engine surface (round 4, 2026-09-05):
 
 ```bash
 # robots: retrieval agents + Content-Signal must be present
-curl -s https://example.com/robots.txt | grep -E 'OAI-SearchBot|Content-Signal'
+curl -s https://brocamed.ir/robots.txt | grep -E 'OAI-SearchBot|Content-Signal'
 
 # Markdown twins: text/markdown, clean content, same data as the HTML page
-curl -sI https://example.com/catalog.md | grep -i content-type
-curl -s https://example.com/catalog.md | head -20
+curl -sI https://brocamed.ir/catalog.md | grep -i content-type
+curl -s https://brocamed.ir/catalog.md | head -20
 
 # curated agent index
-curl -s https://example.com/llms.txt | head -20
+curl -s https://brocamed.ir/llms.txt | head -20
 
 # content negotiation: explicit markdown preference flips the representation
-curl -s -H 'Accept: text/markdown' https://example.com/catalog | head -5
+curl -s -H 'Accept: text/markdown' https://brocamed.ir/catalog | head -5
 # …while browsers and plain curl keep getting HTML:
-curl -s -H 'Accept: */*' https://example.com/catalog | head -5
+curl -s -H 'Accept: */*' https://brocamed.ir/catalog | head -5
 ```
 
 If metadata/canonical values are wrong after deployment, re-clear and rebuild caches:

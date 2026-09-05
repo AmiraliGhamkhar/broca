@@ -23,3 +23,77 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# =============================================================================
+# Performance. Every directive is wrapped in <IfModule> so the site still
+# boots if the module is absent — cPanel/LiteSpeed hosts vary, and a hard
+# reference to a missing module returns 500 on every request.
+#
+# LiteSpeed (what most cPanel hosts run, including Mizbanfa) honours the
+# mod_deflate and mod_expires syntax, so this works on both Apache and LSWS.
+# =============================================================================
+
+# ---- Compression -----------------------------------------------------------
+# Text assets only; images/fonts/video are already compressed and re-deflating
+# them wastes CPU. Vazirmatn woff2 is likewise pre-compressed — excluded.
+<IfModule mod_deflate.c>
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css
+        AddOutputFilterByType DEFLATE text/markdown
+        AddOutputFilterByType DEFLATE application/xml application/xhtml+xml
+        AddOutputFilterByType DEFLATE application/rss+xml
+        AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+        AddOutputFilterByType DEFLATE application/json application/ld+json
+        AddOutputFilterByType DEFLATE image/svg+xml
+    </IfModule>
+</IfModule>
+
+# ---- Browser caching -------------------------------------------------------
+# Vite fingerprints build output (app-BzOQGPFz.css), so those URLs are
+# immutable and safe to cache for a year — a content change produces a new
+# filename. Fonts are self-hosted and equally stable.
+#
+# HTML is deliberately NOT cached: pages are personalised (auth state, free
+# quota badges) and caching them would serve one user's header to another.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 hour"
+
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 month"
+
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Fingerprinted bundles: immutable tells the browser never to revalidate.
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    <FilesMatch "\.woff2$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+        # Fonts are loaded with crossorigin (see the preload tags in
+        # layouts/app.blade.php); without CORS the preload is discarded and
+        # fetched twice, hurting LCP.
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+
+    # Never let a proxy or CDN cache an authenticated HTML response.
+    <FilesMatch "\.(php)$">
+        Header set Cache-Control "no-cache, private"
+    </FilesMatch>
+</IfModule>
+
+# ---- Hardening -------------------------------------------------------------
+# Block access to dotfiles that must never be web-readable if the document
+# root is ever misconfigured to the project root instead of public/.
+<FilesMatch "^\.(env|git|htaccess|htpasswd)">
+    Require all denied
+</FilesMatch>

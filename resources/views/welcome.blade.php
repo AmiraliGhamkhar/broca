@@ -27,12 +27,10 @@
         ['title' => 'آزمون برای سنجش واقعی یادگیری', 'copy' => 'ارزیابی فقط یک نمره نیست؛ بخشی از حلقه یادگیری است تا ضعف‌ها زودتر مشخص شوند.', 'icon' => 'chart'],
     ];
 
-    $faculty = [
-        ['name' => 'دکتر سارا احمدی', 'role' => 'فیزیولوژی قلب و عروق', 'copy' => 'تدوین مسیرهای آموزشی علوم پایه با تمرکز بر فهم مفهومی و ارتباط با سناریوهای بالینی.'],
-        ['name' => 'دکتر رضا کریمی', 'role' => 'بازبین علمی و داخلی', 'copy' => 'بازبینی علمی محتوای پزشکی برای حفظ دقت، شفافیت و سلامت اطلاعات ارائه‌شده به فراگیر.'],
-        ['name' => 'دکتر نیما راد', 'role' => 'آناتومی بالینی', 'copy' => 'تأکید بر یادگیری تصویری، لندمارک‌های جراحی و مسیرهای ساختاری مهم در آموزش آناتومی.'],
-        ['name' => 'دکتر مریم حسینی', 'role' => 'علوم اعصاب', 'copy' => 'مرور ساختارهای زبانی، قشری و عملکردی با نگاه پژوهشی و آموزشی منظم.'],
-    ];
+    // $faculty is injected by HomeController from the `contributors` table
+    // (real, visible, attached-to-published-content records only). It was
+    // previously a hardcoded array of four invented doctors with invented
+    // credentials — removed as a medical-trust violation.
 
     $faqs = [
         ['q' => 'آیا قبل از خرید می‌توان کیفیت محتوا را ارزیابی کرد؟', 'a' => 'بله. مدل دسترسی بروکا برای شروع رایگان طراحی شده تا فراگیر پیش از خرید، سبک تدریس، ساختار جزوات و کیفیت تجربه آموزشی را ببیند.'],
@@ -119,20 +117,33 @@
         </div>
 
         <div class="lg:col-span-8 subtle-grid cols-2">
-            @foreach ($faculty as $person)
+            @forelse ($faculty as $person)
                 <article class="editorial-card">
                     <div class="flex items-start gap-4">
                         <span class="icon-frame-soft icon-frame-lg icon-frame-round">
                             <x-ui.icon name="users" class="size-5" />
                         </span>
                         <div>
-                            <h3 class="text-base font-extrabold text-ink">{{ $person['name'] }}</h3>
-                            <p class="mt-1 text-xs font-bold text-rausch">{{ $person['role'] }}</p>
-                            <p class="mt-3 text-sm leading-7 text-muted">{{ $person['copy'] }}</p>
+                            <h3 class="text-base font-extrabold text-ink">{{ $person->name }}</h3>
+                            <p class="mt-1 text-xs font-bold text-rausch">{{ $person->credentials }}</p>
+                            @if ($person->specialty)
+                                <p class="mt-1 text-xs text-muted-soft">{{ $person->specialty }}</p>
+                            @endif
+                            @if ($person->bio)
+                                <p class="mt-3 text-sm leading-7 text-muted">{{ $person->bio }}</p>
+                            @endif
                         </div>
                     </div>
                 </article>
-            @endforeach
+            @empty
+                {{-- Honest empty state: describe the review PROCESS, never
+                     invent the people. Renders until real contributors are
+                     attached to published content. --}}
+                <article class="editorial-card is-soft sm:col-span-2">
+                    <h3 class="text-base font-extrabold text-ink">مسیر انتشار محتوا در بروکا</h3>
+                    <p class="mt-3 text-sm leading-7 text-muted">هر درس پیش از انتشار، مسیر نویسنده و بازبین علمی را طی می‌کند و نام و اعتبارنامهٔ هر دو، روی همان درس نمایش داده می‌شود. فهرست کامل نویسندگان و بازبینان به‌محض انتشار نخستین دوره‌ها در همین بخش منتشر می‌شود.</p>
+                </article>
+            @endforelse
         </div>
     </div>
 </section>

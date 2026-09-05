@@ -1,6 +1,22 @@
 # Deploying Broca on shared hosting / cPanel
 
-This guide is for the exact hosting model requested here: **shared hosting with cPanel**.
+**Confirmed target (2026-09-05):** Mizbanfa shared cPanel · domain `brocamed.ir`
+· SSH available · Git Version Control available · MySQL · **PHP must be set to
+8.4** in MultiPHP Manager.
+
+> **PHP 8.4 is a hard requirement, not a preference.** `shetabit/payment` v7
+> (the ZarinPal driver) and the whole Symfony 8.1 component set require
+> `>=8.4.1`. On 8.3 the app does not boot. Set it for **both** the web handler
+> (MultiPHP Manager) and the CLI — cPanel cron/SSH often defaults to an older
+> EA-PHP. Pin the absolute binary in cron entries:
+> `/opt/cpanel/ea-php84/root/usr/bin/php`.
+
+Deployment is automated by **`.cpanel.yml`** in the repository root: push to
+the branch, then hit *Update from Remote* → *Deploy HEAD Commit* in cPanel's
+Git Version Control. It installs Composer deps, builds assets **only if Node
+exists** (falling back to the committed `public/build`), migrates, and rebuilds
+caches behind `artisan down`/`up`.
+
 It assumes:
 
 - PHP CLI is available on the host
@@ -51,7 +67,7 @@ Minimum production-oriented example:
 APP_NAME=Broca
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://example.com
+APP_URL=https://brocamed.ir
 APP_FORCE_HTTPS=true
 
 DB_CONNECTION=mysql
@@ -66,17 +82,17 @@ SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 
 MAIL_MAILER=smtp
-MAIL_HOST=mail.example.com
+MAIL_HOST=mail.brocamed.ir
 MAIL_PORT=587
-MAIL_USERNAME=no-reply@example.com
+MAIL_USERNAME=no-reply@brocamed.ir
 MAIL_PASSWORD=mail-password
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=no-reply@example.com
+MAIL_FROM_ADDRESS=no-reply@brocamed.ir
 MAIL_FROM_NAME="Broca"
 
 ZARINPAL_MERCHANT_ID=real-merchant-id
 ZARINPAL_SANDBOX=false
-ZARINPAL_CALLBACK_URL="https://example.com/payments/zarinpal/callback"
+ZARINPAL_CALLBACK_URL="https://brocamed.ir/payments/zarinpal/callback"
 
 TELEGRAM_BOT_ENABLED=true
 TELEGRAM_BOT_TOKEN=123456:telegram-token
@@ -210,7 +226,7 @@ https://YOUR-DOMAIN/telegram/webhook
 Example:
 
 ```text
-https://example.com/telegram/webhook
+https://brocamed.ir/telegram/webhook
 ```
 
 This endpoint is already designed to be CSRF-exempt.
@@ -356,11 +372,11 @@ After the code is live, verify these pages in a real browser, not only with curl
 Run these from SSH if available:
 
 ```bash
-curl -I https://example.com/
-curl -I https://example.com/catalog
-curl -I https://example.com/plans
-curl -I https://example.com/robots.txt
-curl -I https://example.com/sitemap.xml
+curl -I https://brocamed.ir/
+curl -I https://brocamed.ir/catalog
+curl -I https://brocamed.ir/plans
+curl -I https://brocamed.ir/robots.txt
+curl -I https://brocamed.ir/sitemap.xml
 ```
 
 And inspect page source manually for:

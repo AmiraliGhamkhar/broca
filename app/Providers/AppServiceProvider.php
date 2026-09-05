@@ -7,13 +7,16 @@ use App\Contracts\VideoProvider;
 use App\Services\EntitlementService;
 use App\Services\PlaceholderVideoProvider;
 use App\Services\ZarinPalGateway;
+use App\Models\BlogPost;
 use App\Models\Course;
+use App\Models\Subject;
 use App\Models\Video;
 use App\Models\Note;
 use App\Models\Flashcard;
 use App\Models\QuizQuestion;
 use App\Observers\FreeCapObserver;
 use App\Observers\CourseFreeCapObserver;
+use App\Observers\PublicIndexCacheObserver;
 use App\Support\MarkdownTwin;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -58,6 +61,15 @@ class AppServiceProvider extends ServiceProvider
         // Course visibility feeds the free-cap counts; invalidation must also
         // fire when a course is published, archived, or soft-deleted.
         Course::observe(CourseFreeCapObserver::class);
+
+        // sitemap.xml and llms.txt are cached (they enumerate the whole
+        // published catalog on every hit, and AI crawlers poll them hard).
+        // Publishing must invalidate them immediately, or new content stays
+        // undiscoverable for the cache TTL.
+        foreach ([Course::class, Subject::class, BlogPost::class] as $model) {
+            $model::observe(PublicIndexCacheObserver::class);
+        }
+
         RateLimiter::for('video-progress', function (Request $request): Limit {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
@@ -66,6 +78,14 @@ class AppServiceProvider extends ServiceProvider
         // account spam and email bombing through the signup form.
         RateLimiter::for('registration', function (Request $request): Limit {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Checkout hits ZarinPal and can create an invoice row per call.
+        // Keyed by user (not IP): university/hospital networks NAT many
+        // legitimate students behind one address, and an IP key would let
+        // one user's retries lock out everyone else on that network.
+        RateLimiter::for('checkout', function (Request $request): Limit {
+            return Limit::perMinute(6)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

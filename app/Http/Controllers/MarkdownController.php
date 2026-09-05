@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Subject;
 use App\Services\SiteMarkdown;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Markdown twins for the public pages (llmstxt.org convention) plus the
@@ -20,6 +21,16 @@ use Illuminate\Http\Response;
 class MarkdownController extends Controller
 {
     public function llms(): Response
+    {
+        // Enumerates the whole published catalog; robots.txt explicitly
+        // invites AI crawlers, which poll this index hard. Cached and
+        // invalidated on publish by PublicIndexCacheObserver.
+        return $this->markdown(
+            Cache::remember('seo.llms.txt', 3600, fn () => $this->buildLlms())
+        );
+    }
+
+    private function buildLlms(): string
     {
         $lines = [
             '# Broca | بروکا',
@@ -66,7 +77,7 @@ class MarkdownController extends Controller
         $lines[] = '- '.route('blog.index', absolute: true).' → /blog.md';
         $lines[] = '';
 
-        return $this->markdown(implode("\n", $lines));
+        return implode("\n", $lines);
     }
 
     public function index(): Response

@@ -26,10 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // TLS-terminating reverse proxies (cPanel/shared hosting) must be
         // trusted so $request->secure() sees X-Forwarded-Proto — otherwise
         // the HTTPS redirect loops and HSTS/secure cookies never engage.
-        $proxies = env('TRUSTED_PROXIES');
-        if ($proxies) {
-            $middleware->trustProxies(at: array_map('trim', explode(',', $proxies)));
-        }
+        // Proxy trust is resolved at request time in App\Http\Middleware\
+        // TrustProxies. It cannot be done here: env() breaks under
+        // config:cache, and config() is not yet bound in this closure.
+        $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
 
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',

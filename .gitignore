@@ -14,7 +14,11 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
+# public/build IS committed on purpose: brocamed.ir deploys via cPanel Git
+# Version Control and Node availability on the host is unconfirmed. Without
+# committed artifacts a Node-less deploy renders the site with zero CSS
+# (layouts/app.blade.php's @vite() throws on a missing manifest).
+# Rebuild with `npm run build` and commit the result with the change.
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

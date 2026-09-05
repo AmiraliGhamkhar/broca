@@ -22,6 +22,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Learner\EnrollmentController;
 use App\Http\Controllers\Learner\FlashcardController;
 use App\Http\Controllers\Learner\NoteController;
@@ -42,7 +43,7 @@ use Illuminate\Support\Facades\Route;
 | Public pages (SEO-critical, fully server-rendered)
 |--------------------------------------------------------------------------
 */
-Route::view('/', 'welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 Route::get('/health', HealthCheckController::class)->name('health');
 
 /*
@@ -118,7 +119,14 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     })->middleware('throttle:6,1')->name('verification.send');
 
     Route::middleware('verified')->group(function (): void {
-        Route::post('/checkout/{plan}', [PaymentController::class, 'checkout'])->name('checkout');
+        // Throttled: each call may create an invoice and always performs an
+        // outbound ZarinPal purchase request. Unbounded, a double-clicking
+        // user (or a script) can spray gateway requests and invoice rows —
+        // ZarinPal also rate-limits merchants, so this protects our standing
+        // with the gateway as much as our own DB.
+        Route::post('/checkout/{plan}', [PaymentController::class, 'checkout'])
+            ->middleware('throttle:checkout')
+            ->name('checkout');
         Route::get('/checkout/{invoice}/success', [PaymentController::class, 'success'])->name('checkout.success');
         Route::get('/checkout/{invoice}/failed', [PaymentController::class, 'failed'])->name('checkout.failed');
 
