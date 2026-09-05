@@ -56,6 +56,17 @@ jobs:
           npm ci --ignore-scripts
           npm run build
 
+      # public/build is COMMITTED so that a Node-less cPanel deploy still
+      # ships styled pages. That only holds if the committed artifacts match
+      # the sources — otherwise production silently serves stale CSS.
+      - name: Committed assets must match a fresh build
+        run: |
+          if ! git diff --quiet -- public/build; then
+            echo "::error::public/build is stale. Run 'npm run build' and commit the result."
+            git diff --stat -- public/build
+            exit 1
+          fi
+
       - name: Run migrations
         run: php artisan migrate --force
         env:

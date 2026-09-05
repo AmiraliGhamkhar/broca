@@ -1,0 +1,49 @@
+# cPanel Git Version Control deploy hook (brocamed.ir, Mizbanfa shared hosting).
+#
+# Triggered by "Update from Remote" → "Deploy HEAD Commit" in cPanel, or by
+# `/usr/local/cpanel/bin/gitdeploy` over SSH.
+#
+# Design notes for this host:
+#  - PHP 8.4 is REQUIRED (shetabit/payment v7 + Symfony 8.1 need >=8.4.1).
+#    cPanel's default `php` in cron/deploy context is often an older EA-PHP,
+#    so the binary is pinned explicitly below rather than trusting $PATH.
+#  - Node is NOT assumed. If `npm` is unavailable the build step is skipped
+#    and the COMMITTED public/build artifacts are used instead. That keeps a
+#    deploy from ever producing an unstyled site.
+#  - No queue worker: QUEUE_CONNECTION should be `sync` or drained by cron.
+#
+# Set DEPLOYPATH to the repo checkout; the domain's document root must point
+# at $DEPLOYPATH/public.
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/brocamed/broca
+    - export PHPBIN=/opt/cpanel/ea-php84/root/usr/bin/php
+    - /bin/test -x "$PHPBIN" || export PHPBIN=$(command -v php)
+
+    # Fail loudly rather than deploying a build that cannot boot.
+    - "$PHPBIN" -r 'exit(PHP_VERSION_ID >= 80400 ? 0 : 1);' || { echo "FATAL: PHP 8.4+ required, got $($PHPBIN -v | head -1)"; exit 1; }
+
+    - cd "$DEPLOYPATH"
+
+    # Put the app to sleep so users never hit a half-updated release.
+    - "$PHPBIN" artisan down --render="errors::503" --retry=60 || true
+
+    - /bin/test -x "$(command -v composer)" && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || "$PHPBIN" composer.phar install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+    # Rebuild assets only if Node exists; otherwise use committed artifacts.
+    - if command -v npm >/dev/null 2>&1; then npm ci --ignore-scripts && npm run build; else echo "npm not found — using committed public/build"; fi
+    - /bin/test -f "$DEPLOYPATH/public/build/manifest.json" || { echo "FATAL: no Vite manifest; commit public/build or install Node"; "$PHPBIN" artisan up; exit 1; }
+
+    - "$PHPBIN" artisan migrate --force
+    - "$PHPBIN" artisan storage:link || true
+
+    # Rebuild caches (config:cache makes env() outside config/ return null —
+    # bootstrap/app.php's env('TRUSTED_PROXIES') is read at boot, so it is
+    # resolved before caching applies; see docs/CPANEL_DEPLOYMENT.md).
+    - "$PHPBIN" artisan config:cache
+    - "$PHPBIN" artisan route:cache
+    - "$PHPBIN" artisan view:cache
+    - "$PHPBIN" artisan event:cache
+
+    - "$PHPBIN" artisan up

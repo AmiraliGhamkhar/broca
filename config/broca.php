@@ -19,4 +19,13 @@ return [
     'force_https' => (bool) env('APP_FORCE_HTTPS', false),
 
     'external_video_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('BROCA_EXTERNAL_VIDEO_ORIGINS', ''))))),
+
+    // TLS-terminating reverse proxies. MUST live in config (not a raw env()
+    // call in bootstrap/app.php): once `php artisan config:cache` runs — and
+    // the cPanel deploy hook always runs it — env() outside config/ returns
+    // null. Trusting no proxies on a host that terminates TLS upstream makes
+    // $request->secure() false forever, which sends ForceSecureConnections
+    // into an infinite HTTPS redirect loop and stops the Secure session
+    // cookie from ever being set.
+    'trusted_proxies' => array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))))),
 ];

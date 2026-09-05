@@ -22,6 +22,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Learner\EnrollmentController;
 use App\Http\Controllers\Learner\FlashcardController;
 use App\Http\Controllers\Learner\NoteController;
@@ -42,7 +43,7 @@ use Illuminate\Support\Facades\Route;
 | Public pages (SEO-critical, fully server-rendered)
 |--------------------------------------------------------------------------
 */
-Route::view('/', 'welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 Route::get('/health', HealthCheckController::class)->name('health');
 
 /*

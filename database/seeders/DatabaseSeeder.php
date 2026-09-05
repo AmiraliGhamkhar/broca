@@ -41,41 +41,53 @@ class DatabaseSeeder extends Seeder
         // 2. Subscription Plans
         $this->seedPlans();
 
-        // 3. Medical Contributors (Faculty Members)
+        // 3. Demo contributors (LOCAL SEED DATA ONLY — NOT REAL PEOPLE)
+        //
+        // These rows exist so the catalog/course pages have an author and a
+        // reviewer to render against in local development and tests. They are
+        // deliberately:
+        //   - named "نمونه" (sample), never a plausible real doctor's name;
+        //   - given process-descriptive credentials, never a claimed post at
+        //     a real institution;
+        //   - is_visible = false, so they never surface on the public site
+        //     even if this seeder is accidentally run in production.
+        //
+        // SPEC.md: "No placeholder may be presented as a real medical
+        // credential, source, price, provider, or launch guarantee."
         $drSara = Contributor::create([
-            'name' => 'دکتر سارا احمدی',
-            'slug' => 'dr-sara-ahmadi',
-            'credentials' => 'پزشک، دکترای تخصصی فیزیولوژی پزشکی',
-            'specialty' => 'فیزیولوژی قلب و عروق و سلولی',
-            'bio' => 'عضو هیئت علمی دانشگاه علوم پزشکی، مدرس برجسته مباحث فیزیولوژی پزشکی و الکتروفیزیولوژی سلولی.',
-            'is_visible' => true,
+            'name' => 'نویسندهٔ نمونه ۱',
+            'slug' => 'sample-author-1',
+            'credentials' => 'نمونهٔ توسعه — اعتبارنامهٔ واقعی ثبت نشده است',
+            'specialty' => 'فیزیولوژی قلب و عروق',
+            'bio' => 'رکورد نمونه برای محیط توسعه. پیش از انتشار عمومی باید با نویسندهٔ واقعی جایگزین شود.',
+            'is_visible' => false,
         ]);
 
         $drReza = Contributor::create([
-            'name' => 'دکتر رضا کریمی',
-            'slug' => 'dr-reza-karimi',
-            'credentials' => 'متخصص بیماری‌های داخلی، فلوشیپ بالینی',
-            'specialty' => 'پزشکی بالینی و همودینامیک',
-            'bio' => 'بازبین ارشد محتوای علمی و بالینی آکادمی بروکا، با سابقه بیش از ۱۰ سال تدریس بالینی.',
-            'is_visible' => true,
+            'name' => 'بازبین نمونه ۱',
+            'slug' => 'sample-reviewer-1',
+            'credentials' => 'نمونهٔ توسعه — اعتبارنامهٔ واقعی ثبت نشده است',
+            'specialty' => 'بازبینی علمی بالینی',
+            'bio' => 'رکورد نمونه برای محیط توسعه. پیش از انتشار عمومی باید با بازبین واقعی جایگزین شود.',
+            'is_visible' => false,
         ]);
 
         $drNima = Contributor::create([
-            'name' => 'دکتر نیما راد',
-            'slug' => 'dr-nima-rad',
-            'credentials' => 'استادیار آناتومی بالینی و جراحی',
-            'specialty' => 'آناتومی بالینی قفسه سینه و اسکلتی',
-            'bio' => 'مؤلف کتب مرجع تشریح و مدرس کورس‌های آناتومی بالینی و جراحی عمومی.',
-            'is_visible' => true,
+            'name' => 'نویسندهٔ نمونه ۲',
+            'slug' => 'sample-author-2',
+            'credentials' => 'نمونهٔ توسعه — اعتبارنامهٔ واقعی ثبت نشده است',
+            'specialty' => 'آناتومی بالینی',
+            'bio' => 'رکورد نمونه برای محیط توسعه. پیش از انتشار عمومی باید با نویسندهٔ واقعی جایگزین شود.',
+            'is_visible' => false,
         ]);
 
         $drMaryam = Contributor::create([
-            'name' => 'دکتر مریم حسینی',
-            'slug' => 'dr-maryam-hosseini',
-            'credentials' => 'متخصص مغز و اعصاب (نورولوژیست)',
+            'name' => 'نویسندهٔ نمونه ۳',
+            'slug' => 'sample-author-3',
+            'credentials' => 'نمونهٔ توسعه — اعتبارنامهٔ واقعی ثبت نشده است',
             'specialty' => 'علوم اعصاب و نوروآناتومی',
-            'bio' => 'پژوهشگر حوزه علوم اعصاب شناختی و ناحیه زبانی بروکا و ورنیکه در قشر مخ.',
-            'is_visible' => true,
+            'bio' => 'رکورد نمونه برای محیط توسعه. پیش از انتشار عمومی باید با نویسندهٔ واقعی جایگزین شود.',
+            'is_visible' => false,
         ]);
 
         // 4. Subjects
