@@ -22,7 +22,21 @@ class VideoController extends Controller
         $canPlay = app(ContentPolicy::class)->viewVideo($request->user(), $video);
         $threshold = $video->completion_threshold_percent ?: config('broca.video_completion_threshold');
 
-        return view('learner.video', compact('course', 'video', 'canPlay', 'threshold'));
+        // Hydrate the player with the learner's existing progress so a
+        // revisit resumes from where they stopped instead of zero.
+        $progress = VideoProgress::query()
+            ->where('user_id', $request->user()->id)
+            ->where('video_id', $video->id)
+            ->first();
+
+        return view('learner.video', [
+            'course' => $course,
+            'video' => $video,
+            'canPlay' => $canPlay,
+            'threshold' => $threshold,
+            'initialPercent' => (int) ($progress->watched_percent ?? 0),
+            'initialCompleted' => (bool) $progress?->completed_at,
+        ]);
     }
 
     /**
@@ -49,8 +63,14 @@ class VideoController extends Controller
      * the expiry. The stored manifest_reference is a bare filename — the
      * charset check plus realpath containment stop any traversal attempt.
      */
-    public function media(Request $request, Video $video): BinaryFileResponse
+    public function media(Request $request, string $videoId): BinaryFileResponse
     {
+        // No implicit model binding on this route: the `signed` middleware
+        // must reject bad signatures with 403 BEFORE any resource resolution,
+        // otherwise tampered URLs would 404 at binding and leak whether a
+        // video id exists behind the signature.
+        $video = Video::query()->findOrFail($videoId);
+
         abort_unless($video->isPublished(), 404);
         abort_unless(app(ContentPolicy::class)->viewVideo($request->user(), $video), 403);
 

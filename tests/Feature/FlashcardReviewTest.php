@@ -33,7 +33,7 @@ class FlashcardReviewTest extends TestCase
             'ends_at' => now()->addMonth(),
         ]);
 
-        $card = Flashcard::factory()->for($deck)->create();
+        $card = Flashcard::factory()->for($deck, 'deck')->create();
 
         $response = $this->actingAs($user)->postJson(route('flashcards.review', $card), ['quality' => 4]);
 
@@ -61,7 +61,7 @@ class FlashcardReviewTest extends TestCase
         $user->enrollments()->create(['course_id' => $deck->course_id, 'enrolled_at' => now(), 'status' => 'active']);
         Subscription::factory()->create(['user_id' => $user->id, 'status' => 'active', 'activated_at' => now(), 'starts_at' => now()->subDay(), 'ends_at' => now()->addMonth()]);
 
-        $card = Flashcard::factory()->for($deck)->create();
+        $card = Flashcard::factory()->for($deck, 'deck')->create();
 
         $this->actingAs($user)->postJson(route('flashcards.review', $card), ['quality' => 4]);
         $this->actingAs($user)->postJson(route('flashcards.review', $card), ['quality' => 4]);
@@ -77,7 +77,7 @@ class FlashcardReviewTest extends TestCase
         $user->enrollments()->create(['course_id' => $deck->course_id, 'enrolled_at' => now(), 'status' => 'active']);
         Subscription::factory()->create(['user_id' => $user->id, 'status' => 'active', 'activated_at' => now(), 'starts_at' => now()->subDay(), 'ends_at' => now()->addMonth()]);
 
-        $card = Flashcard::factory()->for($deck)->create();
+        $card = Flashcard::factory()->for($deck, 'deck')->create();
 
         $this->actingAs($user)->postJson(route('flashcards.review', $card), ['quality' => 9])
             ->assertStatus(422);

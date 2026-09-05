@@ -77,7 +77,7 @@
                             <span class="icon-frame-soft"><x-ui.icon name="play" class="size-5" /></span>
                             <div>
                                 <strong>{{ $isPaid ? 'دسترسی گسترده به ویدیوهای آموزشی' : 'شروع با نمونه‌درس‌های منتخب' }}</strong>
-                                <span>{{ $isPaid ? 'تمام درس‌های ویدیویی منتشرشده قابل استفاده هستند.' : 'برای ارزیابی سبک تدریس و ساختار محتوا، نمونه‌های رایگان فعال است.' }}</span>
+                                <span>{{ $isPaid ? 'تمام درس‌های ویدیویی منتشرشده قابل استفاده هستند.' : 'تا ۲ ویدیوی منتخب، در کل آرشیو و همه دوره‌ها — سهمیهٔ رایگان به‌صورت جدا برای هر دوره محاسبه نمی‌شود، بلکه در کل آرشیو (همه دوره‌ها روی هم) به‌کار می‌رود تا سبک تدریس و ساختار محتوا را ارزیابی کنید.' }}</span>
                             </div>
                         </div>
                         <div class="trust-list-item is-soft">
@@ -177,27 +177,27 @@
 @push('scripts')
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'CollectionPage',
         'name' => 'پلن‌های اشتراک بروکا',
         'description' => 'مقایسه پلن‌های اشتراک بروکا با قیمت شفاف، مدت دسترسی و پرداخت امن.',
         'url' => route('plans'),
         'inLanguage' => 'fa-IR',
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'BreadcrumbList',
         'itemListElement' => [
             ['@type' => 'ListItem', 'position' => 1, 'name' => __('app.name'), 'item' => route('home')],
             ['@type' => 'ListItem', 'position' => 2, 'name' => 'پلن‌های اشتراک', 'item' => route('plans')],
         ],
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'ItemList',
         'name' => 'پلن‌های اشتراک بروکا',
         'numberOfItems' => $plans->count(),
@@ -217,11 +217,11 @@
                 ], fn ($value) => $value !== null && $value !== ''),
             ];
         })->all(),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'FAQPage',
         'mainEntity' => collect($faq)->map(fn ($item) => [
             '@type' => 'Question',
@@ -231,7 +231,7 @@
                 'text' => $item['a'],
             ],
         ])->all(),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection

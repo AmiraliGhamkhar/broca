@@ -84,7 +84,7 @@ class TelegramWebhookTest extends TestCase
 
     public function test_authorized_admin_can_open_a_flow_from_inline_callback(): void
     {
-        $this->postJson(route('telegram.webhook'), $this->callback('new:blog'), $this->headers())
+        $this->postJson(route('telegram.webhook'), $this->callbackUpdate('new:blog'), $this->headers())
             ->assertOk();
 
         $this->assertDatabaseHas('telegram_chat_sessions', [
@@ -144,7 +144,7 @@ class TelegramWebhookTest extends TestCase
         ];
     }
 
-    private function callback(string $data, int $fromId = 42): array
+    private function callbackUpdate(string $data, int $fromId = 42): array
     {
         return [
             'update_id' => 2,

@@ -4,12 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['course_id', 'title', 'slug', 'description', 'sort_order', 'storage_disk', 'storage_key', 'mime_type', 'size_bytes', 'checksum', 'is_free_designated', 'status', 'published_at', 'author_id', 'reviewer_id'])]
 class Note extends Model
 {
+    use HasFactory;
+
     use SoftDeletes;
     protected function casts(): array
     {

@@ -1,11 +1,10 @@
-# Landing hero assets (placeholder)
+# Site-wide images
 
-`heart-placeholder.svg` is a temporary flat-cream poster image used by the
-landing page hero. It exists so the page renders even before the client
-supplies the real 3D-heart asset.
+- `og-default.png` (1200×630): the Open Graph / Twitter card image used by
+  every page via the layout's `og:image` meta unless a view yields a specific
+  `og_image`. Keep it at exactly 1200×630; brand palette, Latin-only artwork
+  (Persian glyphs render inconsistantly across crawlers' image pipelines).
 
-**To replace with the real asset** (per SPEC §15 placeholder register):
-1. Place the MP4/WebM video files in `public/videos/`
-2. Place the high-resolution poster image in `public/images/` (e.g. `heart-hero.jpg`)
-3. Update `resources/views/components/landing-hero.blade.php` to reference the new asset names
-4. Remove this README and the placeholder file
+The 2026-09 landing hero is an editorial card rendered by
+`resources/views/components/landing-hero.blade.php` and needs no image
+assets; the former `heart-placeholder.svg` poster was removed with it.

@@ -31,7 +31,7 @@ class SiteMarkdown
             '- [کاتالوگ دوره‌ها]('.self::url('catalog').'): فهرست کامل دوره‌های منتشرشده',
             '- [پلن‌های اشتراک]('.self::url('plans').'): قیمت‌ها و محدودهٔ دسترسی',
             '- [وبلاگ و مقالات]('.self::url('blog.index').'): محتوای آموزشی رایگان',
-            '- [بیانیهٔ پزشکی]('.self::url('legal', 'medical-disclaimer').'): سلب مسئولیت بالینی (YMYL)',
+            '- [بیانیهٔ پزشکی]('.self::url('legal.show', 'medical-disclaimer').'): سلب مسئولیت بالینی (YMYL)',
             '',
         ];
 
@@ -264,7 +264,7 @@ class SiteMarkdown
         $lines = [
             '# '.$document['heading'].' — Broca',
             '',
-            '> نسخهٔ وب: '.self::url('legal', $page),
+            '> نسخهٔ وب: '.self::url('legal.show', $page),
             '',
         ];
 

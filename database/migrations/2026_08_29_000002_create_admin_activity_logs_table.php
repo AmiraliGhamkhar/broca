@@ -6,11 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Created directly in the final shape intended by
+     * 2026_08_26_000004_preserve_financial_and_audit_records (nullable
+     * user_id with SET NULL + actor snapshots): that migration runs BEFORE
+     * this table exists on a fresh database and skips it, so it must not
+     * rely on a later ALTER pass.
+     */
     public function up(): void
     {
         Schema::create('admin_activity_logs', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('actor_name_snapshot')->nullable();
+            $table->string('actor_email_snapshot')->nullable();
             $table->string('action', 255);
             $table->string('route_name', 255)->nullable();
             $table->string('method', 10);

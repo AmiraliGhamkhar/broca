@@ -116,7 +116,11 @@ class BlogController extends Controller
 
     public function destroy(BlogPost $blog): RedirectResponse
     {
-        $blog->delete();
+        // Permanent removal: the admin panel is the only deletion path and
+        // there is no restore UI, so a soft delete would just leave an
+        // orphaned row that can never be recovered. The SoftDeletes trait
+        // still guards programmatic/accidental deletes elsewhere.
+        $blog->forceDelete();
 
         return redirect()->route('admin.blogs.index')->with('status', 'مطلب وبلاگ حذف شد.');
     }

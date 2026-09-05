@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" class="scroll-smooth">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,18 +55,18 @@
 
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'Organization',
         'name' => 'Broca',
         'alternateName' => 'بروکا',
         'url' => url('/'),
         'description' => 'پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی برای دانشجویان؛ دوره‌ها با بازبینی علمی، مرور فاصله‌دار و ارزیابی.',
         'inLanguage' => 'fa-IR',
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'WebSite',
         'name' => 'Broca',
         'alternateName' => 'بروکا',
@@ -80,7 +80,7 @@
             ],
             'query-input' => 'required name=search_term_string',
         ],
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 </head>
 <body class="bg-canvas text-ink font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileNav: false }">

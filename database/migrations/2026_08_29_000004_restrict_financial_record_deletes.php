@@ -12,30 +12,34 @@ return new class extends Migration
      * evidence. Original migrations created these FKs with cascadeOnDelete;
      * restrict them so an accidental invoice delete fails loudly instead of
      * silently destroying money records (audit finding, 2026-08-29).
+     *
+     * Drop and re-add are split into separate Schema::table calls so the
+     * SQLite table-rebuild emulation (used in local dev and the test suite)
+     * never has to mix two FK operations in a single blueprint.
      */
     public function up(): void
     {
-        Schema::table('payment_transactions', function (Blueprint $table): void {
-            $table->dropForeign(['invoice_id']);
-            $table->foreign('invoice_id')->references('id')->on('invoices')->restrictOnDelete();
-        });
+        foreach (['payment_transactions', 'subscriptions'] as $tableName) {
+            Schema::table($tableName, function (Blueprint $table): void {
+                $table->dropForeign(['invoice_id']);
+            });
 
-        Schema::table('subscriptions', function (Blueprint $table): void {
-            $table->dropForeign(['invoice_id']);
-            $table->foreign('invoice_id')->references('id')->on('invoices')->restrictOnDelete();
-        });
+            Schema::table($tableName, function (Blueprint $table): void {
+                $table->foreign('invoice_id')->references('id')->on('invoices')->restrictOnDelete();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('payment_transactions', function (Blueprint $table): void {
-            $table->dropForeign(['invoice_id']);
-            $table->foreign('invoice_id')->references('id')->on('invoices')->cascadeOnDelete();
-        });
+        foreach (['payment_transactions', 'subscriptions'] as $tableName) {
+            Schema::table($tableName, function (Blueprint $table): void {
+                $table->dropForeign(['invoice_id']);
+            });
 
-        Schema::table('subscriptions', function (Blueprint $table): void {
-            $table->dropForeign(['invoice_id']);
-            $table->foreign('invoice_id')->references('id')->on('invoices')->cascadeOnDelete();
-        });
+            Schema::table($tableName, function (Blueprint $table): void {
+                $table->foreign('invoice_id')->references('id')->on('invoices')->cascadeOnDelete();
+            });
+        }
     }
 };

@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class LandingPageTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_home_page_renders_successfully(): void
     {
         $response = $this->get('/');
@@ -13,8 +16,10 @@ class LandingPageTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('dir="rtl"', false);
         $response->assertSee('lang="fa"', false);
-        $response->assertSee('heart-placeholder', false);
-        $response->assertSee('این ویدیوی نمونه است', false);
+        // The 2026-09 hero redesign replaced the placeholder heart poster and
+        // sample-video block with the editorial card; assert its real copy.
+        $response->assertSee('یادگیری عمیق علوم پزشکی', false);
+        $response->assertSee('درس‌های ویدیویی ساخت‌یافته', false);
     }
 
     public function test_vazirmatn_font_is_self_hosted(): void

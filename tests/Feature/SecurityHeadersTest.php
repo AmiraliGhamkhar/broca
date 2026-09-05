@@ -38,9 +38,16 @@ class SecurityHeadersTest extends TestCase
     {
         config(['session.secure' => true]);
 
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSecureCookie(config('session.cookie'));
+        $response = $this->get(route('home'))->assertOk();
+
+        // TestResponse has no assertSecureCookie; inspect the emitted
+        // cookie object directly (also re-assert HttpOnly here).
+        $cookie = collect($response->headers->getCookies())
+            ->first(fn ($cookie): bool => $cookie->getName() === config('session.cookie'));
+
+        $this->assertNotNull($cookie, 'session cookie was not set');
+        $this->assertTrue($cookie->isSecure());
+        $this->assertTrue($cookie->isHttpOnly());
     }
 
     public function test_robots_txt_is_served_by_the_controller_not_a_static_file(): void

@@ -15,11 +15,11 @@
     <div class="grid gap-4 md:grid-cols-3 mt-10">
         <div class="meta-card is-soft">
             <p class="text-xs font-bold text-ink">دسته‌های فعال</p>
-            <p class="mt-3 text-3xl font-black text-ink">{{ number_format($decks->count()) }}</p>
+            <p class="mt-3 text-3xl font-black text-ink">{{ number_format($decks->count()) }} دستهٔ کارت</p>
         </div>
         <div class="meta-card is-soft">
             <p class="text-xs font-bold text-ink">مرورهای امروز</p>
-            <p class="mt-3 text-3xl font-black {{ $dueToday > 0 ? 'text-rausch' : 'text-teal' }}">{{ number_format($dueToday) }}</p>
+            <p class="mt-3 text-3xl font-black {{ $dueToday > 0 ? 'text-rausch' : 'text-teal' }}">{{ number_format($dueToday) }} کارت آمادهٔ مرور امروز</p>
         </div>
         <div class="meta-card is-soft">
             <p class="text-xs font-bold text-ink">روش مرور</p>

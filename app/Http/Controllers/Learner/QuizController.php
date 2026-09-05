@@ -15,6 +15,47 @@ use Illuminate\View\View;
 
 class QuizController extends Controller
 {
+    /**
+     * Learner quiz hub: published quizzes of the user's enrolled, published
+     * courses with per-quiz attempt stats (tries, best score, last attempt).
+     */
+    public function index(Request $request): View
+    {
+        $user = $request->user();
+
+        $enrolledCourseIds = $user->enrollments()
+            ->where('status', 'active')
+            ->pluck('course_id');
+
+        $quizzes = Quiz::query()
+            ->with('course.subject')
+            ->withCount(['questions' => fn ($q) => $q->published()])
+            ->published()
+            ->whereHas('course', fn ($q) => $q->published()->whereIn('id', $enrolledCourseIds))
+            ->orderBy('id')
+            ->get();
+
+        $attempts = $quizzes->isEmpty()
+            ? collect()
+            : QuizAttempt::query()
+                ->where('user_id', $user->id)
+                ->whereIn('quiz_id', $quizzes->pluck('id'))
+                ->get()
+                ->groupBy('quiz_id');
+
+        $quizStats = $attempts->map(fn ($attempts) => [
+            'tries' => $attempts->count(),
+            'best' => $attempts->max('score_percent'),
+            'last' => $attempts->sortByDesc('submitted_at')->first(),
+        ]);
+
+        return view('learner.quizzes', [
+            'quizzes' => $quizzes,
+            'quizStats' => $quizStats,
+            'hasEnrollments' => $enrolledCourseIds->isNotEmpty(),
+        ]);
+    }
+
     public function show(Request $request, Quiz $quiz): View
     {
         abort_unless($this->published($quiz), 404);

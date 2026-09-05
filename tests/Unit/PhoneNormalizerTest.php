@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Support\PhoneNormalizer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class PhoneNormalizerTest extends TestCase
@@ -34,13 +35,13 @@ class PhoneNormalizerTest extends TestCase
         ];
     }
 
-    /** @dataProvider validProvider */
+    #[DataProvider('validProvider')]
     public function test_normalizes_valid_numbers(string $input, string $expected): void
     {
         $this->assertSame($expected, PhoneNormalizer::normalize($input));
     }
 
-    /** @dataProvider invalidProvider */
+    #[DataProvider('invalidProvider')]
     public function test_rejects_invalid_numbers(string $input): void
     {
         $this->assertFalse(PhoneNormalizer::isValid($input));

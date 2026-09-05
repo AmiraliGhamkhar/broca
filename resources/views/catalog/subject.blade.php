@@ -104,7 +104,7 @@
 @push('scripts')
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'CollectionPage',
         'name' => 'دوره‌های ' . $subject->name,
         'description' => $subject->description ?: ('مشاهده دوره‌های ' . $subject->name . ' در بروکا.'),
@@ -118,11 +118,11 @@
             ],
         ],
         'inLanguage' => 'fa-IR',
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'ItemList',
         'name' => 'دوره‌های ' . $subject->name,
         'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
@@ -142,7 +142,7 @@
                 'author' => $course->author ? ['@type' => 'Person', 'name' => $course->author->name] : null,
             ], fn ($value) => $value !== null && $value !== ''),
         ])->all(),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection

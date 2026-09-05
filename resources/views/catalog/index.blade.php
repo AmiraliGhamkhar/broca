@@ -195,7 +195,7 @@
 @push('scripts')
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'CollectionPage',
         'name' => $catalogTitle,
         'description' => $catalogDescription,
@@ -206,22 +206,22 @@
             'url' => route('home'),
         ],
         'inLanguage' => 'fa-IR',
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'BreadcrumbList',
         'itemListElement' => array_values(array_filter([
             ['@type' => 'ListItem', 'position' => 1, 'name' => __('app.name'), 'item' => route('home')],
             ['@type' => 'ListItem', 'position' => 2, 'name' => 'کاتالوگ', 'item' => route('catalog')],
             $selectedSubject ? ['@type' => 'ListItem', 'position' => 3, 'name' => $selectedSubject->name, 'item' => route('subjects.show', $selectedSubject)] : null,
         ])),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'ItemList',
         'name' => $selectedSubject ? ('دوره‌های ' . $selectedSubject->name) : 'دوره‌های پزشکی بروکا',
         'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
@@ -243,7 +243,7 @@
                 'author' => $course->author ? ['@type' => 'Person', 'name' => $course->author->name] : null,
             ], fn ($value) => $value !== null && $value !== ''),
         ])->all(),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection

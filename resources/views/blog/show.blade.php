@@ -108,7 +108,7 @@
 @push('scripts')
     <script type="application/ld+json">
     {!! json_encode(array_filter([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'BlogPosting',
         'headline' => $post->title,
         'description' => $post->meta_description ?: ($post->excerpt ?: \Illuminate\Support\Str::limit($post->content, 155)),
@@ -120,7 +120,7 @@
         'publisher' => ['@type' => 'Organization', 'name' => config('app.name'), 'url' => url('/')],
         'mainEntityOfPage' => route('blog.show', $post->slug),
         'inLanguage' => 'fa-IR',
-    ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ]), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection
