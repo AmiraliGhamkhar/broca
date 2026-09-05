@@ -2194,27 +2194,60 @@ class TelegramBotService
     /** @return array{storage_key:string,mime_type:string,size_bytes:int,checksum:string} */
     private function storeRemoteDocument(string $url, string $directory, string $title): array
     {
-        if (! preg_match('/^https?:\/\//i', $url)) {
-            throw new RuntimeException('فقط URL های http/https پشتیبانی می‌شوند.');
-        }
-
-        // The URL comes from a Telegram message, so treat it as untrusted:
-        // refuse to fetch loopback/private/link-local targets (SSRF) — on
-        // shared hosting this box's own services sit on 127.0.0.1.
-        $this->assertPublicHost((string) (parse_url($url, PHP_URL_HOST) ?: ''));
-
         $tmp = tempnam(sys_get_temp_dir(), 'broca-remote-');
         if ($tmp === false) {
             throw new RuntimeException('ساخت فایل موقت ناموفق بود.');
         }
 
+        $hopsLeft = 3;
+        $currentUrl = $url;
+
         try {
-            $response = Http::timeout(180)->sink($tmp)->get($url);
+            while (true) {
+                // The URL ultimately comes from a Telegram message, so treat
+                // it as untrusted on EVERY hop: validate scheme + host, then
+                // pin the connection to the validated IP. Without pinning, a
+                // late DNS swap (rebinding) could still land on loopback
+                // after validation; without per-hop re-validation, a public
+                // URL could 302 the fetcher to 127.0.0.1 (SSRF) — on shared
+                // hosting this box's own services sit there.
+                $ip = $this->assertPublicUrl($currentUrl);
 
-            if (! $response->successful()) {
-                @unlink($tmp);
+                $response = Http::timeout(180)
+                    ->withoutRedirecting()
+                    ->withOptions(['curl' => [CURLOPT_RESOLVE => [$this->resolvePin($currentUrl, $ip)]]])
+                    ->sink($tmp)
+                    ->get($currentUrl);
 
-                throw new RuntimeException('دریافت فایل از URL ناموفق بود (HTTP '.$response->status().').');
+                if ($response->redirect()) {
+                    if ($hopsLeft-- <= 0) {
+                        @unlink($tmp);
+
+                        throw new RuntimeException('دریافت فایل از این URL مجاز نیست: تعداد ریدایرکت‌ها بیش از حد مجاز است.');
+                    }
+
+                    $location = trim((string) $response->header('Location', ''));
+
+                    // Relative Locations are refused outright: resolving them
+                    // adds parsing surface for zero benefit in this flow.
+                    if ($location === '' || ! preg_match('/^https?:\/\//i', $location)) {
+                        @unlink($tmp);
+
+                        throw new RuntimeException('ریدایرکت این URL به مقصد نامعتبر است و دنبال نمی‌شود.');
+                    }
+
+                    $currentUrl = $location;
+
+                    continue;
+                }
+
+                if (! $response->successful()) {
+                    @unlink($tmp);
+
+                    throw new RuntimeException('دریافت فایل از URL ناموفق بود (HTTP '.$response->status().').');
+                }
+
+                break;
             }
         } catch (RuntimeException $exception) {
             throw $exception;
@@ -2224,17 +2257,42 @@ class TelegramBotService
         }
 
         $mime = (string) $response->header('Content-Type', 'application/octet-stream');
-        $name = basename(parse_url($url, PHP_URL_PATH) ?: 'remote-file');
+        $name = basename(parse_url($currentUrl, PHP_URL_PATH) ?: 'remote-file');
 
         return $this->storeLocalFile($tmp, $directory, $title, $mime, $name);
     }
 
     /**
-     * Reject hosts that resolve to non-public IP space. The resolved IP is
-     * what actually gets connected to, so an unresolvable or private host is
-     * blocked the same way.
+     * Validate scheme + host of an untrusted URL; returns the resolved
+     * public IP so the caller can pin the connection to it.
      */
-    private function assertPublicHost(string $host): void
+    private function assertPublicUrl(string $url): string
+    {
+        if (! preg_match('/^https?:\/\//i', $url)) {
+            throw new RuntimeException('فقط URL های http/https پشتیبانی می‌شوند.');
+        }
+
+        return $this->assertPublicHost((string) (parse_url($url, PHP_URL_HOST) ?: ''));
+    }
+
+    /** host:port:ip entry for CURLOPT_RESOLVE — pins the fetch to the IP we validated. */
+    private function resolvePin(string $url, string $ip): string
+    {
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        $port = parse_url($url, PHP_URL_PORT)
+            ?? (stripos($url, 'https://') === 0 ? 443 : 80);
+
+        return $host.':'.$port.':'.$ip;
+    }
+
+    /**
+     * Reject hosts that resolve to non-public IP space and return the
+     * resolved IP. The resolved IP is what actually gets connected to, so
+     * an unresolvable or private host is blocked the same way. IPv6-only
+     * destinations fail closed (gethostbyname is IPv4-only) — acceptable
+     * for an admin-only asset-import path.
+     */
+    private function assertPublicHost(string $host): string
     {
         if ($host === '') {
             throw new RuntimeException('URL معتبر نیست.');
@@ -2249,6 +2307,8 @@ class TelegramBotService
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
             throw new RuntimeException('ذخیره از این URL مجاز نیست.');
         }
+
+        return $ip;
     }
 
     /** @return array{storage_key:string,mime_type:string,size_bytes:int,checksum:string} */

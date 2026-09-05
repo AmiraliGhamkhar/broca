@@ -486,12 +486,13 @@ by re-running the suite**.
 | R5-13 | `PaymentTest` collision retry used `createRandomStringsUsingSequence`, but the framework's own 40-char draws (session id, CSRF token) consume the positional sequence before the invoice draw — the test could never collide | Test now installs a length-aware factory: 8-char draws return the scripted collision pair, everything else gets real entropy |
 | R5-14 | `<html>` carried a redundant `class="scroll-smooth"` while `scroll-behavior: smooth` already lives in `app.css` (with a reduced-motion override) | Class removed — behavior preserved, markup matches assertions |
 | R5-15 | `public/images/heart-placeholder.svg` was orphaned (the 2026-09 hero is a pure editorial card) with a README still describing it as in use | SVG deleted; README rewritten to document `og-default.png` (1200×630, Latin-only artwork) which is the only live asset |
+| R5-16 | **Telegram bot URL import had two SSRF bypasses**: `storeRemoteDocument` validated the host once, then fetched with redirects enabled — a public URL could 302 the fetcher to `127.0.0.1` (cPanel services) or the cloud metadata IP — and DNS could re-resolve to an internal address between validation and connect (rebinding) | Per-hop validation: `withoutRedirecting()` + manual follow of ≤3 absolute http(s) hops, each re-checked against public IP space; connection pinned to the validated IP via `CURLOPT_RESOLVE`; relative Locations refused outright; IPv6-only hosts fail closed. New `TelegramSsrfTest` (6 tests) locks the rules incl. redirect-to-loopback refusal with `Http::assertSentCount(1)` |
 
 ### 12.3 What was verified, not assumed
 
-- **Full suite green**: `OK (170 tests, 636 assertions)` on PHP 8.4.23 / PHPUnit 12.5.33 via the WASM harness (sqlite `:memory:`, same env as `phpunit.xml`).
+- **Full suite green**: `OK (176 tests, 654 assertions)` on PHP 8.4.23 / PHPUnit 12.5.33 via the WASM harness (sqlite `:memory:`, same env as `phpunit.xml`).
 - **SEO/GEO endpoints smoke-tested live**: `/sitemap.xml` (course URLs + `lastmod`), `/robots.txt` (sitemap reference, retrieval-agent blocks), `/llms.txt`, canonical link on home — all asserted against rendered output, not source reading.
-- **Lint**: 246 PHP files, 0 failures. **Build**: `vite build` green (CSS 59.07 kB / JS 54.41 kB).
+- **Lint**: 247 PHP files, 0 failures. **Build**: `vite build` green (CSS 59.07 kB / JS 54.41 kB).
 - The micro-interaction layer from round 4 was re-audited in context and kept as-is: it already implements purposeful motion only (state feedback, reveal, hover/press, RTL-correct `scaleX` progress) with CSS **and** JS `prefers-reduced-motion` fallbacks — adding more would be decoration, which the client brief explicitly rejects.
 
 ### 12.4 Remaining launch gates (unchanged from RUNBOOK)

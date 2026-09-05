@@ -89,3 +89,9 @@ working-process rules. Newest first.
    the plans page must never hide the free tier, mirroring how
    `EntitlementService` constants define the quota. Seeded wording states
    the cap is global (whole archive), not per course.
+6. **Untrusted URLs are validated on every hop and pinned to the validated
+   IP.** The Telegram bot's URL-import path refuses relative redirects,
+   follows at most 3 absolute http(s) hops (each re-checked against public
+   IP space), and connects via `CURLOPT_RESOLVE` to close DNS-rebinding.
+   IPv6-only targets fail closed — acceptable trade-off for an admin-only
+   import path on cPanel shared hosting.
