@@ -119,7 +119,14 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     })->middleware('throttle:6,1')->name('verification.send');
 
     Route::middleware('verified')->group(function (): void {
-        Route::post('/checkout/{plan}', [PaymentController::class, 'checkout'])->name('checkout');
+        // Throttled: each call may create an invoice and always performs an
+        // outbound ZarinPal purchase request. Unbounded, a double-clicking
+        // user (or a script) can spray gateway requests and invoice rows —
+        // ZarinPal also rate-limits merchants, so this protects our standing
+        // with the gateway as much as our own DB.
+        Route::post('/checkout/{plan}', [PaymentController::class, 'checkout'])
+            ->middleware('throttle:checkout')
+            ->name('checkout');
         Route::get('/checkout/{invoice}/success', [PaymentController::class, 'success'])->name('checkout.success');
         Route::get('/checkout/{invoice}/failed', [PaymentController::class, 'failed'])->name('checkout.failed');
 

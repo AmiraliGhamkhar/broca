@@ -6,6 +6,7 @@ use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Subject;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * SEO/GEO endpoints. AI answer-engine crawlers (GPTBot, ClaudeBot,
@@ -77,6 +78,23 @@ class SeoController extends Controller
 
     public function sitemap(): Response
     {
+        // The sitemap walks every visible subject, published course and
+        // published post on each hit. AI crawlers (GPTBot, ClaudeBot,
+        // PerplexityBot, …) are explicitly invited above and poll this
+        // aggressively, so an uncached build is a free DB-load amplifier on
+        // shared hosting. Content changes are admin-driven and not
+        // time-critical for crawlers; 1 hour is well inside every engine's
+        // recrawl window.
+        $xml = Cache::remember('seo.sitemap.xml', 3600, fn () => $this->buildSitemap());
+
+        return response($xml, 200, [
+            'Content-Type' => 'application/xml; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
+    private function buildSitemap(): string
+    {
         $urls = [
             ['loc' => route('home'), 'priority' => '1.0'],
             ['loc' => route('catalog'), 'priority' => '0.9'],
@@ -117,6 +135,6 @@ class SeoController extends Controller
         }
         $xml .= '</urlset>'."\n";
 
-        return response($xml, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+        return $xml;
     }
 }
