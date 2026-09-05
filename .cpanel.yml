@@ -1,49 +1,46 @@
 # cPanel Git Version Control deploy hook (brocamed.ir, Mizbanfa shared hosting).
 #
-# Triggered by "Update from Remote" → "Deploy HEAD Commit" in cPanel, or by
-# `/usr/local/cpanel/bin/gitdeploy` over SSH.
+# Triggered by "Update from Remote" -> "Deploy HEAD Commit" in cPanel, or by
+# /usr/local/cpanel/bin/gitdeploy over SSH.
 #
 # Design notes for this host:
 #  - PHP 8.4 is REQUIRED (shetabit/payment v7 + Symfony 8.1 need >=8.4.1).
 #    cPanel's default `php` in cron/deploy context is often an older EA-PHP,
-#    so the binary is pinned explicitly below rather than trusting $PATH.
-#  - Node is NOT assumed. If `npm` is unavailable the build step is skipped
-#    and the COMMITTED public/build artifacts are used instead. That keeps a
-#    deploy from ever producing an unstyled site.
-#  - No queue worker: QUEUE_CONNECTION should be `sync` or drained by cron.
+#    so the binary is pinned explicitly rather than trusting $PATH.
+#  - Node is NOT assumed. If npm is unavailable the build step is skipped and
+#    the COMMITTED public/build artifacts are used instead, so a deploy can
+#    never produce an unstyled site.
+#  - No queue worker on shared hosting: keep QUEUE_CONNECTION=sync, or drain
+#    the queue from the cPanel cron (see docs/CPANEL_DEPLOYMENT.md).
 #
-# Set DEPLOYPATH to the repo checkout; the domain's document root must point
-# at $DEPLOYPATH/public.
+# Every task runs in its own shell, so state (cd, exports) does NOT persist
+# between list items. Each task is therefore self-contained on one line.
+#
+# Adjust DEPLOYPATH if the checkout lives elsewhere; the domain's document
+# root must point at $DEPLOYPATH/public.
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/brocamed/broca
-    - export PHPBIN=/opt/cpanel/ea-php84/root/usr/bin/php
-    - /bin/test -x "$PHPBIN" || export PHPBIN=$(command -v php)
+    # Abort before touching anything if the PHP version cannot run the app.
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); "$P" -r "exit(PHP_VERSION_ID >= 80400 ? 0 : 1);" || { echo "FATAL: PHP 8.4+ required, found $("$P" -v | head -1)"; exit 1; }'
 
-    # Fail loudly rather than deploying a build that cannot boot.
-    - "$PHPBIN" -r 'exit(PHP_VERSION_ID >= 80400 ? 0 : 1);' || { echo "FATAL: PHP 8.4+ required, got $($PHPBIN -v | head -1)"; exit 1; }
+    # Maintenance mode so users never hit a half-updated release.
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan down --retry=60 || true'
 
-    - cd "$DEPLOYPATH"
-
-    # Put the app to sleep so users never hit a half-updated release.
-    - "$PHPBIN" artisan down --render="errors::503" --retry=60 || true
-
-    - /bin/test -x "$(command -v composer)" && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || "$PHPBIN" composer.phar install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && { command -v composer >/dev/null 2>&1 && composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist || "$P" composer.phar install --no-dev --optimize-autoloader --no-interaction --prefer-dist; }'
 
     # Rebuild assets only if Node exists; otherwise use committed artifacts.
-    - if command -v npm >/dev/null 2>&1; then npm ci --ignore-scripts && npm run build; else echo "npm not found — using committed public/build"; fi
-    - /bin/test -f "$DEPLOYPATH/public/build/manifest.json" || { echo "FATAL: no Vite manifest; commit public/build or install Node"; "$PHPBIN" artisan up; exit 1; }
+    - 'export D=/home/brocamed/broca; cd "$D" && if command -v npm >/dev/null 2>&1; then npm ci --ignore-scripts && npm run build; else echo "npm not found - using committed public/build"; fi'
 
-    - "$PHPBIN" artisan migrate --force
-    - "$PHPBIN" artisan storage:link || true
+    # Never leave the site up without a Vite manifest: @vite() would throw.
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && { test -f public/build/manifest.json || { echo "FATAL: no Vite manifest; commit public/build or install Node"; "$P" artisan up; exit 1; }; }'
 
-    # Rebuild caches (config:cache makes env() outside config/ return null —
-    # bootstrap/app.php's env('TRUSTED_PROXIES') is read at boot, so it is
-    # resolved before caching applies; see docs/CPANEL_DEPLOYMENT.md).
-    - "$PHPBIN" artisan config:cache
-    - "$PHPBIN" artisan route:cache
-    - "$PHPBIN" artisan view:cache
-    - "$PHPBIN" artisan event:cache
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan migrate --force'
 
-    - "$PHPBIN" artisan up
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan storage:link || true'
+
+    # Rebuild caches. NOTE: after config:cache, env() outside config/ returns
+    # null - that is why TRUSTED_PROXIES moved into config/broca.php.
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan config:cache && "$P" artisan route:cache && "$P" artisan view:cache && "$P" artisan event:cache'
+
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan up'
