@@ -171,13 +171,21 @@ class PaymentController extends Controller
     }
 
     /**
-     * Merge the gateway's verification receipt (reference id, amount, date)
+     * Merge the gateway's verification receipt (driver, reference id, date)
      * into the transaction row so the ledger is self-sufficient for
      * chargeback disputes and accounting reconciliation (Round-6 audit I-2).
+     *
+     * Shetabit's Receipt exposes getters only (properties are protected
+     * readonly, no toArray), so the array is built from the contract's
+     * accessors explicitly.
      */
     private function attachReceipt(PaymentTransaction $transaction, Receipt $receipt): void
     {
-        $payload = method_exists($receipt, 'toArray') ? $receipt->toArray() : get_object_vars($receipt);
+        $payload = [
+            'driver' => $receipt->getDriver(),
+            'referenceId' => $receipt->getReferenceId(),
+            'date' => $receipt->getDate()->toISOString(),
+        ];
 
         $transaction->update([
             'response_payload' => array_merge((array) $transaction->response_payload, [

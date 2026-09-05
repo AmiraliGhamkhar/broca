@@ -64,7 +64,12 @@ class ZarinPalGateway implements PaymentGateway
             // back to a minimal driver-tagged receipt otherwise.
             $attached = property_exists($exception, 'receipt') ? $exception->receipt : null;
 
-            return $attached instanceof Receipt ? $attached : new Receipt($this->getGatewayName());
+            // Receipt's constructor requires (driver, referenceId); in this
+            // recovery path the best available reference is the invoice's
+            // stored authority (ZarinPal's Authority string).
+            return $attached instanceof Receipt
+                ? $attached
+                : new Receipt($this->getGatewayName(), (string) $invoice->authority);
         } catch (InvalidPaymentException | PurchaseFailedException | TimeoutException) {
             return null;
         } catch (\Throwable $exception) {

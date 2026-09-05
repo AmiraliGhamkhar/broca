@@ -72,7 +72,12 @@ class ZibalGateway implements PaymentGateway
             // verified trackId is a paid invoice, not a failure.
             $attached = property_exists($exception, 'receipt') ? $exception->receipt : null;
 
-            return $attached instanceof Receipt ? $attached : new Receipt($this->getGatewayName());
+            // Receipt's constructor requires (driver, referenceId); the
+            // authority column holds Zibal's trackId here — the same
+            // transaction id the gateway knows.
+            return $attached instanceof Receipt
+                ? $attached
+                : new Receipt($this->getGatewayName(), (string) $invoice->authority);
         } catch (InvalidPaymentException | PurchaseFailedException | TimeoutException) {
             return null;
         } catch (\Throwable $exception) {

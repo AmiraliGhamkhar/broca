@@ -28,10 +28,9 @@ class FakePaymentGateway implements PaymentGateway
             return null;
         }
 
-        $receipt = new Receipt($this->getGatewayName());
-        $receipt->referenceId = 'FAKE-REF-'.$invoice->id;
-
-        return $receipt;
+        // Receipt's constructor requires (driver, referenceId); the
+        // reference is readonly — pass it at construction.
+        return new Receipt($this->getGatewayName(), 'FAKE-REF-'.$invoice->id);
     }
 
     public function getGatewayName(): string
