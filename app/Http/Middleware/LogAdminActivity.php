@@ -73,8 +73,11 @@ class LogAdminActivity
     }
 
     /**
-     * Redaction must recurse: nested keys (e.g. options[0][label]) would
+     * Redaction must recurse: nested keys (e.g. options[0][password]) would
      * otherwise bypass the REDACTED_KEYS filter (Round-6 audit B-3).
+     * Redacted keys are REMOVED entirely — the pre-audit except() contract
+     * (asserted by AdminAuditLogTest / AdminTwoFactorManagementTest) is
+     * absence, and absence leaks less than a '[redacted]' marker would.
      *
      * @param  mixed  $value
      * @param  int  $depth  Hard cap so pathological nesting cannot recurse unbounded.
@@ -91,8 +94,6 @@ class LogAdminActivity
 
             foreach ($value as $key => $child) {
                 if (is_string($key) && in_array(strtolower($key), self::REDACTED_KEYS, true)) {
-                    $clean[$key] = '[redacted]';
-
                     continue;
                 }
 
