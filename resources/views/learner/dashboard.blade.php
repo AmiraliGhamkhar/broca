@@ -112,7 +112,11 @@
         </nav>
     </div>
 
-    <div x-show="activeTab === 'courses'" class="mt-8 space-y-8">
+    <div x-show="activeTab === 'courses'"
+ x-transition:enter="transition duration-200 ease-out"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+         class="mt-8 space-y-8">
         @forelse ($enrollments as $enrollment)
             @php $course = $enrollment->course; @endphp
             <div class="editorial-card">
@@ -217,7 +221,11 @@
         @endforelse
     </div>
 
-    <div x-show="activeTab === 'flashcards'" x-cloak class="mt-8">
+    <div x-show="activeTab === 'flashcards'" x-cloak
+ x-transition:enter="transition duration-200 ease-out"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+         class="mt-8">
         <div class="editorial-card">
             <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-hairline-soft">
                 <div>
@@ -253,7 +261,11 @@
         </div>
     </div>
 
-    <div x-show="activeTab === 'quizzes'" x-cloak class="mt-8">
+    <div x-show="activeTab === 'quizzes'" x-cloak
+ x-transition:enter="transition duration-200 ease-out"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+         class="mt-8">
         <div class="editorial-card">
             <h2 class="text-xl font-black text-ink pb-4 border-b border-hairline-soft">کارنامه و نتایج آزمون‌ها</h2>
             <div class="mt-6 divide-y divide-broca-sand">
@@ -279,7 +291,11 @@
         </div>
     </div>
 
-    <div x-show="activeTab === 'discover'" x-cloak class="mt-8 space-y-6">
+    <div x-show="activeTab === 'discover'" x-cloak
+ x-transition:enter="transition duration-200 ease-out"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+         class="mt-8 space-y-6">
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h2 class="text-xl font-black text-ink">دوره‌های پیشنهادی برای ادامه مسیر</h2>
@@ -290,7 +306,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             @forelse ($availableCourses as $c)
-                <article class="course-card">
+                <article class="course-card" data-reveal>
                     @if ($c->cover_image_path)
                         <img src="{{ $c->cover_image_path }}" alt="{{ $c->title }}" class="aspect-[16/10] w-full object-cover">
                     @endif

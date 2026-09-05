@@ -20,9 +20,9 @@ class CatalogController extends Controller
             ->with(['subject', 'author', 'reviewer'])
             ->withCount([
                 'videos as published_videos_count' => fn ($query) => $query->published(),
-                'notes as published_notes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
-                'decks as published_decks_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
-                'quizzes as published_quizzes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+                'notes as published_notes_count' => fn ($query) => $query->published(),
+                'decks as published_decks_count' => fn ($query) => $query->published(),
+                'quizzes as published_quizzes_count' => fn ($query) => $query->published(),
             ])
             ->published()
             ->when(
@@ -31,8 +31,14 @@ class CatalogController extends Controller
                 fn ($query) => $query->where('title', 'like', '%'.addcslashes((string) $request->string('q'), '\\%_').'%')
             )
             ->when(
-                $request->filled('subject'),
-                fn ($query) => $query->whereHas('subject', fn ($subject) => $subject->where('slug', (string) $request->string('subject')))
+                $selectedSubject !== null,
+                fn ($query) => $query->where('subject_id', $selectedSubject->id)
+            )
+            ->when(
+                // ?subject= was given but names no visible subject: render an
+                // empty page without hitting the course table.
+                $selectedSubject === null && $request->filled('subject'),
+                fn ($query) => $query->whereRaw('1 = 0')
             )
             ->orderBy('sort_order')
             ->paginate(12)
@@ -48,9 +54,9 @@ class CatalogController extends Controller
             ->with(['author', 'reviewer'])
             ->withCount([
                 'videos as published_videos_count' => fn ($query) => $query->published(),
-                'notes as published_notes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
-                'decks as published_decks_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
-                'quizzes as published_quizzes_count' => fn ($query) => $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now()),
+                'notes as published_notes_count' => fn ($query) => $query->published(),
+                'decks as published_decks_count' => fn ($query) => $query->published(),
+                'quizzes as published_quizzes_count' => fn ($query) => $query->published(),
             ])
             ->published()
             ->orderBy('sort_order')
@@ -73,12 +79,12 @@ class CatalogController extends Controller
         $videos->each(fn ($video) => $video->is_free_available = $entitlements->isFree($video));
         $course->setRelation('videos', $videos);
 
-        $notes = $course->notes()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get();
+        $notes = $course->notes()->published()->orderBy('sort_order')->get();
         $notes->each(fn ($note) => $note->is_free_available = $entitlements->isFree($note));
         $course->setRelation('notes', $notes);
 
-        $course->setRelation('decks', $course->decks()->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order')->get());
-        $course->setRelation('quizzes', $course->quizzes()->where('status', 'published')->where('published_at', '<=', now())->get());
+        $course->setRelation('decks', $course->decks()->published()->orderBy('sort_order')->get());
+        $course->setRelation('quizzes', $course->quizzes()->published()->get());
 
         $isEnrolled = auth()->check() && auth()->user()->isEnrolledIn($course->id);
 

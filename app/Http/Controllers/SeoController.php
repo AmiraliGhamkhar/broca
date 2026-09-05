@@ -16,25 +16,54 @@ class SeoController extends Controller
 {
     public function robots(): Response
     {
+        // Policy 2026-09-05 (client decision open — see DECISIONS.md): ALL
+        // AI crawlers are welcome on public pages. The explicit Allow blocks
+        // matter because several engines IGNORE a bare "User-agent: *" allow
+        // for bots they recognize by name; unknown lines are ignored by
+        // strict parsers, so adding them can never break existing crawlers.
+        //
+        // Distinction that actually drives citation traffic (2026 log
+        // studies): RETRIEVAL agents fetch pages while answering user
+        // queries — that is where citations happen — while TRAINING agents
+        // crawl for model training. Both are allowed here today; if the
+        // client later wants to opt out of training, only the training
+        // agents (GPTBot, ClaudeBot, CCBot, Google-Extended) should be
+        // flipped to Disallow.
         $lines = [
             'User-agent: *',
+            // Cloudflare's Content-Signal convention (contentsignals.org):
+            // usage permission, independent of the access rules below.
+            'Content-Signal: search=yes, ai-input=yes, ai-train=yes',
             'Disallow: /admin',
             'Disallow: /dashboard',
             'Disallow: /checkout',
             'Disallow: /payments',
             'Disallow: /video-playback',
             '',
-            '# AI answer-engine crawlers are welcome on public pages',
-            'User-agent: GPTBot',
+            '# Retrieval/search agents (fetch pages on user queries — citations)',
+            'User-agent: OAI-SearchBot',
             'Allow: /',
             '',
-            'User-agent: ClaudeBot',
+            'User-agent: ChatGPT-User',
             'Allow: /',
             '',
             'User-agent: Claude-SearchBot',
             'Allow: /',
             '',
+            'User-agent: Claude-User',
+            'Allow: /',
+            '',
             'User-agent: PerplexityBot',
+            'Allow: /',
+            '',
+            'User-agent: Perplexity-User',
+            'Allow: /',
+            '',
+            '# Training agents (currently allowed by client policy)',
+            'User-agent: GPTBot',
+            'Allow: /',
+            '',
+            'User-agent: ClaudeBot',
             'Allow: /',
             '',
             'User-agent: Google-Extended',

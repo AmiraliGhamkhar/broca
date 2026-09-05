@@ -3,6 +3,25 @@
 Running log of decisions made that were not explicit in the brief, per the
 working-process rules. Newest first.
 
+## 2026-09-05 — Round-4 audit: LLM/answer-engine visibility, correctness & motion
+
+### Resolved
+
+| Decision | Rationale |
+|---|---|
+| **GEO: `.md` twins + `/llms.txt` + `Accept: text/markdown` negotiation + robots `Content-Signal`** | 2026 practice (llmstxt.org convention; Evil Martians' tested ranking): the markdown twin is the only high-value, zero-dependency signal for agent retrieval; robots/llms.txt alone are low-yield but free. Everything is static-safe on cPanel: same routes + one middleware, no queue, no new package. **Explicitly NOT done** (documented anti-patterns): User-Agent sniffing to serve markdown (cloaking — search-engine penalty), `meta ai-content-url` / `<meta name="llms">` (ignored, pollutes HTML), `/.well-known/ai.txt` (no consumer), AI toggle buttons, HTML-comment hints (stripped by parsers). |
+| **AI crawlers stay allow-all on public pages (open question #7 kept open)** | Policy now lives in one place (`SeoController::robots`) with retrieval vs training agents separated by comment, and the explicit `Content-Signal: search=yes, ai-input=yes, ai-train=yes` line makes the permission machine-readable. Flipping training agents to `Disallow` later is a one-line change per bot. Gating is still hard: paywalled routes are auth/entitlement-middleware protected, so robots.txt is a courtesy, not the fence. |
+| **Markdown twins share one builder (`SiteMarkdown`) with the HTML pages** | Same Eloquent rows → no drift between `/courses/x` and `/courses/x.md`. Legal body copy and plans FAQ extracted to `App\Support\LegalContent` / `App\Support\PlanFaq` so HTML, JSON-LD and markdown all render from one array (the old FAQ item 4 was meta copy about the page's own design, not a customer question — replaced with a real one; flagged for client review). |
+| **Route order: `.md` routes registered before parameterized HTML routes** | Laravel matches in registration order; `/blog/{slug}` would otherwise capture `post.md` as a slug and 404. The `{page}.md` legal twin additionally uses `whereIn` so the catch-all can't shadow it. |
+| **Free-cap counting now scoped to *published* courses** | Correctness fix, not a product change: the "2 free videos globally" cap consumed quota by items on archived/soft-deleted courses (fail-closed denial of legitimate free views + blocked admin designations). `CourseVisibility::onPublishedCourses()` applies the `Course::published()` scope per item relation; `CourseFreeCapObserver` invalidates the 300 s cap cache when a course's status/publish-date/deletion changes. |
+| **Video media cache: `private, max-age=290` (was `no-store`)** | The signed URL lives exactly 300 s and entitlement is re-checked on every server request, so the browser may keep bytes just under the signature window — range-seeks and replays within the window no longer re-stream. `no-store` gave zero benefit (the cache would never have been shared anyway: `private`) and forced full re-downloads. |
+| **Password reset deletes every stored session of the user** | Reset assumes a compromised account; the database session driver makes this a plain `DELETE ... WHERE user_id = ?` inside the reset transaction. No effect on array/file drivers (dev). |
+| **`Password::uncompromised()` on register + reset** | HaveIBeenPwned range lookup; the framework rule fails open on network errors, so a flaky cPanel connection can never block signups. Test passwords updated because the old fixture (`password123`) is in the breach corpus. |
+| **Collation default `utf8mb4_unicode_ci` → `utf8mb4_0900_ai_ci` (mysql connection only)** | 0900 is the MySQL 8 default (Unicode 9.0, faster than the 4.1.0 legacy). Affects only tables created by fresh migrations; existing deployments keep their collation until intentionally converted (a whole-DB conversion is a downtime operation the client must choose). MariaDB connection keeps `unicode_ci` (no 0900 family there). |
+| **og:image committed as a binary asset (`public/images/og-default.png`)** | Consistent with the existing convention (placeholder media is committed under `public/` and `database/placeholder-media/`); per-page overrides via the `og_image` section. Latin-only artwork deliberately — no Persian text rendering in generated images. |
+| **Motion system: transform/opacity only, 150–320 ms, reduced-motion gated in both CSS and JS** | Matches the existing `DESIGN-airbnb.md` reduced-motion rule; JS scroll-reveal is progressive enhancement (content is visible without JS or with reduced motion). Replaced the width-animating `focus:w-72` search input (layout animation) with border/shadow feedback. No new JS dependencies. |
+| **Footer subject links now data-driven (visible subjects, 5-min cache)** | The old hard-coded `?subject=cardio|neuro|anatomy|physiology` links matched no database slug — every click rendered an empty catalog page. Now lists real subjects with their real names and links to `subjects.show`. |
+
 ## 2026-08-26 — Full audit remediation + brief alignment
 
 ### Resolved

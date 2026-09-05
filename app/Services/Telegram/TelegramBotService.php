@@ -2198,18 +2198,57 @@ class TelegramBotService
             throw new RuntimeException('فقط URL های http/https پشتیبانی می‌شوند.');
         }
 
+        // The URL comes from a Telegram message, so treat it as untrusted:
+        // refuse to fetch loopback/private/link-local targets (SSRF) — on
+        // shared hosting this box's own services sit on 127.0.0.1.
+        $this->assertPublicHost((string) (parse_url($url, PHP_URL_HOST) ?: ''));
+
         $tmp = tempnam(sys_get_temp_dir(), 'broca-remote-');
         if ($tmp === false) {
             throw new RuntimeException('ساخت فایل موقت ناموفق بود.');
         }
 
-        $response = Http::timeout(180)->sink($tmp)->get($url);
-        $response->throw();
+        try {
+            $response = Http::timeout(180)->sink($tmp)->get($url);
+
+            if (! $response->successful()) {
+                @unlink($tmp);
+
+                throw new RuntimeException('دریافت فایل از URL ناموفق بود (HTTP '.$response->status().').');
+            }
+        } catch (RuntimeException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            @unlink($tmp);
+            throw new RuntimeException('دریافت فایل از URL ناموفق بود: '.$exception->getMessage());
+        }
 
         $mime = (string) $response->header('Content-Type', 'application/octet-stream');
         $name = basename(parse_url($url, PHP_URL_PATH) ?: 'remote-file');
 
         return $this->storeLocalFile($tmp, $directory, $title, $mime, $name);
+    }
+
+    /**
+     * Reject hosts that resolve to non-public IP space. The resolved IP is
+     * what actually gets connected to, so an unresolvable or private host is
+     * blocked the same way.
+     */
+    private function assertPublicHost(string $host): void
+    {
+        if ($host === '') {
+            throw new RuntimeException('URL معتبر نیست.');
+        }
+
+        $ip = filter_var($host, FILTER_VALIDATE_IP) !== false
+            ? $host
+            : gethostbyname($host);
+
+        // gethostbyname returns the input unchanged when DNS fails — the
+        // subsequent validation rejects that as a non-IP.
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            throw new RuntimeException('ذخیره از این URL مجاز نیست.');
+        }
     }
 
     /** @return array{storage_key:string,mime_type:string,size_bytes:int,checksum:string} */

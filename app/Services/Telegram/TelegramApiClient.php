@@ -46,7 +46,24 @@ class TelegramApiClient
             ->sink($destination)
             ->get($this->fileEndpoint($telegramPath));
 
-        $response->throw();
+        if (! $response->successful()) {
+            // A sink would have written Telegram's JSON error body to the
+            // destination — remove it so a broken file is never mistaken for
+            // valid media, then fail with the actual status.
+            @unlink($destination);
+
+            throw new RuntimeException('دریافت فایل از تلگرام ناموفق بود (HTTP '.$response->status().').');
+        }
+
+        // Guard against a truncated transfer (connection cut mid-stream):
+        // sink reports success as long as the body streamed, so compare the
+        // byte count with the declared Content-Length when it is present.
+        $contentLength = $response->header('Content-Length');
+        if ($contentLength !== null && is_numeric($contentLength) && filesize($destination) !== (int) $contentLength) {
+            @unlink($destination);
+
+            throw new RuntimeException('فایل تلگرام ناقص دانلود شد؛ دوباره تلاش کنید.');
+        }
     }
 
     public function setWebhook(string $url, ?string $secretToken = null, bool $dropPendingUpdates = false): array

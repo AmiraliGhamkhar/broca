@@ -391,6 +391,54 @@ All nine LOW findings from the second audit were fixed in commit `a8aef4e`:
 
 **Verification (honest):** same sandbox limits as above — all 216 repo PHP files parse clean on PHP 8.4.23 (0 failures), the frontend build succeeds (CSS −0.03 kB from the 10px removal), and the new tests (`BlogTest`, `AdminUserManagementTest`, plus additions to `PaymentTest`/`PaymentLifecycleTest`/`AdminTwoFactorManagementTest`) must be executed locally with `composer test`.
 
+### Fourth round (2026-09-05) — correctness, LLM visibility, SEO precision & motion
+
+Full re-read of the tree (app/, config/, database/, routes/, resources/, tests/) plus 2026 research (Laravel 13 release notes, schema.org rich-result status, llmstxt.org + Evil Martians GEO field data, current motion practice). 16 findings; all fixed in this branch.
+
+**Database**
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | `user_flashcard_schedules` scanned by `(user_id, due_at <= now()) ORDER BY due_at LIMIT 10` on every dashboard load with only the single-column FK index | Composite `(user_id, due_at)` index (migration `2026_09_05_000001`, guarded with `Schema::hasIndex`) |
+| 2 | `blog_posts.status` unenforced at DB level (table postdates the 2026-08-29 CHECK batch) | Same migration adds `chk_blog_posts_status` (MySQL-only, idempotent via `information_schema` guard) |
+| 3 | Free-cap counted items regardless of parent-course visibility — an archived/soft-deleted course's free-designated items consumed the global quota (fail-closed denial of legitimate free views; admins blocked from designating) | `App\Support\CourseVisibility` scopes the count through `Course::published()` per relation in both `EntitlementService::freeCapNotExceeded` and `FreeItemDesignationService::ensureWithinQuota`; new `CourseFreeCapObserver` invalidates the 300 s cap cache on course status/publish-date/deletion. Regression tests in `EntitlementBadgeTest` |
+| 4 | Fresh-migration collation `utf8mb4_unicode_ci` (Unicode 4.1.0) on a MySQL 8 target | `config/database.php`: mysql connection defaults to `utf8mb4_0900_ai_ci` (MySQL 8 default, faster); mariadb keeps `unicode_ci` (no 0900 family). Existing deployments unaffected (config default only applies to new table creation) |
+
+**Backend / auth**
+
+| # | Finding | Fix |
+|---|---|---|
+| 5 | `broca:reconcile-payments` reported `orphans->count()` as "subscriptions repaired" (candidates, not repairs) | Counts actual `$repaired` and logs `X/Y missing subscriptions recreated` |
+| 6 | `TelegramApiClient::downloadTelegramFile` + `storeRemoteDocument`: a non-2xx response left Telegram's JSON error body (or a truncated transfer) in the destination, which the bot then treated as media | Success check + Content-Length verification with partial-file `unlink`; `storeRemoteDocument` additionally **rejects loopback/private/link-local hosts** (SSRF surface: arbitrary URLs pasted into the admin bot on a shared host) |
+| 7 | Media streaming answered `Cache-Control: private, no-store` → full re-download on every reload/seek within the signed window | `private, max-age=290` — just under the 300 s signed-URL expiry; entitlement is re-checked server-side on each request, so the cache cannot outlive the authorization |
+| 8 | `User::consumeRecoveryCode` saved on a locked copy; the in-request instance kept the consumed code in memory | Instance attribute synced inside the transaction |
+| 9 | Password reset left every other session of the user alive (compromised-account assumption violated) | Reset deletes the user's rows from the sessions table (database driver only, in the reset closure) |
+| 10 | Weak/breached passwords accepted at register + reset | `Password::defaults()->uncompromised()` (fail-open on network errors); test fixtures updated off the breach corpus |
+| 11 | Telegram webhook unthrottled (secret token is the only control) | `throttle:120,1` defense-in-depth |
+| 12 | "Published" predicate duplicated inline 10× (status + published_at) across controllers vs the `published()` scopes on only 3 models | `scopePublished`/`isPublished` added to `Course`, `Note`, `FlashcardDeck`, `Flashcard`, `QuizQuestion`; all inline copies now call the scope. Single source of truth restored |
+| 13 | Dead code: `PaymentTransaction::isDuplicate/markDuplicate` (dedup is enforced by invoice state machine + unique gateway authority) | Removed |
+| 14 | Catalog `?subject=` filter ran a `whereHas` subquery for slugs that matched nothing (or worse: a *hidden* subject still filtered results, leaking its existence as an empty page) | Unknown/hidden subject → empty result set without a course-table hit; known visible subject filters by `subject_id` |
+
+**SEO / structured data**
+
+| # | Finding | Fix |
+|---|---|---|
+| 15 | Organization JSON-LD name was the raw `config('app.name')` artifact `Broca \| بروکا`; WebSite had no SearchAction; Course entity missing `url`; catalog/subject ItemList was flat name/url (not the Course-List shape); no og:image/theme-color; no font preloads; footer advertised four dead subject links; plans FAQ item 4 was meta copy about the page's own design | Organization/WebSite corrected (`Broca` + `alternateName`, SearchAction → `/catalog?q={search_term_string}`); Course gains `url`; ItemList ListItems now wrap full Course entities (name/description/url/provider/author); og:image 1200×630 brand asset (per-page `og_image` section); `theme-color` ink; Vazirmatn/Lalezar preloads; footer renders real visible subjects (5-min cache); FAQ #4 replaced with a real customer question (single source: `App\Support\PlanFaq`); visible breadcrumbs on course + subject pages mirroring their BreadcrumbList |
+
+**LLM / answer-engine surface (new)**
+
+| # | Finding | Fix |
+|---|---|---|
+| 16 | No machine-readable representation for agents: robots.txt missed the 2026 retrieval agents (OAI-SearchBot, ChatGPT-User, Claude-User, Perplexity-User) and declared no usage policy; no llms.txt; no markdown representation | robots.txt: retrieval vs training agents separated, `Content-Signal: search=yes, ai-input=yes, ai-train=yes` (Cloudflare/contentsignals.org convention; unknown directives are ignored by strict parsers per RFC 9309, so nothing can break). New `MarkdownController` + routes: `/llms.txt` (curated index) and `.md` twins for every public page (home, catalog, subjects, courses, blog, plans, legal) — all built by `SiteMarkdown` from the same Eloquent rows as HTML (no drift). `ServeMarkdown` middleware answers `Accept: text/markdown` with proper q-value comparison + `Vary: Accept` + `Link` back to HTML — explicit requests only, never `*/*`, never UA sniffing (no cloaking). HTML pages advertise the twin via `<link rel="alternate" type="text/markdown">` + a screen-reader-hidden hint line (layout view composer, zero DB cost). `GeoTest` covers all of it |
+
+**Frontend / motion**
+
+| # | Finding | Fix |
+|---|---|---|
+| 17 | Flash toasts used inline `onclick` removal with no auto-dismiss; search input animated **width** on focus (layout animation); dropdown/drawer/tabs appeared/disappeared without transition; no submit feedback beyond opacity; no selected state on quiz options; validation alerts didn't draw the eye | Toasts are an Alpine `flashToast` component (auto-dismiss 7 s, fade in/out); search input keeps fixed width, feedback via border/shadow; drawer/dropdown/tab panels/flashcard answer get 100–320 ms transform+opacity transitions; `app.js` adds submit relabeling ("در حال پردازش…" + spinner) on all forms, one-time shake on `[role="alert"]`, and IntersectionObserver scroll-reveal (progressive enhancement — content is visible without JS); quiz options get a `:has(:checked)` selected state; video progress bar animates `scaleX` (RTL-correct) instead of `width`; motion tokens `--motion-fast/base/slow` added; everything honors `prefers-reduced-motion` in CSS **and** JS |
+
+**Verification (honest):** all 184 repo PHP files parse clean on PHP 8.4 (php-wasm `TOKEN_PARSE`, 0 failures — the same technique used in rounds 2–3); the production Vite build succeeds (CSS 59.1 kB / JS 54.4 kB, both new utilities verified present in the compiled output). **Tests cannot run in this sandbox** (no PHP binary, `repo.packagist.org`/`getcomposer.org` unreachable): `GeoTest` (new), the `EntitlementBadgeTest` + `AuthTest` additions, and the full suite must be executed locally with `composer test`. One known test-suite interaction to note: registration/reset tests now use a non-breach password because the uncompromised rule consults HIBP (fails open offline).
+
 ---
 
 ## 11. Verdict

@@ -24,8 +24,7 @@ class FlashcardController extends Controller
         // Eager-load deck.course (ContentPolicy walks card→deck→course).
         $cards = $deck->cards()
             ->with('deck.course')
-            ->where('status', 'published')
-            ->where('published_at', '<=', now())
+            ->published()
             ->orderBy('sort_order')
             ->get()
             ->filter(fn (Flashcard $card): bool => app(ContentPolicy::class)->viewFlashcard($request->user(), $card))
@@ -78,9 +77,6 @@ class FlashcardController extends Controller
 
     private function publishedDeck(FlashcardDeck $deck): bool
     {
-        return $deck->status === 'published'
-            && $deck->published_at?->isPast()
-            && $deck->course?->status === 'published'
-            && $deck->course->published_at?->isPast();
+        return $deck->isPublished() && $deck->course?->isPublished() === true;
     }
 }

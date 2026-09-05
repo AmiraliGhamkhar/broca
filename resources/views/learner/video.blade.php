@@ -32,12 +32,17 @@
                 </div>
 
                 <template x-if="manifest">
-                    <div class="pt-6">
+                    <div class="pt-6"
+                         x-transition:enter="transition duration-400 ease-out"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100">
                         <video x-ref="player" class="aspect-video w-full rounded-[1.5rem] bg-black" controls playsinline preload="metadata" x-bind:src="manifest" aria-label="پخش {{ $video->title }}"></video>
 
                         <div class="mt-5 flex flex-wrap items-center gap-4">
+                            {{-- Transform-based fill (scaleX from the right in RTL):
+                                 animating width would reflow on every update. --}}
                             <div class="h-2 w-44 overflow-hidden rounded-full bg-cream/20" role="progressbar" aria-valuemin="0" aria-valuemax="100" x-bind:aria-valuenow="progressPercent">
-                                <div class="h-2 rounded-full bg-surface-soft transition-all" x-bind:style="`width:${progressPercent}%`"></div>
+                                <div class="h-2 w-full origin-right rounded-full bg-surface-soft transition-transform duration-500 ease-out" x-bind:style="`transform:scaleX(${progressPercent / 100})`"></div>
                             </div>
                             <p class="text-sm text-white/70"><span x-text="progressPercent">0</span>٪ مشاهده شده</p>
                             <p x-show="completed" x-cloak class="text-sm font-bold text-white">این ویدیو برای شما تکمیل شده است.</p>
@@ -59,8 +64,8 @@
                             <p class="mt-3 max-w-md text-sm leading-7 text-white/70">برای دریافت مجوز کوتاه‌مدت پخش، دکمه زیر را انتخاب کنید. پیشرفت شما هنگام مشاهده ذخیره خواهد شد.</p>
                             <button type="button" x-on:click="loadPlayback" x-bind:disabled="loading" class="button-primary mt-6 disabled:cursor-wait disabled:opacity-60">
                                 <x-ui.icon name="play" class="size-4" />
-                                <span x-show="!loading">دریافت مجوز پخش</span>
-                                <span x-show="loading" x-cloak>در حال آماده‌سازی پخش…</span>
+                                <span x-show="!loading" x-transition.opacity.duration.150ms>دریافت مجوز پخش</span>
+                                <span x-show="loading" x-cloak x-transition.opacity.duration.150ms>در حال آماده‌سازی پخش…</span>
                             </button>
                         @else
                             <p class="mt-3 max-w-md text-sm leading-7 text-white/70">این ویدیو برای حساب شما فعال نیست. ابتدا ثبت‌نام یا اشتراک لازم را تکمیل کنید.</p>

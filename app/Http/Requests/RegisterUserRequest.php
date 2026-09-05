@@ -39,7 +39,10 @@ class RegisterUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20', new IranianMobile, 'unique:users,phone'],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            // uncompromised(): rejects passwords already seen in public data
+            // breaches (HaveIBeenPwned). Fails open on network errors, so a
+            // flaky host connection can never block legitimate signups.
+            'password' => ['required', 'confirmed', Password::defaults()->uncompromised()],
             'consent' => ['accepted'],
         ];
     }

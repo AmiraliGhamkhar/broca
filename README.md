@@ -121,15 +121,34 @@ The bot sends a form template; fill it in and send it back. For video/note uploa
 ## Docs
 
 - `SPEC.md` — original product/technical specification
+- `ANALYSIS.md` — line-by-line audit trail (rounds 1–4) with fix status
 - `DECISIONS.md` — running log of decisions and open questions
 - `docs/PROJECT_STATUS.md` — what's done / in-progress / pending
 - `docs/RUNNING_LOCALLY.md` — setup details
+- `docs/RUNBOOK.md` — production ops, cron, verification gates
 - `docs/CPANEL_DEPLOYMENT.md` — shared hosting / cPanel deployment + Telegram webhook checklist
+
+## SEO & LLM visibility
+
+- Dynamic `robots.txt` (retrieval + training AI agents, `Content-Signal` usage
+  policy) and `sitemap.xml` — no static file (a static one would shadow the
+  routes).
+- Every public page has a clean **Markdown twin** at the same path with a
+  `.md` suffix (`/catalog.md`, `/courses/{slug}.md`, …) built from the same
+  database rows as the HTML, plus a curated `/llms.txt` index. Clients sending
+  `Accept: text/markdown` get the twin via content negotiation (`Vary:
+  Accept`); browsers and plain `curl` are never affected.
+- Structured data: Organization, WebSite + SearchAction, Course (with `url`),
+  ItemList of Course entities, BreadcrumbList (visible + JSON-LD), BlogPosting,
+  FAQPage; og:image, canonical, and noindex on all gated/error states.
 
 ## Security posture
 
 - CSRF everywhere (web middleware), mass-assignment locked down (`is_admin`/`status` are **not** fillable)
 - Auth + password-reset routes rate-limited; login has per-identifier+IP throttling
+- Passwords checked against known breaches (HaveIBeenPwned, fail-open) on register + reset; a reset kills **every** stored session of the user
 - Suspended users are logged out mid-session by the `active` middleware
 - Entitlement enforced server-side by `ContentPolicy` + `EntitlementService` — never in JS alone
 - Video playback via short-lived signed URLs that re-check entitlement
+- Telegram bot media downloads validate HTTP success + size and refuse private/loopback hosts (SSRF guard)
+- Strict CSP, HSTS, secure cookies, nosniff on every response

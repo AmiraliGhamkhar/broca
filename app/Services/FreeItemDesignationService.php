@@ -6,6 +6,7 @@ use App\Models\Flashcard;
 use App\Models\Note;
 use App\Models\QuizQuestion;
 use App\Models\Video;
+use App\Support\CourseVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -48,9 +49,20 @@ class FreeItemDesignationService
             'quiz_questions' => EntitlementService::FREE_QUIZ_QUESTION_CAP,
         ];
 
-        $currentCount = DB::table($contentType)
+        // Count only items on published courses — identical semantics to the
+        // runtime check in EntitlementService, so an admin can always
+        // designate up to the cap of items a visitor can actually see.
+        $query = match ($contentType) {
+            'videos' => Video::query(),
+            'notes' => Note::query(),
+            'flashcards' => Flashcard::query(),
+            'quiz_questions' => QuizQuestion::query(),
+            default => throw new RuntimeException('Unsupported content type for free designation.'),
+        };
+
+        $currentCount = CourseVisibility::onPublishedCourses($query)
+            ->published()
             ->where('is_free_designated', true)
-            ->where('status', 'published')
             ->count();
 
         if ($currentCount >= $caps[$contentType]) {

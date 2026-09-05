@@ -6,12 +6,9 @@
 
 @section('content')
 @php
-    $faq = [
-        ['q' => 'حساب رایگان چه امکانی می‌دهد؟', 'a' => 'حساب رایگان برای ارزیابی کیفیت یادگیری طراحی شده و امکان تجربه نمونه‌درس‌ها، بخشی از جزوات، فلش‌کارت‌ها و سؤال‌های منتخب را فراهم می‌کند.'],
-        ['q' => 'بعد از پرداخت چه اتفاقی می‌افتد؟', 'a' => 'پس از تکمیل موفق پرداخت، فاکتور ثبت می‌شود و دسترسی اشتراک طبق پلن انتخابی فعال خواهد شد.'],
-        ['q' => 'اگر اشتراک فعال داشته باشم می‌توانم دوباره خرید کنم؟', 'a' => 'برای جلوگیری از سردرگمی در وضعیت دسترسی، هنگام داشتن اشتراک فعال مسیر خرید جدید محدود می‌شود و وضعیت فعلی شما در داشبورد نمایش داده می‌شود.'],
-        ['q' => 'چرا این صفحه حس اعتماد بیشتری ایجاد می‌کند؟', 'a' => 'چون قیمت، مدت، سطح دسترسی، روش پرداخت و وضعیت فعلی کاربر صریح نمایش داده می‌شود و دکمه‌ها با وضعیت واقعی سیستم هماهنگ هستند.'],
-    ];
+    // FAQ copy lives in App\Support\PlanFaq — the FAQPage JSON-LD block and
+    // the /plans.md twin render from the same array.
+    $faq = \App\Support\PlanFaq::all();
 @endphp
 
 <section class="section-shell section-stack">
@@ -47,7 +44,7 @@
                 $isRecommended = $isPaid && (int) $plan->duration_months === 3;
             @endphp
 
-            <article class="editorial-card relative flex flex-col justify-between {{ $isRecommended ? 'border-rausch shadow-float' : '' }}">
+            <article class="editorial-card relative flex flex-col justify-between {{ $isRecommended ? 'border-rausch shadow-float' : '' }}" data-reveal>
                 @if ($isRecommended)
                     <span class="badge-soft absolute -top-3 right-6 shadow-float">پیشنهاد متعادل برای بیشتر دانشجویان</span>
                 @endif

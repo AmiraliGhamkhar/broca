@@ -82,6 +82,48 @@ class EntitlementBadgeTest extends TestCase
             ->assertSee('تا ۲ ویدیوی منتخب، در کل آرشیو و همه دوره‌ها');
     }
 
+    public function test_free_cap_counts_only_items_on_published_courses(): void
+    {
+        // Regression (2026-09-05): the cap used to count free-designated
+        // items regardless of whether their course was still published, so
+        // invisible content (archived/soft-deleted courses) silently ate
+        // the quota and failed closed for everyone.
+        $visible = Course::factory()->published()->create();
+        $hidden = Course::factory()->create(); // draft
+
+        Video::factory()->count(2)->for($visible)->create(['is_free_designated' => true]);
+        Video::factory()->count(2)->for($hidden)->create(['is_free_designated' => true]);
+
+        // Two free videos on a VISIBLE course: within the cap (2) — the two
+        // videos on the draft course must not count.
+        $content = $this->get(route('courses.show', $visible))->assertOk()->getContent();
+        $this->assertSame(2, substr_count($content, '>رایگان</span>'));
+
+        // Archiving the hidden course changes nothing for visible content.
+        $hidden->update(['status' => 'archived']);
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $content = $this->get(route('courses.show', $visible->fresh()))->assertOk()->getContent();
+        $this->assertSame(2, substr_count($content, '>رایگان</span>'));
+    }
+
+    public function test_free_cap_releases_quota_when_a_course_is_soft_deleted(): void
+    {
+        $visible = Course::factory()->published()->create();
+        $hidden = Course::factory()->published()->create();
+
+        Video::factory()->count(2)->for($visible)->create(['is_free_designated' => true]);
+        Video::factory()->count(2)->for($hidden)->create(['is_free_designated' => true]);
+
+        // Soft-deleting the second course drops its (still-published)
+        // videos out of the count → the visible course stays within cap.
+        $hidden->delete();
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $content = $this->get(route('courses.show', $visible->fresh()))->assertOk()->getContent();
+        $this->assertSame(2, substr_count($content, '>رایگان</span>'));
+    }
+
     public function test_note_badge_uses_the_effective_entitlement(): void
     {
         $course = Course::factory()->published()->create();

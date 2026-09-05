@@ -134,8 +134,11 @@ Inspect page source or devtools and verify:
 
 - canonical URL uses the production HTTPS host
 - `meta description` is present and non-empty
-- Open Graph tags are present
+- Open Graph tags are present, including `og:image` (1200×630)
 - JSON-LD is present where expected (course, blog, FAQ, item list, breadcrumb)
+- public pages with a Markdown twin carry
+  `<link rel="alternate" type="text/markdown" href="…">` (catalog, plans,
+  subjects, courses, blog, legal — not auth/admin/learner)
 - no page leaks `localhost`, preview domains, or staging URLs
 
 ### CLI spot checks
@@ -146,6 +149,25 @@ curl -I https://example.com/catalog
 curl -I https://example.com/plans
 curl -I https://example.com/robots.txt
 curl -I https://example.com/sitemap.xml
+```
+
+LLM/answer-engine surface (round 4, 2026-09-05):
+
+```bash
+# robots: retrieval agents + Content-Signal must be present
+curl -s https://example.com/robots.txt | grep -E 'OAI-SearchBot|Content-Signal'
+
+# Markdown twins: text/markdown, clean content, same data as the HTML page
+curl -sI https://example.com/catalog.md | grep -i content-type
+curl -s https://example.com/catalog.md | head -20
+
+# curated agent index
+curl -s https://example.com/llms.txt | head -20
+
+# content negotiation: explicit markdown preference flips the representation
+curl -s -H 'Accept: text/markdown' https://example.com/catalog | head -5
+# …while browsers and plain curl keep getting HTML:
+curl -s -H 'Accept: */*' https://example.com/catalog | head -5
 ```
 
 If metadata/canonical values are wrong after deployment, re-clear and rebuild caches:
@@ -179,6 +201,13 @@ php artisan view:cache
       `manifest_reference` field; placeholder provider replaced before scale.
       (Placeholders are provisioned automatically by `php artisan db:seed` /
       `php artisan broca:provision-media` from `database/placeholder-media/`.)
+- [ ] AI-crawler visibility policy confirmed by the client: current state is
+      **allow-all on public pages** (retrieval + training agents), declared in
+      `robots.txt` via explicit `Allow` blocks +
+      `Content-Signal: search=yes, ai-input=yes, ai-train=yes`. To opt out of
+      training only, flip the three training agents (GPTBot, ClaudeBot,
+      Google-Extended) to `Disallow` in `SeoController::robots()` and set
+      `ai-train=no` in the Content-Signal line.
 - [ ] CI green on MySQL (`.github/workflows/ci.yml`).
 - [ ] `composer audit` passes with zero known-vulnerable dependencies
       (run locally; the CI step could not be added from this sandbox

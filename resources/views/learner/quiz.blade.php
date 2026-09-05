@@ -56,7 +56,7 @@
                             <legend class="text-lg font-black leading-8 text-ink">{{ $loop->iteration }}. {{ $question->prompt }}</legend>
                             <div class="space-y-3 mt-6">
                                 @foreach ($question->options as $option)
-                                    <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-hairline-soft bg-surface-soft px-4 py-4 text-sm leading-7 text-ink transition hover:border-rausch/25 hover:bg-rausch-tint">
+                                    <label class="quiz-option flex cursor-pointer items-start gap-3 rounded-2xl border border-hairline-soft bg-surface-soft px-4 py-4 text-sm leading-7 text-ink transition hover:border-rausch/25 hover:bg-rausch-tint">
                                         <input required type="radio" name="answers[{{ $question->id }}]" value="{{ $option->id }}" class="mt-1 size-4 rounded border-ink/20 text-rausch">
                                         <span>{{ $option->label }}</span>
                                     </label>

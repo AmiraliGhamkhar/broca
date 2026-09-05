@@ -7,7 +7,18 @@
 
 @section('content')
 <section class="section-shell section-stack">
-    <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch hover:underline">← بازگشت به کاتالوگ دوره‌ها</a>
+    {{-- Visible breadcrumbs: mirror of the BreadcrumbList JSON-LD below. --}}
+    <nav aria-label="مسیر صفحه" class="flex items-center gap-2 text-[11px] font-bold text-muted">
+        <a href="{{ route('home') }}" class="hover:text-rausch transition-colors">خانه</a>
+        <span aria-hidden="true">/</span>
+        <a href="{{ route('catalog') }}" class="hover:text-rausch transition-colors">کاتالوگ</a>
+        @if ($course->subject)
+            <span aria-hidden="true">/</span>
+            <a href="{{ route('subjects.show', $course->subject) }}" class="hover:text-rausch transition-colors">{{ $course->subject->name }}</a>
+        @endif
+        <span aria-hidden="true">/</span>
+        <span class="text-ink">{{ $course->title }}</span>
+    </nav>
 
     <div class="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-7 space-y-5">
@@ -217,14 +228,28 @@
         '@context' => 'https://schema.org',
         '@type' => 'Course',
         'name' => $course->title,
-        'description' => $course->excerpt ?: $course->title,
+        'url' => route('courses.show', $course),
+        'description' => $course->excerpt ?: $course->description ?: $course->title,
         'inLanguage' => 'fa-IR',
-        'provider' => ['@type' => 'Organization', 'name' => config('app.name'), 'sameAs' => url('/')],
+        'educationalLevel' => $course->level ?: 'پیش‌درسی و علوم پایه پزشکی',
+        'provider' => ['@type' => 'Organization', 'name' => 'Broca', 'alternateName' => 'بروکا', 'url' => url('/')],
         'author' => $course->author ? ['@type' => 'Person', 'name' => $course->author->name, 'jobTitle' => $course->author->credentials] : null,
-        'contributor' => $course->reviewer ? [['@type' => 'Person', 'name' => $course->reviewer->name, 'jobTitle' => $course->reviewer->credentials]] : null,
+        'contributor' => $course->reviewer ? ['@type' => 'Person', 'name' => $course->reviewer->name, 'jobTitle' => $course->reviewer->credentials] : null,
         'datePublished' => $course->published_at?->toIso8601String(),
         'dateModified' => $course->updated_at?->toIso8601String(),
     ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    </script>
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => array_values(array_filter([
+            ['@type' => 'ListItem', 'position' => 1, 'name' => __('app.name'), 'item' => route('home')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'کاتالوگ', 'item' => route('catalog')],
+            $course->subject ? ['@type' => 'ListItem', 'position' => 3, 'name' => $course->subject->name, 'item' => route('subjects.show', $course->subject)] : null,
+            ['@type' => 'ListItem', 'position' => $course->subject ? 4 : 3, 'name' => $course->title, 'item' => route('courses.show', $course)],
+        ])),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection

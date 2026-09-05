@@ -28,6 +28,7 @@ use App\Http\Controllers\Learner\NoteController;
 use App\Http\Controllers\Learner\QuizController;
 use App\Http\Controllers\Learner\VideoController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\MarkdownController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SeoController;
@@ -43,6 +44,28 @@ use Illuminate\Support\Facades\Route;
 */
 Route::view('/', 'welcome')->name('home');
 Route::get('/health', HealthCheckController::class)->name('health');
+
+/*
+|--------------------------------------------------------------------------
+| LLM / answer-engine surface: llms.txt index + clean Markdown twins
+|--------------------------------------------------------------------------
+| ORDER MATTERS: route matching is registration-order, so the ".md"
+| patterns must be registered BEFORE the parameterized HTML routes —
+| otherwise /blog/{slug} would capture "post.md" as a slug and 404.
+| Each twin is the same content as its HTML page in a cleaner
+| representation (RFC 7763 text/markdown); ServeMarkdown also answers
+| the same pages for clients that send "Accept: text/markdown".
+*/
+Route::get('/llms.txt', [MarkdownController::class, 'llms'])->name('seo.llms');
+Route::get('/index.md', [MarkdownController::class, 'index'])->name('seo.md.index');
+Route::get('/catalog.md', [MarkdownController::class, 'catalog'])->name('seo.md.catalog');
+Route::get('/plans.md', [MarkdownController::class, 'plans'])->name('seo.md.plans');
+Route::get('/blog.md', [MarkdownController::class, 'blogIndex'])->name('seo.md.blog');
+Route::get('/blog/{slug}.md', [MarkdownController::class, 'blogPost'])->name('seo.md.blog.show');
+Route::get('/subjects/{subject:slug}.md', [MarkdownController::class, 'subject'])->name('seo.md.subject');
+Route::get('/courses/{course:slug}.md', [MarkdownController::class, 'course'])->name('seo.md.course');
+Route::get('/{page}.md', [MarkdownController::class, 'legal'])->whereIn('page', ['terms', 'privacy', 'medical-disclaimer', 'contact'])->name('seo.md.legal');
+
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
@@ -233,7 +256,10 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admi
     Route::patch('/publication/{type}/{id}', [PublicationController::class, 'update'])->name('admin.publication.update');
 });
 
-Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
+// The secret-token header authenticates Telegram; the throttle is a
+// defense-in-depth cap so a leaked/weak token can't be used to burn CPU on
+// (and DDoS) the bot's heavy media-parsing paths.
+Route::post('/telegram/webhook', TelegramWebhookController::class)->middleware('throttle:120,1')->name('telegram.webhook');
 
 /*
 |--------------------------------------------------------------------------

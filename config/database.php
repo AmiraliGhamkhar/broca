@@ -54,7 +54,11 @@ return [
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            // 0900_ai_ci is the MySQL 8 default: Unicode 9.0 ordering, faster
+            // than the legacy utf8mb4_unicode_ci (4.1.0). Only affects tables
+            // created by fresh migrations — existing deployments keep their
+            // collation until intentionally converted.
+            'collation' => env('DB_COLLATION', 'utf8mb4_0900_ai_ci'),
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
@@ -74,6 +78,9 @@ return [
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
+            // MariaDB has no 0900 collation; utf8mb4_unicode_ci is the safe
+            // universal default there (the cPanel target of this project is
+            // MySQL 8, which uses the mysql connection above).
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
             'prefix' => '',
             'prefix_indexes' => true,

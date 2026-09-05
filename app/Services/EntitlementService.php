@@ -7,6 +7,7 @@ use App\Models\Flashcard;
 use App\Models\Note;
 use App\Models\Video;
 use App\Models\User;
+use App\Support\CourseVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -67,6 +68,10 @@ class EntitlementService
     /**
      * Fail-closed cap check: if more items are designated free than the cap
      * allows (e.g. a race or a direct DB edit), NONE of them are served free.
+     *
+     * The count only includes items that a visitor can actually reach —
+     * items whose course is archived or soft-deleted no longer consume the
+     * cap the moment the course stops being published.
      */
     protected function freeCapNotExceeded(Model $item): bool
     {
@@ -76,9 +81,9 @@ class EntitlementService
         $count = Cache::remember(
             $cacheKey,
             300,
-            fn () => $model::query()
+            fn () => CourseVisibility::onPublishedCourses($model::query())
+                ->published()
                 ->where('is_free_designated', true)
-                ->where('status', 'published')
                 ->count()
         );
 

@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             ForceSecureConnections::class,
             SetSecurityHeaders::class,
+            \App\Http\Middleware\ServeMarkdown::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

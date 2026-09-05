@@ -70,7 +70,12 @@ class VideoController extends Controller
             abort(404, 'Playback asset is not configured yet.');
         }
 
-        return response()->file($path, ['Cache-Control' => 'private, no-store']);
+        // The signed URL lives 300s and the entitlement re-check runs on
+        // every server request, so caching the bytes just under that window
+        // is safe and lets the player range-seek/replay from the local cache
+        // instead of re-streaming (no-store forced a full re-download on
+        // every reload).
+        return response()->file($path, ['Cache-Control' => 'private, max-age=290']);
     }
 
     public function progress(Request $request, Video $video): JsonResponse

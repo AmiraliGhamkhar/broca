@@ -22,9 +22,9 @@ class DashboardController extends Controller
                 'course.author',
                 'course.reviewer',
                 'course.videos' => fn ($q) => $q->published()->orderBy('sort_order'),
-                'course.notes' => fn ($q) => $q->where('status', 'published')->where('published_at', '<=', now())->orderBy('sort_order'),
-                'course.decks' => fn ($q) => $q->where('status', 'published')->where('published_at', '<=', now())->withCount('cards'),
-                'course.quizzes' => fn ($q) => $q->where('status', 'published')->where('published_at', '<=', now()),
+                'course.notes' => fn ($q) => $q->published()->orderBy('sort_order'),
+                'course.decks' => fn ($q) => $q->published()->withCount('cards'),
+                'course.quizzes' => fn ($q) => $q->published(),
             ])
             ->latest('enrolled_at')
             ->get();

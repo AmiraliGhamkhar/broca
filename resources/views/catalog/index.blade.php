@@ -120,7 +120,7 @@
     @else
         <div class="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             @foreach ($courses as $course)
-                <article class="course-card">
+                <article class="course-card" data-reveal>
                     @if ($course->cover_image_path)
                         <img src="{{ $course->cover_image_path }}" alt="{{ $course->title }}" class="aspect-[16/10] w-full object-cover">
                     @else
@@ -226,11 +226,22 @@
         'name' => $selectedSubject ? ('دوره‌های ' . $selectedSubject->name) : 'دوره‌های پزشکی بروکا',
         'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
         'numberOfItems' => $courses->count(),
+        // Each ListItem wraps a full Course entity: the shape the active
+        // "Course List" rich result (and AI answer engines) expect — a flat
+        // name/url list carries far less signal.
         'itemListElement' => $courses->values()->map(fn ($course, $index) => [
             '@type' => 'ListItem',
             'position' => $index + 1,
             'url' => route('courses.show', $course),
-            'name' => $course->title,
+            'item' => array_filter([
+                '@type' => 'Course',
+                'name' => $course->title,
+                'description' => $course->excerpt ?: $course->description,
+                'url' => route('courses.show', $course),
+                'inLanguage' => 'fa-IR',
+                'provider' => ['@type' => 'Organization', 'name' => 'Broca', 'alternateName' => 'بروکا', 'url' => url('/')],
+                'author' => $course->author ? ['@type' => 'Person', 'name' => $course->author->name] : null,
+            ], fn ($value) => $value !== null && $value !== ''),
         ])->all(),
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>

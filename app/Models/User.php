@@ -104,6 +104,11 @@ class User extends Authenticatable implements MustVerifyEmail
                     unset($codes[$index]);
                     $user->forceFill(['recovery_codes' => array_values($codes)])->save();
 
+                    // The transaction saves on a locked copy — sync this
+                    // instance so a later read in the same request never
+                    // sees the consumed code as still available.
+                    $this->recovery_codes = $user->recovery_codes;
+
                     return true;
                 }
             }

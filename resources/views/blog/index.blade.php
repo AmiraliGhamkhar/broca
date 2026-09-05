@@ -34,7 +34,7 @@
     @else
         <div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             @foreach ($posts as $post)
-                <article class="course-card">
+                <article class="course-card" data-reveal>
                     @if ($post->cover_image_path)
                         <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" class="aspect-[16/10] w-full object-cover">
                     @else

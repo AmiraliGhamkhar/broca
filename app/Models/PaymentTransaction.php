@@ -31,11 +31,6 @@ class PaymentTransaction extends Model
         return $this->status === 'failed';
     }
 
-    public function isDuplicate(): bool
-    {
-        return $this->status === 'duplicate';
-    }
-
     public function markVerified(): void
     {
         $this->update(['status' => 'verified', 'verified_at' => now()]);
@@ -44,10 +39,5 @@ class PaymentTransaction extends Model
     public function markFailed(): void
     {
         $this->update(['status' => 'failed']);
-    }
-
-    public function markDuplicate(): void
-    {
-        $this->update(['status' => 'duplicate']);
     }
 }

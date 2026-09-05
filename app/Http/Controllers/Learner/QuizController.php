@@ -24,8 +24,7 @@ class QuizController extends Controller
         // question→quiz→course) so filtering N questions costs O(1) queries.
         $questions = $quiz->questions()
             ->with(['options', 'quiz.course'])
-            ->where('status', 'published')
-            ->where('published_at', '<=', now())
+            ->published()
             ->orderBy('sort_order')
             ->get()
             ->filter(fn (QuizQuestion $question): bool => app(ContentPolicy::class)->viewQuizQuestion($request->user(), $question))
@@ -41,8 +40,7 @@ class QuizController extends Controller
 
         $questions = $quiz->questions()
             ->with('options')
-            ->where('status', 'published')
-            ->where('published_at', '<=', now())
+            ->published()
             ->get()
             ->filter(fn (QuizQuestion $question): bool => app(ContentPolicy::class)->viewQuizQuestion($request->user(), $question))
             ->values();
@@ -107,6 +105,6 @@ class QuizController extends Controller
 
     private function published(Quiz $quiz): bool
     {
-        return $quiz->status === 'published' && $quiz->published_at?->isPast() && $quiz->course?->status === 'published' && $quiz->course->published_at?->isPast();
+        return $quiz->isPublished() && $quiz->course?->isPublished() === true;
     }
 }

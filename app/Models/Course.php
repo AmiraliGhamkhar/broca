@@ -40,6 +40,11 @@ class Course extends Model
         return $query->where('status', 'published')->whereNotNull('published_at')->where('published_at', '<=', now());
     }
 
+    public function isPublished(): bool
+    {
+        return $this->status === 'published' && $this->published_at?->isPast();
+    }
+
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);

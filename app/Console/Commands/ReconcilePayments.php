@@ -57,16 +57,19 @@ class ReconcilePayments extends Command
             ->where('updated_at', '>=', $since)
             ->get();
 
+        $repaired = 0;
+
         foreach ($orphans as $orphan) {
             try {
                 $finalizer->ensureSubscription($orphan);
+                $repaired++;
                 $this->info("Recreated missing subscription for invoice {$orphan->number}.");
             } catch (\Throwable $exception) {
                 report($exception);
             }
         }
 
-        $this->info("Reconciled: {$healed} healed, {$stillFailed} confirmed failed, {$orphans->count()} subscriptions repaired.");
+        $this->info("Reconciled: {$healed} healed, {$stillFailed} confirmed failed, {$repaired}/{$orphans->count()} missing subscriptions recreated.");
 
         if ($healed > 0) {
             // Healed invoices mean money was captured without access —

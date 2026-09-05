@@ -10,12 +10,17 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="@yield('robots', 'index, follow')">
     <link rel="canonical" href="@yield('canonical', url()->current())">
+    <meta name="theme-color" content="#222222">
     <meta property="og:locale" content="fa_IR">
     <meta property="og:site_name" content="{{ __('app.name') }}">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:title" content="@yield('title', __('app.name') . ' — ' . __('app.tagline'))">
     <meta property="og:description" content="@yield('meta_description', __('app.tagline') . ' — پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی')">
     <meta property="og:url" content="@yield('canonical', url()->current())">
+    <meta property="og:image" content="@yield('og_image', url('/images/og-default.png'))">
+    <meta property="og:image:alt" content="@yield('og_image_alt', 'بروکا — پلتفرم آموزش علوم پزشکی')">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     @hasSection('article_published_time')
         <meta property="article:published_time" content="@yield('article_published_time')">
     @endif
@@ -25,26 +30,56 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('title', __('app.name') . ' — ' . __('app.tagline'))">
     <meta name="twitter:description" content="@yield('meta_description', __('app.tagline') . ' — پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی')">
+    <meta name="twitter:image" content="@yield('og_image', url('/images/og-default.png'))">
     <title>@yield('title', __('app.name') . ' — ' . __('app.tagline'))</title>
 
+    @if (! empty($markdownAlternate ?? null))
+        <!-- Agent hint: this page has a clean Markdown twin (RFC 7763 MIME).
+             Crawlers that read the DOM pick the <link>; headless fetchers
+             pick the Link response header; a rendered-text reader (e.g. a
+             user pasting the URL into a chatbot) picks the hidden line. -->
+        <link rel="alternate" type="text/markdown" href="{{ $markdownAlternate }}">
+    @endif
+
+    <!-- LCP-critical fonts: the body (Vazirmatn Regular) and the display
+         face used by above-the-fold headings (Lalezar). Preloading them
+         avoids the CSS→font round trip on the hero. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/vazirmatn/Vazirmatn-Regular.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/lalezar/Lalezar-Regular.woff2">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @if (! empty($markdownAlternate ?? null))
+        <div class="sr-only" aria-hidden="true">نسخهٔ مارک‌داون این صفحه در آدرس {{ $markdownAlternate }} در دسترس است، بهینه‌شده برای ابزارهای هوش مصنوعی و LLM.</div>
+    @endif
 
     <script type="application/ld+json">
     {!! json_encode([
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
-        'name' => config('app.name'),
+        'name' => 'Broca',
+        'alternateName' => 'بروکا',
         'url' => url('/'),
-        'description' => __('app.tagline'),
+        'description' => 'پلتفرم تخصصی آموزش علوم پایه و بالینی پزشکی برای دانشجویان؛ دوره‌ها با بازبینی علمی، مرور فاصله‌دار و ارزیابی.',
+        'inLanguage' => 'fa-IR',
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
         '@context' => 'https://schema.org',
         '@type' => 'WebSite',
-        'name' => config('app.name'),
+        'name' => 'Broca',
+        'alternateName' => 'بروکا',
         'url' => url('/'),
         'inLanguage' => 'fa-IR',
+        'potentialAction' => [
+            '@type' => 'SearchAction',
+            'target' => [
+                '@type' => 'EntryPoint',
+                'urlTemplate' => route('catalog').'?q={search_term_string}',
+            ],
+            'query-input' => 'required name=search_term_string',
+        ],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 </head>
@@ -113,8 +148,11 @@
                 <div class="flex items-center gap-3">
                     <!-- Quick Catalog Search (pill + Rausch orb) -->
                     <form method="get" action="{{ route('catalog') }}" class="hidden md:flex items-center relative">
+                        <!-- Fixed width: the old focus:w-72 animated width,
+                             which forces layout on every keystroke/focus.
+                             Feedback now comes from border + shadow. -->
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="جستجوی دوره، فیزیولوژی، آناتومی..."
-                               class="w-56 lg:w-64 pl-10 pr-4 py-2.5 rounded-full border border-hairline bg-white text-xs font-medium focus:w-72 focus:border-ink transition-all">
+                               class="w-56 lg:w-64 pl-10 pr-4 py-2.5 rounded-full border border-hairline bg-white text-xs font-medium focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
                         <button type="submit"
                                 class="absolute left-1.5 top-1/2 -translate-y-1/2 size-8 rounded-full bg-rausch text-white text-xs grid place-items-center hover:bg-rausch-active transition-colors"
                                 aria-label="جستجو">
@@ -168,6 +206,12 @@
 
                                 <!-- Dropdown Menu -->
                                 <div x-show="userMenu" @click.away="userMenu = false" x-cloak
+                                     x-transition:enter="transition duration-150 ease-out"
+                                     x-transition:enter-start="opacity-0 -translate-y-1"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     x-transition:leave="transition duration-100 ease-in"
+                                     x-transition:leave-start="opacity-100"
+                                     x-transition:leave-end="opacity-0 -translate-y-1"
                                      class="absolute left-0 mt-2 w-64 rounded-2xl bg-white border border-hairline-soft shadow-float py-2 text-xs font-bold z-50">
                                     <div class="px-4 py-2.5 border-b border-hairline-soft text-right">
                                         <p class="font-bold text-ink">{{ auth()->user()->name }}</p>
@@ -210,7 +254,14 @@
             </div>
 
             <!-- Mobile Drawer Navigation -->
-            <div x-show="mobileNav" x-cloak class="lg:hidden pb-6 pt-2 border-t border-hairline-soft space-y-3">
+            <div x-show="mobileNav" x-cloak
+                 x-transition:enter="transition duration-200 ease-out"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition duration-150 ease-in"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-2"
+                 class="lg:hidden pb-6 pt-2 border-t border-hairline-soft space-y-3">
                 <form method="get" action="{{ route('catalog') }}" class="flex items-center">
                     <input type="text" name="q" placeholder="جستجوی دوره‌ها..."
                            class="w-full px-4 py-2.5 rounded-full border border-hairline bg-white text-xs">
@@ -247,27 +298,44 @@
         </div>
     </header>
 
-    <!-- Flash Messages / Toast Feedback -->
+    <!-- Flash Messages / Toast Feedback: Alpine-driven (no inline handlers),
+         auto-dismiss after 7s, fades out so it never pops off the screen. -->
     <main class="flex-1">
         @if (session('status'))
-            <div class="mx-auto max-w-4xl mt-6 px-4">
+            <div class="mx-auto max-w-4xl mt-6 px-4"
+                 x-data="flashToast"
+                 x-show="show" x-cloak
+                 x-transition:enter="transition duration-300 ease-out"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition duration-200 ease-in"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-2">
                 <div class="rounded-full border border-hairline bg-white px-5 py-3 text-xs font-bold text-ink flex items-center justify-between shadow-float" role="status">
                     <span class="flex items-center gap-2">
                         <span class="size-2 rounded-full bg-teal inline-block"></span>
                         <span>{{ session('status') }}</span>
                     </span>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-muted hover:text-ink">✕</button>
+                    <button type="button" @click="dismiss" class="text-muted hover:text-ink transition-colors" aria-label="بستن پیام">✕</button>
                 </div>
             </div>
         @endif
         @if (session('error'))
-            <div class="mx-auto max-w-4xl mt-6 px-4">
+            <div class="mx-auto max-w-4xl mt-6 px-4"
+                 x-data="flashToast"
+                 x-show="show" x-cloak
+                 x-transition:enter="transition duration-300 ease-out"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition duration-200 ease-in"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 -translate-y-2">
                 <div class="rounded-full border border-error-text/30 bg-rausch-tint px-5 py-3 text-xs font-bold text-error-text flex items-center justify-between shadow-float" role="alert">
                     <span class="flex items-center gap-2">
                         <span class="size-2 rounded-full bg-error-text inline-block"></span>
                         <span>{{ session('error') }}</span>
                     </span>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-error-text/70 hover:text-error-text">✕</button>
+                    <button type="button" @click="dismiss" class="text-error-text/70 hover:text-error-text transition-colors" aria-label="بستن پیام">✕</button>
                 </div>
             </div>
         @endif
@@ -318,14 +386,25 @@
                     </div>
                 </div>
 
-                <!-- Col 2: Courses & Specialties -->
+                <!-- Col 2: Courses & Specialties — rendered from the real
+                     subject table (short-cached): the old hard-coded slugs
+                     (cardio/neuro/...) matched nothing in the database and
+                     produced empty catalog pages. -->
                 <div class="space-y-3">
                     <h3 class="text-sm font-bold text-ink">شاخه‌های آموزشی</h3>
                     <ul class="space-y-2.5 text-muted">
-                        <li><a href="{{ route('catalog') }}?subject=cardio" class="hover:text-rausch transition-colors">فیزیولوژی و الکتروفیزیولوژی قلب</a></li>
-                        <li><a href="{{ route('catalog') }}?subject=neuro" class="hover:text-rausch transition-colors">نوروآناتومی و ناحیه بروکا</a></li>
-                        <li><a href="{{ route('catalog') }}?subject=anatomy" class="hover:text-rausch transition-colors">آناتومی بالینی و اسکلتی قفسه سینه</a></li>
-                        <li><a href="{{ route('catalog') }}?subject=physiology" class="hover:text-rausch transition-colors">فیزیولوژی عمومی و سلولی</a></li>
+                        @php
+                            $footerSubjects = \Illuminate\Support\Facades\Cache::remember(
+                                'footer_subjects',
+                                300,
+                                fn () => \App\Models\Subject::query()->where('is_visible', true)->orderBy('sort_order')->limit(4)->get()
+                            );
+                        @endphp
+                        @forelse ($footerSubjects as $footerSubject)
+                            <li><a href="{{ route('subjects.show', $footerSubject) }}" class="hover:text-rausch transition-colors">{{ $footerSubject->name }}</a></li>
+                        @empty
+                            <li><a href="{{ route('catalog') }}" class="hover:text-rausch transition-colors">دوره‌های آموزشی</a></li>
+                        @endforelse
                         <li><a href="{{ route('catalog') }}" class="hover:text-rausch transition-colors text-rausch font-bold">تمام دوره‌های آموزشی ←</a></li>
                     </ul>
                 </div>

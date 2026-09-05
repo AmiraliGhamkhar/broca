@@ -41,7 +41,11 @@
                         نمایش پاسخ
                     </button>
 
-                    <div x-show="revealed" x-cloak class="mt-8 border-t border-hairline-soft pt-6">
+                    <div x-show="revealed" x-cloak
+                         x-transition:enter="transition duration-300 ease-out"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="card-answer mt-8 border-t border-hairline-soft pt-6">
                         <p class="text-sm leading-8 text-ink">{{ $card->back }}</p>
 
                         <div class="mt-7">

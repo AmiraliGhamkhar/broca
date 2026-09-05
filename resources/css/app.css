@@ -1115,3 +1115,88 @@ a.rounded-xl:active {
 .soft-divider {
     border-top: 1px solid var(--color-hairline-soft);
 }
+
+/* =========================================================================
+   Motion & feedback (audit 2026-09-05)
+   =========================================================================
+   Composite-only properties (transform/opacity). Durations: 150ms for
+   state changes, 240-320ms for reveals — below the 300ms threshold where
+   motion becomes consciously "waitable". The global
+   prefers-reduced-motion rule above collapses every duration, and the JS
+   in app.js skips its own effects for the same users. */
+
+:root {
+    --motion-fast: 150ms;
+    --motion-base: 240ms;
+    --motion-slow: 320ms;
+}
+
+/* -- Scroll reveal: JS opts the page in with html.reveal-ready, so a JS
+       failure (or reduced motion) always leaves content fully visible. -- */
+html.reveal-ready [data-reveal]:not(.is-revealed) {
+    opacity: 0;
+    transform: translateY(14px);
+}
+
+[data-reveal] {
+    transition:
+        opacity var(--motion-slow) ease,
+        transform var(--motion-slow) ease;
+}
+
+html.reveal-ready [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+}
+
+/* -- Submit button feedback (app.js relabels + disables on submit). -- */
+button.is-loading {
+    opacity: 0.75;
+    transform: scale(0.985);
+    cursor: progress;
+}
+
+.spinner-dot {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    background: currentColor;
+    animation: broca-pulse var(--motion-slow) ease-in-out infinite;
+}
+
+@keyframes broca-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+/* -- One gentle shake when a form comes back with validation errors. -- */
+.shake-once {
+    animation: broca-shake 180ms ease-in-out 1;
+}
+
+@keyframes broca-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(4px); }
+    50% { transform: translateX(-3px); }
+    75% { transform: translateX(2px); }
+}
+
+/* -- Quiz option: explicit selected state (feedback, not just hover). -- */
+.quiz-option {
+    transition:
+        border-color var(--motion-fast) ease,
+        background-color var(--motion-fast) ease;
+}
+
+.quiz-option:has(input:checked) {
+    border-color: var(--color-rausch);
+    background: var(--color-rausch-tint);
+}
+
+/* -- Flashcard answer reveal (deck study). -- */
+.card-answer {
+    transition:
+        opacity var(--motion-base) ease,
+        transform var(--motion-base) ease;
+}

@@ -8,7 +8,14 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
         <div class="lg:col-span-8 section-intro">
-            <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch hover:underline">← بازگشت به کاتالوگ اصلی</a>
+            {{-- Visible breadcrumbs: mirror of the BreadcrumbList JSON-LD. --}}
+            <nav aria-label="مسیر صفحه" class="flex items-center gap-2 text-[11px] font-bold text-muted">
+                <a href="{{ route('home') }}" class="hover:text-rausch transition-colors">خانه</a>
+                <span aria-hidden="true">/</span>
+                <a href="{{ route('catalog') }}" class="hover:text-rausch transition-colors">کاتالوگ</a>
+                <span aria-hidden="true">/</span>
+                <span class="text-ink">{{ $subject->name }}</span>
+            </nav>
             <h1 class="section-title mt-4">دوره‌های {{ $subject->name }}</h1>
             <p class="section-copy max-w-3xl">{{ $subject->description ?: 'این مبحث مجموعه‌ای از دوره‌های ساخت‌یافته، ویدیوهای آموزشی، جزوات و ابزارهای مرور را در یک مسیر روشن گرد هم می‌آورد.' }}</p>
         </div>
@@ -27,7 +34,7 @@
 
     <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         @forelse ($courses as $course)
-            <article class="course-card">
+            <article class="course-card" data-reveal>
                 @if ($course->cover_image_path)
                     <img src="{{ $course->cover_image_path }}" alt="{{ $course->title }}" class="aspect-[16/10] w-full object-cover">
                 @else
@@ -118,12 +125,22 @@
         '@context' => 'https://schema.org',
         '@type' => 'ItemList',
         'name' => 'دوره‌های ' . $subject->name,
+        'itemListOrder' => 'https://schema.org/ItemListOrderAscending',
         'numberOfItems' => $courses->count(),
+        // Full Course entities per ListItem (Course List rich result shape).
         'itemListElement' => $courses->values()->map(fn ($course, $index) => [
             '@type' => 'ListItem',
             'position' => $index + 1,
             'url' => route('courses.show', $course),
-            'name' => $course->title,
+            'item' => array_filter([
+                '@type' => 'Course',
+                'name' => $course->title,
+                'description' => $course->excerpt ?: $course->description,
+                'url' => route('courses.show', $course),
+                'inLanguage' => 'fa-IR',
+                'provider' => ['@type' => 'Organization', 'name' => 'Broca', 'alternateName' => 'بروکا', 'url' => url('/')],
+                'author' => $course->author ? ['@type' => 'Person', 'name' => $course->author->name] : null,
+            ], fn ($value) => $value !== null && $value !== ''),
         ])->all(),
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>

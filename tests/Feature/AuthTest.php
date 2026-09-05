@@ -24,8 +24,8 @@ class AuthTest extends TestCase
             'name' => 'علی احمدی',
             'email' => 'ali@example.com',
             'phone' => '09123456789',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Xk9vP2mQ7zR4tW8n',
+            'password_confirmation' => 'Xk9vP2mQ7zR4tW8n',
             'consent' => '1',
         ]);
 
@@ -40,8 +40,8 @@ class AuthTest extends TestCase
             'name' => 'سارا محمدی',
             'email' => 'sara@example.com',
             'phone' => '+98 ۹۱۲ ۳۴۵ ۶۷۸۹',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Xk9vP2mQ7zR4tW8n',
+            'password_confirmation' => 'Xk9vP2mQ7zR4tW8n',
             'consent' => '1',
         ]);
 
@@ -54,8 +54,8 @@ class AuthTest extends TestCase
             'name' => 'نام',
             'email' => 'x@example.com',
             'phone' => '12345',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Xk9vP2mQ7zR4tW8n',
+            'password_confirmation' => 'Xk9vP2mQ7zR4tW8n',
             'consent' => '1',
         ]);
 
@@ -69,8 +69,8 @@ class AuthTest extends TestCase
             'name' => 'مهاجم',
             'email' => 'attacker@example.com',
             'phone' => '09121112233',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Xk9vP2mQ7zR4tW8n',
+            'password_confirmation' => 'Xk9vP2mQ7zR4tW8n',
             'consent' => '1',
             'is_admin' => '1',
             'status' => 'whatever',
@@ -86,23 +86,23 @@ class AuthTest extends TestCase
         $user = User::factory()->create([
             'email' => 'test@example.com',
             'phone' => '09123456789',
-            'password' => 'password123',
+            'password' => 'Xk9vP2mQ7zR4tW8n',
             'status' => 'active',
             'email_verified_at' => now(),
         ]);
 
-        $this->post('/login', ['identifier' => 'test@example.com', 'password' => 'password123'])
+        $this->post('/login', ['identifier' => 'test@example.com', 'password' => 'Xk9vP2mQ7zR4tW8n'])
             ->assertRedirect(route('dashboard'));
 
         auth()->logout();
 
-        $this->post('/login', ['identifier' => '09123456789', 'password' => 'password123'])
+        $this->post('/login', ['identifier' => '09123456789', 'password' => 'Xk9vP2mQ7zR4tW8n'])
             ->assertRedirect(route('dashboard'));
     }
 
     public function test_login_with_a_garbage_identifier_returns_422_not_500(): void
     {
-        $this->post('/login', ['identifier' => 'not-an-email-or-phone', 'password' => 'password123'])
+        $this->post('/login', ['identifier' => 'not-an-email-or-phone', 'password' => 'Xk9vP2mQ7zR4tW8n'])
             ->assertSessionHasErrors('identifier');
     }
 
@@ -110,18 +110,18 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'suspended@example.com',
-            'password' => 'password123',
+            'password' => 'Xk9vP2mQ7zR4tW8n',
             'status' => 'suspended',
             'email_verified_at' => now(),
         ]);
 
-        $this->post('/login', ['identifier' => 'suspended@example.com', 'password' => 'password123'])
+        $this->post('/login', ['identifier' => 'suspended@example.com', 'password' => 'Xk9vP2mQ7zR4tW8n'])
             ->assertSessionHasErrors('identifier');
     }
 
     public function test_suspended_user_with_a_live_session_is_logged_out_by_middleware(): void
     {
-        $user = User::factory()->create(['password' => 'password123']);
+        $user = User::factory()->create(['password' => 'Xk9vP2mQ7zR4tW8n']);
 
         $this->actingAs($user)->get('/dashboard')->assertOk();
 
@@ -134,5 +134,35 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->unverified()->create(['status' => 'active']);
         $this->actingAs($user)->get('/dashboard')->assertRedirect(route('verification.notice'));
+    }
+
+    public function test_password_reset_changes_the_password_and_kills_every_live_session(): void
+    {
+        // The reset path assumes a compromised account: on the database
+        // session driver (production) every stored session row of the user
+        // must be removed, not just the one performing the reset.
+        config(['session.driver' => 'database']);
+
+        $user = User::factory()->create(['password' => 'OldPass123Xk9vP2mQ']);
+
+        // A live session held by the (possibly compromised) account.
+        DB::table('sessions')->insert([
+            'id' => \Illuminate\Support\Str::random(40),
+            'user_id' => $user->id,
+            'payload' => 2,
+            'last_activity' => now()->timestamp,
+        ]);
+
+        $token = \Illuminate\Support\Facades\Password::broker()->createToken($user);
+
+        $this->post('/reset-password', [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'Xk9vP2mQ7zR4tW8n',
+            'password_confirmation' => 'Xk9vP2mQ7zR4tW8n',
+        ])->assertRedirect(route('login'))->assertSessionHas('status');
+
+        $this->assertDatabaseMissing('sessions', ['user_id' => $user->id]);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Xk9vP2mQ7zR4tW8n', $user->fresh()->password));
     }
 }
