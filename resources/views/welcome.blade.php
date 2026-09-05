@@ -27,10 +27,10 @@
         ['title' => 'آزمون برای سنجش واقعی یادگیری', 'copy' => 'ارزیابی فقط یک نمره نیست؛ بخشی از حلقه یادگیری است تا ضعف‌ها زودتر مشخص شوند.', 'icon' => 'chart'],
     ];
 
-    {{-- $faculty is injected by HomeController from the `contributors`
-         table (real, visible, attached-to-published-content records only).
-         It was previously a hardcoded array of four invented doctors with
-         invented credentials — removed as a medical-trust violation. --}}
+    // $faculty is injected by HomeController from the `contributors` table
+    // (real, visible, attached-to-published-content records only). It was
+    // previously a hardcoded array of four invented doctors with invented
+    // credentials — removed as a medical-trust violation.
 
     $faqs = [
         ['q' => 'آیا قبل از خرید می‌توان کیفیت محتوا را ارزیابی کرد؟', 'a' => 'بله. مدل دسترسی بروکا برای شروع رایگان طراحی شده تا فراگیر پیش از خرید، سبک تدریس، ساختار جزوات و کیفیت تجربه آموزشی را ببیند.'],
