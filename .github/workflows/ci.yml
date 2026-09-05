@@ -35,7 +35,18 @@ jobs:
           coverage: none
 
       - name: Install PHP dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: |
+          set -o pipefail
+          composer install --prefer-dist --no-interaction --no-progress 2>&1 | tee /tmp/composer.log || {
+            {
+              echo "COMPOSER FAILED:"
+              tail -60 /tmp/composer.log
+            } | while IFS= read -r line; do
+              line="${line//'%'/'%25'}"
+              echo "::error::${line}"
+            done
+            exit 1
+          }
 
       - name: Point the test suite at MySQL
         run: |
