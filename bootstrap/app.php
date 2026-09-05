@@ -26,15 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // TLS-terminating reverse proxies (cPanel/shared hosting) must be
         // trusted so $request->secure() sees X-Forwarded-Proto — otherwise
         // the HTTPS redirect loops and HSTS/secure cookies never engage.
-        // Read from config, NOT env(): after `config:cache` (run by the
-        // cPanel deploy hook) a raw env() call here returns null, silently
-        // dropping proxy trust and breaking HTTPS detection behind the
-        // host's TLS terminator. See config/broca.php.
-        $proxies = config('broca.trusted_proxies', []);
-        if ($proxies !== []) {
-            // '*' must be passed as a bare string, not a single-item array.
-            $middleware->trustProxies(at: $proxies === ['*'] ? '*' : $proxies);
-        }
+        // Proxy trust is resolved at request time in App\Http\Middleware\
+        // TrustProxies. It cannot be done here: env() breaks under
+        // config:cache, and config() is not yet bound in this closure.
+        $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
 
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
