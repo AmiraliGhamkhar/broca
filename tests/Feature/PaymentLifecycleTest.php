@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Fixtures\FakePaymentGateway;
 use Tests\TestCase;
 
@@ -137,9 +138,20 @@ class PaymentLifecycleTest extends TestCase
 
     public function test_backup_command_refuses_non_mysql_drivers(): void
     {
-        // The suite runs on sqlite; the command must refuse loudly instead
-        // of attempting a root mysqldump (audit finding: no credential
-        // fallback and no silent wrong-driver runs).
+        // Audit finding: no credential fallback and no silent wrong-driver
+        // runs — on sqlite the command must refuse loudly instead of
+        // attempting a root mysqldump. On real MySQL (CI) it legitimately
+        // dumps, so assert the success path there.
+        if (DB::getDriverName() === 'mysql') {
+            $this->artisan('broca:backup-database')->assertSuccessful();
+
+            $backups = glob(storage_path('app/backups/broca-*.sql.gz')) ?: [];
+            $this->assertNotEmpty($backups, 'the mysql run must produce a dump file');
+            @unlink(end($backups)); // don't pollute the dev workspace
+
+            return;
+        }
+
         $this->artisan('broca:backup-database')
             ->assertExitCode(\Symfony\Component\Console\Command\Command::INVALID);
     }

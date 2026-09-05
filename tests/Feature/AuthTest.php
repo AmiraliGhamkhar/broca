@@ -30,8 +30,13 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertRedirect(route('verification.notice'));
+        $user = User::query()->where('email', 'ali@example.com')->first();
+        $this->assertNotNull($user);
         $this->assertDatabaseHas('users', ['email' => 'ali@example.com', 'phone' => '09123456789']);
-        $this->assertDatabaseHas('user_consents', ['user_id' => 1]);
+        // Never assert a hardcoded id: on MySQL, auto-increment values
+        // consumed by rolled-back tests are never reused, so "the first
+        // user is id 1" only holds on SQLite.
+        $this->assertDatabaseHas('user_consents', ['user_id' => $user->id]);
     }
 
     public function test_registration_normalizes_persian_digits_and_plus_98_prefix(): void
