@@ -47,11 +47,9 @@
     <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/vazirmatn/Vazirmatn-Regular.woff2">
     <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/lalezar/Lalezar-Regular.woff2">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
 
-    @if (! empty($markdownAlternate ?? null))
-        <div class="sr-only" aria-hidden="true">نسخهٔ مارک‌داون این صفحه در آدرس {{ $markdownAlternate }} در دسترس است، بهینه‌شده برای ابزارهای هوش مصنوعی و LLM.</div>
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script type="application/ld+json">
     {!! json_encode([
@@ -85,6 +83,10 @@
 </head>
 <body class="bg-canvas text-ink font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileNav: false }">
 
+    @if (! empty($markdownAlternate ?? null))
+        <div class="sr-only" aria-hidden="true">نسخهٔ مارک‌داون این صفحه در آدرس {{ $markdownAlternate }} در دسترس است، بهینه‌شده برای ابزارهای هوش مصنوعی و LLM.</div>
+    @endif
+
     <!-- Top Announcement Bar -->
     <aside class="bg-ink text-white text-xs py-2.5 px-4" aria-label="اطلاعیه">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -92,7 +94,7 @@
                 <span class="icon-frame-ghost icon-frame-sm icon-frame-round">
                     <x-ui.icon name="shield" class="size-4" />
                 </span>
-                <span class="font-bold">محتوای بروکا با بازبینی علمی، دسترسی آزمایشی رایگان و پرداخت امن زرین‌پال ارائه می‌شود.</span>
+                <span class="font-bold">محتوای بروکا با بازبینی علمی، دسترسی آزمایشی رایگان و مسیر یادگیری قابل پیگیری ارائه می‌شود.</span>
             </div>
             <div class="hidden sm:flex items-center gap-4 text-[11px] text-white/70">
                 <span>بازبینی دو مرحله‌ای پزشکی</span>
@@ -372,7 +374,7 @@
                         </div>
                     </div>
                     <p class="text-muted leading-7 text-xs max-w-sm">
-                        بروکا پلتفرم پیشرو در آموزش تخصصی علوم پایه، فیزیولوژی، آناتومی و نورولوژی با تکیه بر متدهای یادگیری فعال، مرور فاصله‌دار (Spaced Repetition) و نظارت اعضای هیئت علمی دانشگاه‌های علوم پزشکی است.
+                        بروکا پلتفرم آموزش تخصصی علوم پایه، فیزیولوژی، آناتومی و نورولوژی با تکیه بر متدهای یادگیری فعال، مرور فاصله‌دار (Spaced Repetition) و بازبینی علمی دو مرحله‌ای پیش از انتشار است.
                     </p>
                     <div class="flex items-center gap-2 pt-2 flex-wrap">
                         <span class="badge-soft">

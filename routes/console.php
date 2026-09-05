@@ -42,3 +42,16 @@ Schedule::command('broca:reconcile-payments')->dailyAt('03:30');
 
 // Local backup half; the off-box copy is a host-level cron (RUNBOOK).
 Schedule::command('broca:backup-database')->dailyAt('02:00');
+
+/*
+ * TABLE GROWTH (Round-6 audit D-1/D-2): SESSION_DRIVER=database and
+ * CACHE_STORE=database never garbage-collect on their own. The sessions
+ * table accumulates a row per visitor (guests included) with IP + user
+ * agent; the cache table accumulates one row per rate-limiter key per
+ * window. Without these entries both tables grow without bound on a
+ * metered shared disk. admin_activity_logs is kept forever by client
+ * decision (2026-09-05).
+ */
+Schedule::command('session:prune')->dailyAt('04:10');
+
+Schedule::command('broca:prune-cache')->dailyAt('04:20');

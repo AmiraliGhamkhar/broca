@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Contracts\PaymentGateway;
 use App\Models\Invoice;
+use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -278,5 +279,34 @@ class PaymentTest extends TestCase
 
         $this->actingAs($other)->get(route('checkout.success', $invoice))->assertForbidden();
         $this->actingAs($owner)->get(route('checkout.success', $invoice))->assertOk();
+    }
+
+    public function test_gateway_verification_receipt_is_persisted_in_the_ledger(): void
+    {
+        // Round-6 audit I-2: the verify receipt (gateway reference id) is the
+        // field a chargeback dispute or accounting reconciliation needs — it
+        // must land in payment_transactions.response_payload, not evaporate.
+        $user = User::factory()->create();
+        $plan = Plan::factory()->monthly()->create();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'plan_id' => $plan->id]);
+        $this->gateway->startPayment($invoice);
+
+        $this->get(route('payments.zarinpal.callback', ['Authority' => $invoice->authority, 'Status' => 'OK']));
+
+        $this->assertDatabaseHas('payment_transactions', [
+            'invoice_id' => $invoice->id,
+            'gateway' => 'fake',
+            'reference_number' => $invoice->authority,
+            'status' => 'verified',
+        ]);
+
+        $payload = PaymentTransaction::query()
+            ->where('invoice_id', $invoice->id)
+            ->where('reference_number', $invoice->authority)
+            ->first()
+            ?->response_payload;
+
+        $this->assertIsArray($payload);
+        $this->assertSame('FAKE-REF-'.$invoice->id, $payload['receipt']['referenceId'] ?? null);
     }
 }

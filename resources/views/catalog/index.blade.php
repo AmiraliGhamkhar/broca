@@ -7,7 +7,13 @@
     $catalogDescription = $selectedSubject
         ? \Illuminate\Support\Str::limit($selectedSubject->description ?: ('مشاهده دوره‌های ' . $selectedSubject->name . ' در بروکا با نمایش مدرس، بازبین علمی، ویدیو، جزوه، فلش‌کارت و آزمون.'), 155)
         : 'کاتالوگ دوره‌های پزشکی بروکا با نمایش مدرس، بازبین علمی، جزوات، فلش‌کارت‌ها، آزمون‌ها و مسیر یادگیری قابل پیگیری.';
-    $catalogCanonical = $selectedSubject ? route('subjects.show', $selectedSubject) : route('catalog');
+    // Self-canonical per page (Round-6 audit F-6): collapsing ?page=2 to the
+    // base URL told search engines every results page duplicated page 1.
+    // Filtered views stay canonicalized to their clean twin (they are
+    // noindex anyway).
+    $catalogCanonical = $selectedSubject
+        ? route('subjects.show', $selectedSubject)
+        : (request()->integer('page') > 1 ? route('catalog', ['page' => request()->integer('page')]) : route('catalog'));
     $catalogRobots = request()->filled('q') || request()->filled('subject') ? 'noindex, follow' : 'index, follow';
 @endphp
 

@@ -2,6 +2,7 @@
 
 @section('title', 'بازیابی گذرواژه — ' . __('app.name'))
 @section('meta_description', 'درخواست لینک بازیابی گذرواژه برای حساب بروکا از طریق ایمیل ثبت‌شده.')
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <section class="section-shell section-stack section-stack-tight-top">

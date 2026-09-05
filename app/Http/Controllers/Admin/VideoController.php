@@ -142,7 +142,10 @@ class VideoController extends Controller
     {
         return Slug::unique(
             $title,
+            // withTrashed: UNIQUE(course_id, slug) covers soft-deleted rows
+            // (Round-6 audit D-5).
             fn (string $slug): bool => Video::query()
+                ->withTrashed()
                 ->where('course_id', $courseId)
                 ->where('slug', $slug)
                 ->exists()

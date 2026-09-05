@@ -2,6 +2,7 @@
 
 namespace App\Services\Telegram;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -23,14 +24,18 @@ class TelegramApiClient
             throw new RuntimeException('Telegram document path not found: '.$path);
         }
 
-        return $this->http()
-            ->attach('document', fopen($path, 'r'), basename($path))
-            ->post($this->endpoint('sendDocument'), array_filter([
-                'chat_id' => $chatId,
-                'caption' => $caption,
-            ]))
-            ->throw()
-            ->json();
+        try {
+            return $this->http()
+                ->attach('document', fopen($path, 'r'), basename($path))
+                ->post($this->endpoint('sendDocument'), array_filter([
+                    'chat_id' => $chatId,
+                    'caption' => $caption,
+                ]))
+                ->throw()
+                ->json();
+        } catch (ConnectionException $exception) {
+            throw new RuntimeException($this->redactToken((string) $exception->getMessage()), previous: $exception);
+        }
     }
 
     public function getFile(string $fileId): array
@@ -85,10 +90,33 @@ class TelegramApiClient
 
     private function request(string $method, array $payload = []): array
     {
-        return $this->http()
-            ->post($this->endpoint($method), $payload)
-            ->throw()
-            ->json();
+        try {
+            return $this->http()
+                ->post($this->endpoint($method), $payload)
+                ->throw()
+                ->json();
+        } catch (ConnectionException $exception) {
+            // The bot token is a URL path segment, so transport-level
+            // exception messages contain the full URL — including the token.
+            // report() writes those messages to laravel.log, which gets
+            // pasted into support chats (Round-6 audit I-3). Redact at this
+            // single choke point; keep the original for the exception chain.
+            throw new RuntimeException($this->redactToken((string) $exception->getMessage()), previous: $exception);
+        }
+    }
+
+    /**
+     * Replace the bot token in any string with a redacted placeholder.
+     */
+    private function redactToken(string $message): string
+    {
+        $token = (string) config('services.telegram.bot_token');
+
+        if ($token === '') {
+            return $message;
+        }
+
+        return str_replace($token, 'REDACTED_TOKEN', $message);
     }
 
     private function http(): PendingRequest

@@ -41,6 +41,9 @@ class CatalogController extends Controller
                 fn ($query) => $query->whereRaw('1 = 0')
             )
             ->orderBy('sort_order')
+            // id tiebreaker: equal sort_order values have no defined order in
+            // MySQL — without it, rows can duplicate/vanish across pages (D-6).
+            ->orderBy('id')
             ->paginate(12)
             ->withQueryString();
 
@@ -60,6 +63,7 @@ class CatalogController extends Controller
             ])
             ->published()
             ->orderBy('sort_order')
+            ->orderBy('id') // deterministic pagination (D-6)
             ->paginate(12);
 
         return view('catalog.subject', compact('subject', 'courses'));

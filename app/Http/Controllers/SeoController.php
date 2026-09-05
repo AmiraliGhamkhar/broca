@@ -17,61 +17,75 @@ class SeoController extends Controller
 {
     public function robots(): Response
     {
-        // Policy 2026-09-05 (client decision open — see DECISIONS.md): ALL
-        // AI crawlers are welcome on public pages. The explicit Allow blocks
-        // matter because several engines IGNORE a bare "User-agent: *" allow
-        // for bots they recognize by name; unknown lines are ignored by
-        // strict parsers, so adding them can never break existing crawlers.
+        // Policy 2026-09-05, corrected in the Round-6 audit: per RFC 9309 §2.2.1
+        // (and Google's robots.txt spec), a crawler obeys ONLY the most
+        // specific matching User-agent group — named groups and the "*"
+        // group are NEVER combined. Earlier revisions put the Disallow set
+        // only in the "*" group, which meant every named agent below legally
+        // ignored those rules. Every named group therefore repeats the full
+        // rule set. The explicit Allow blocks matter because several engines
+        // IGNORE a bare "User-agent: *" allow for bots they recognize by
+        // name; unknown lines are ignored by strict parsers, so adding them
+        // can never break existing crawlers.
         //
         // Distinction that actually drives citation traffic (2026 log
         // studies): RETRIEVAL agents fetch pages while answering user
         // queries — that is where citations happen — while TRAINING agents
-        // crawl for model training. Both are allowed here today; if the
-        // client later wants to opt out of training, only the training
-        // agents (GPTBot, ClaudeBot, CCBot, Google-Extended) should be
-        // flipped to Disallow.
+        // crawl for model training. Both are allowed here today (client
+        // decision 2026-09-05); if the client later wants to opt out of
+        // training, flip only the training agents to a full-site Disallow.
+        $protectedPaths = ['/admin', '/dashboard', '/checkout', '/payments', '/video-playback'];
+
+        // Retrieval/search agents (fetch pages on user queries — citations).
+        $retrievalAgents = [
+            'OAI-SearchBot',
+            'ChatGPT-User',
+            'Claude-SearchBot',
+            'Claude-User',
+            'PerplexityBot',
+            'Perplexity-User',
+        ];
+
+        // Training agents (currently allowed by client policy). CCBot,
+        // Applebot-Extended and Meta-ExternalAgent are included per the same
+        // allow-everything decision (2026-09-05).
+        $trainingAgents = [
+            'GPTBot',
+            'ClaudeBot',
+            'CCBot',
+            'Google-Extended',
+            'Applebot-Extended',
+            'Meta-ExternalAgent',
+        ];
+
         $lines = [
             'User-agent: *',
             // Cloudflare's Content-Signal convention (contentsignals.org):
             // usage permission, independent of the access rules below.
             'Content-Signal: search=yes, ai-input=yes, ai-train=yes',
-            'Disallow: /admin',
-            'Disallow: /dashboard',
-            'Disallow: /checkout',
-            'Disallow: /payments',
-            'Disallow: /video-playback',
-            '',
-            '# Retrieval/search agents (fetch pages on user queries — citations)',
-            'User-agent: OAI-SearchBot',
-            'Allow: /',
-            '',
-            'User-agent: ChatGPT-User',
-            'Allow: /',
-            '',
-            'User-agent: Claude-SearchBot',
-            'Allow: /',
-            '',
-            'User-agent: Claude-User',
-            'Allow: /',
-            '',
-            'User-agent: PerplexityBot',
-            'Allow: /',
-            '',
-            'User-agent: Perplexity-User',
-            'Allow: /',
-            '',
-            '# Training agents (currently allowed by client policy)',
-            'User-agent: GPTBot',
-            'Allow: /',
-            '',
-            'User-agent: ClaudeBot',
-            'Allow: /',
-            '',
-            'User-agent: Google-Extended',
-            'Allow: /',
-            '',
-            'Sitemap: '.route('seo.sitemap'),
         ];
+
+        foreach ($protectedPaths as $path) {
+            $lines[] = 'Disallow: '.$path;
+        }
+
+        foreach (['retrieval' => $retrievalAgents, 'training' => $trainingAgents] as $group => $agents) {
+            foreach ($agents as $agent) {
+                $lines[] = '';
+                $lines[] = $group === 'retrieval'
+                    ? '# Retrieval/search agents (fetch pages on user queries — citations)'
+                    : '# Training agents (currently allowed by client policy)';
+                $lines[] = 'User-agent: '.$agent;
+                $lines[] = 'Content-Signal: search=yes, ai-input=yes, ai-train=yes';
+                foreach ($protectedPaths as $path) {
+                    $lines[] = 'Disallow: '.$path;
+                }
+                $lines[] = 'Allow: /';
+            }
+        }
+
+        $lines[] = '';
+        $lines[] = 'Sitemap: '.route('seo.sitemap');
 
         return response(implode("\n", $lines), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

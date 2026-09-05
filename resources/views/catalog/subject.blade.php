@@ -2,7 +2,13 @@
 
 @section('title', 'دوره‌های ' . $subject->name . ' — ' . __('app.name'))
 @section('meta_description', \Illuminate\Support\Str::limit($subject->description ?: ('مشاهده دوره‌های ' . $subject->name . ' در بروکا همراه با مدرس، بازبین علمی، ویدیو، جزوه، فلش‌کارت و آزمون.'), 155))
-@section('canonical', route('subjects.show', $subject))
+@php
+    // Self-canonical per page — same paginated-canonical fix as the catalog.
+    $subjectCanonical = request()->integer('page') > 1
+        ? route('subjects.show', ['subject' => $subject, 'page' => request()->integer('page')])
+        : route('subjects.show', $subject);
+@endphp
+@section('canonical', $subjectCanonical)
 
 @section('content')
 <section class="section-shell section-stack">

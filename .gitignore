@@ -26,6 +26,10 @@
 /public/videos
 /storage/*.key
 /storage/pail
+
+# Generated intermediates (raw AI-candidate hero originals); the optimized
+# deliverables live in public/images/hero/.
+/storage/meta
 /vendor
 _ide_helper.php
 Homestead.json

@@ -34,12 +34,45 @@ class GeoTest extends TestCase
         }
 
         // Training agents stay allowed by current client policy.
-        foreach (['GPTBot', 'ClaudeBot', 'Google-Extended'] as $bot) {
+        foreach (['GPTBot', 'ClaudeBot', 'Google-Extended', 'CCBot', 'Applebot-Extended', 'Meta-ExternalAgent'] as $bot) {
             $this->assertStringContainsString("User-agent: {$bot}", $content);
         }
 
         $this->assertStringContainsString('Content-Signal: search=yes, ai-input=yes, ai-train=yes', $content);
         $this->assertStringContainsString('Disallow: /admin', $content);
+    }
+
+    public function test_every_named_robots_group_repeats_the_full_rule_set(): void
+    {
+        // RFC 9309 §2.2.1: a crawler obeys ONLY the most specific matching
+        // User-agent group — named groups and the "*" group are never
+        // combined. An earlier revision put the Disallow set solely in the
+        // "*" group, so every named agent legally ignored those rules.
+        $content = $this->get(route('seo.robots'))->assertOk()->getContent();
+
+        $namedAgents = [
+            'OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User',
+            'PerplexityBot', 'Perplexity-User', 'GPTBot', 'ClaudeBot', 'CCBot',
+            'Google-Extended', 'Applebot-Extended', 'Meta-ExternalAgent',
+        ];
+
+        foreach (['/admin', '/dashboard', '/checkout', '/payments', '/video-playback'] as $path) {
+            $this->assertSame(
+                count($namedAgents) + 1, // named groups + the "*" group
+                substr_count($content, 'Disallow: '.$path),
+                "Disallow: {$path} must appear once per group (the wildcard group plus every named agent)."
+            );
+        }
+
+        foreach ($namedAgents as $agent) {
+            // The agent's group must carry the protected paths AND the
+            // site-wide allow in one block.
+            $group = substr($content, (int) strpos($content, 'User-agent: '.$agent));
+            $group = substr($group, 0, (int) strpos($group."\n\n", "\n\n"));
+            $this->assertStringContainsString('Disallow: /admin', $group, "[{$agent}] group lost the protected paths.");
+            $this->assertStringContainsString('Allow: /', $group, "[{$agent}] group lost the site-wide allow.");
+            $this->assertStringContainsString('Content-Signal:', $group, "[{$agent}] group lost the content signal.");
+        }
     }
 
     public function test_llms_txt_is_a_markdown_index_of_the_public_site(): void

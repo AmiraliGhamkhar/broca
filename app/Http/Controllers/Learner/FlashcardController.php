@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Learner;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Flashcard;
 use App\Models\FlashcardDeck;
 use App\Models\FlashcardReview;
@@ -55,9 +56,13 @@ class FlashcardController extends Controller
         ]);
     }
 
-    public function study(Request $request, FlashcardDeck $deck): View
+    public function study(Request $request, Course $course, FlashcardDeck $deck): View
     {
-        abort_unless($this->publishedDeck($deck), 404);
+        // Same URL-scoping contract as the video/note controllers: the deck
+        // must belong to the {course} in the URL, otherwise the breadcrumb
+        // context lies and a deck is reachable under a foreign course's URL
+        // (Round-6 audit F-3).
+        abort_unless($deck->course_id === $course->id && $this->publishedDeck($deck), 404);
         abort_unless($request->user()->isEnrolledIn($deck->course_id), 403);
 
         // Eager-load deck.course (ContentPolicy walks card→deck→course).

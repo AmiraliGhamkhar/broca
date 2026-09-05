@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Shetabit\Multipay\Receipt;
 
 class PaymentController extends Controller
 {
@@ -79,8 +80,22 @@ class PaymentController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        $authority = (string) $request->query('Authority', '');
-        $status = (string) $request->query('Status', '');
+        return $this->handleGatewayCallback($request, okStatus: 'OK');
+    }
+
+    /**
+     * Zibal callback (secondary gateway). Zibal sends `trackId` + `success`
+     * (1/2 = paid) instead of ZarinPal's `Authority` + `Status=OK`; after the
+     * parameter mapping the flow is byte-for-byte the same money path.
+     */
+    public function zibalCallback(Request $request): RedirectResponse
+    {
+        return $this->handleGatewayCallback($request, okStatus: '1');
+    }
+
+    private function handleGatewayCallback(Request $request, string $okStatus): RedirectResponse
+    {
+        $authority = (string) ($request->query('Authority') ?? $request->query('trackId') ?? '');
 
         if ($authority === '') {
             return redirect()->route('plans')->with('error', 'پاسخ درگاه پرداخت نامعتبر بود.');
@@ -102,14 +117,21 @@ class PaymentController extends Controller
         $transaction = $this->recordTransaction($invoice, $request);
 
         // Server-side verification, bound to the invoice's amount+authority.
-        // A cancelled callback (Status !== OK) skips the network call.
-        $verified = $status === 'OK' && $this->gateway->verifyPayment($invoice);
+        // A cancelled callback (Status !== OK / success !== 1) skips the
+        // network call. The returned Receipt is persisted into the ledger
+        // row before finalization so the forensic record carries the
+        // gateway's reference id (Round-6 audit I-2).
+        $receipt = null;
 
-        // Single money-resolution path: PaymentFinalizer owns the row-lock,
-        // status re-check, idempotent subscription activation and the
-        // "never downgrade a paid invoice" invariant (also used by
-        // broca:reconcile-payments — one copy of the logic, not two).
-        $activated = $this->finalizer->finalize($invoice, $verified, $transaction);
+        if ((string) $request->query('Status', $request->query('success', '')) === $okStatus) {
+            $receipt = $this->gateway->verifyPayment($invoice);
+        }
+
+        if ($receipt instanceof Receipt) {
+            $this->attachReceipt($transaction, $receipt);
+        }
+
+        $activated = $this->finalizer->finalize($invoice, $receipt !== null, $transaction);
 
         return $activated
             ? redirect()->route('checkout.success', $invoice)
@@ -136,7 +158,7 @@ class PaymentController extends Controller
             return PaymentTransaction::create([
                 'invoice_id' => $invoice->id,
                 'gateway' => $this->gateway->getGatewayName(),
-                'request_payload' => $request->all(),
+                'request_payload' => $request->query(),
                 'response_payload' => $request->query(),
                 'reference_number' => $invoice->authority,
             ]);
@@ -146,6 +168,22 @@ class PaymentController extends Controller
                 ->where('reference_number', $invoice->authority)
                 ->firstOrFail();
         }
+    }
+
+    /**
+     * Merge the gateway's verification receipt (reference id, amount, date)
+     * into the transaction row so the ledger is self-sufficient for
+     * chargeback disputes and accounting reconciliation (Round-6 audit I-2).
+     */
+    private function attachReceipt(PaymentTransaction $transaction, Receipt $receipt): void
+    {
+        $payload = method_exists($receipt, 'toArray') ? $receipt->toArray() : get_object_vars($receipt);
+
+        $transaction->update([
+            'response_payload' => array_merge((array) $transaction->response_payload, [
+                'receipt' => $payload,
+            ]),
+        ]);
     }
 
     /**

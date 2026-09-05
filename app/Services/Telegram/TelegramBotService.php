@@ -1415,28 +1415,12 @@ class TelegramBotService
 
     private function backupDatabase(int $chatId): bool
     {
-        $this->api->sendMessage($chatId, '⏳ در حال تهیه بکاپ دیتابیس...');
-
-        $exit = Artisan::call('broca:backup-database');
-        $output = trim(Artisan::output());
-
-        if ($exit !== 0) {
-            $this->api->sendMessage($chatId, '❌ بکاپ انجام نشد.'.($output !== '' ? "\n\n".$this->truncate($output, 3200) : ''));
-
-            return true;
-        }
-
-        $files = glob(storage_path('app/backups/broca-*.sql.gz')) ?: [];
-        rsort($files);
-        $latest = $files[0] ?? null;
-
-        if (! $latest) {
-            $this->api->sendMessage($chatId, '✅ بکاپ اجرا شد، ولی فایل پیدا نشد.');
-
-            return true;
-        }
-
-        $this->api->sendDocument($chatId, $latest, 'بکاپ دیتابیس بروکا');
+        // Queued (Round-6 audit I-4): the dump + gzip + upload can outlive
+        // Telegram's webhook patience (~60s), which triggers a retry and a
+        // duplicate dump. The database queue is drained every minute by the
+        // cron worker (routes/console.php), so the job completes without a
+        // daemon on shared hosting.
+        \App\Jobs\RunDatabaseBackup::dispatch($chatId);
 
         return true;
     }

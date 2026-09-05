@@ -80,7 +80,11 @@ class QuizController extends Controller
         abort_unless($request->user()->isEnrolledIn($quiz->course_id), 403);
 
         $questions = $quiz->questions()
-            ->with('options')
+            // quiz.course must ride along: ContentPolicy walks
+            // question→quiz→course per item, and without it every filtered
+            // question costs two extra queries (D-7 — same eager-load the
+            // show() path one method up already uses).
+            ->with(['options', 'quiz.course'])
             ->published()
             ->get()
             ->filter(fn (QuizQuestion $question): bool => app(ContentPolicy::class)->viewQuizQuestion($request->user(), $question))

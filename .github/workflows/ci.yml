@@ -53,6 +53,13 @@ jobs:
           sed -i 's|<env name="DB_CONNECTION" value="sqlite"/>|<env name="DB_CONNECTION" value="mysql"/>|' phpunit.xml
           sed -i 's|<env name="DB_DATABASE" value=":memory:"/>|<env name="DB_DATABASE" value="broca_test"/>|' phpunit.xml
 
+      # Audit gate (Round-6 audit I-1): composer.lock is the deploy artifact
+      # on cPanel — a known-vulnerable lock must fail CI before it can be
+      # committed, not after it ships. `composer audit` exits non-zero on any
+      # advisory matching the locked packages.
+      - name: Audit locked dependencies against security advisories
+        run: composer audit --no-interaction
+
       - name: Prepare environment
         run: |
           cp .env.example .env

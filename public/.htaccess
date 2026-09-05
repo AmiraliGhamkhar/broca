@@ -97,3 +97,21 @@
 <FilesMatch "^\.(env|git|htaccess|htpasswd)">
     Require all denied
 </FilesMatch>
+
+# Round-6 audit F-7: the dotfile block alone leaves storage/logs (stack
+# traces with environment details), database/ and tests/ readable in the same
+# misconfiguration scenario. Directory denies close that gap on Apache 2.4;
+# on LiteSpeed the same syntax is honoured. NOTE: `storage` is deliberately
+# absent — public/storage is the storage:link symlink that serves uploaded
+# covers in the CORRECT layout.
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|vite\.config\.js|\.cpanel\.yml|\.npmrc|\.editorconfig|\.gitattributes|artisan)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+<IfModule mod_rewrite.c>
+    RewriteRule ^(database|tests|lang|config|app|bootstrap|resources|routes|vendor)(/|$) - [F,L]
+    # Logs live outside the storage:link symlink target, so this only bites
+    # in the misconfigured-document-root scenario.
+    RewriteRule ^storage/logs(/|$) - [F,L]
+</IfModule>

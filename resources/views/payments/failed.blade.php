@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'پرداخت ناموفق — ' . __('app.name'))
+@section('robots', 'noindex, nofollow')
 
 @section('content')
     <section class="max-w-2xl mx-auto px-4 py-24 text-center">

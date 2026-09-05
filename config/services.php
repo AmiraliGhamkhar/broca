@@ -1,17 +1,11 @@
 <?php
 
-return [
-    'zarinpal' => [
-        'merchant_id' => env('ZARINPAL_MERCHANT_ID'),
-        'sandbox' => filter_var(env('ZARINPAL_SANDBOX', true), FILTER_VALIDATE_BOOL),
-        'base_url' => filter_var(env('ZARINPAL_SANDBOX', true), FILTER_VALIDATE_BOOL)
-            ? 'https://sandbox.zarinpal.com/pg/v4'
-            : 'https://api.zarinpal.com/pg/v4',
-        'payment_url' => filter_var(env('ZARINPAL_SANDBOX', true), FILTER_VALIDATE_BOOL)
-            ? 'https://sandbox.zarinpal.com/pg/StartPay'
-            : 'https://www.zarinpal.com/pg/StartPay',
-    ],
+// NOTE: there is deliberately NO zarinpal block here (Round-6 audit B-1).
+// Gateway credentials live exclusively in config/payment.php (the shetabit/
+// multipay driver config) — a second, partially divergent credentials block
+// in services.php misled operators and disagreed with the live driver URLs.
 
+return [
     'telegram' => [
         'enabled' => filter_var(env('TELEGRAM_BOT_ENABLED', false), FILTER_VALIDATE_BOOL),
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),

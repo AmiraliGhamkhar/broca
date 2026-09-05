@@ -31,7 +31,16 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(VideoProvider::class, PlaceholderVideoProvider::class);
-        $this->app->bind(PaymentGateway::class, ZarinPalGateway::class);
+
+        // The gateway binding follows config('payment.default') so switching
+        // to Zibal is an env change (PAYMENT_GATEWAY=zibal), not a code
+        // change. The shetabit Payment instance reads the same default, so
+        // driver selection stays in one place.
+        $this->app->bind(PaymentGateway::class, match (config('payment.default', 'zarinpal')) {
+            'zibal' => ZibalGateway::class,
+            default => ZarinPalGateway::class,
+        });
+
         $this->app->singleton(EntitlementService::class);
     }
 
