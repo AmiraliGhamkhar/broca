@@ -32,4 +32,12 @@ class QuizFactory extends Factory
             'published_at' => null,
         ]);
     }
+
+    public function published(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'published',
+            'published_at' => now()->subDay(),
+        ]);
+    }
 }

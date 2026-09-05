@@ -65,14 +65,14 @@
                     <div class="flex items-center gap-3">
                         <span class="icon-frame"><x-ui.icon name="play" class="size-5" /></span>
                         <div>
-                            <span class="text-[11px] font-bold text-rausch">ادامه از آخرین نقطه</span>
+                            <span class="text-[11px] font-bold text-rausch">ادامهٔ تماشا</span>
                             <h2 class="mt-1 text-sm font-extrabold text-ink">{{ $latest->video->title }}</h2>
                             <p class="text-xs text-muted mt-1">{{ $latest->video->course->title ?? '' }}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="text-right">
-                            <span class="text-xs font-bold text-ink">{{ $latest->watched_percent }}٪ مشاهده شده</span>
+                            <span class="text-xs font-bold text-ink">{{ $latest->watched_percent }}٪ دیده‌شده</span>
                             <div class="w-36 h-1.5 rounded-full bg-ink/10 overflow-hidden mt-1">
                                 <div class="h-full bg-rausch rounded-full" style="width: {{ $latest->watched_percent }}%"></div>
                             </div>
@@ -334,6 +334,4 @@
         </div>
     </div>
 </section>
-@endsection
-ion>
 @endsection

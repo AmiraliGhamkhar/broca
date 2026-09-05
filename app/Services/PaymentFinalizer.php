@@ -87,6 +87,11 @@ class PaymentFinalizer
             'gateway' => $invoice->gateway,
             // Unique constraint = DB-level idempotency backstop.
             'gateway_reference' => $invoice->authority,
+            // subscriptions.status is NOT NULL with no DB default; insert as
+            // 'scheduled' and let activate() flip it to 'active' (a plain
+            // create() without status violated the constraint on every
+            // verified payment).
+            'status' => 'scheduled',
             'starts_at' => now(),
             'ends_at' => now()->addMonths(max(1, (int) $plan?->duration_months)),
         ]);

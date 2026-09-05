@@ -43,8 +43,8 @@ class LearnerHubsTest extends TestCase
         $deck = FlashcardDeck::factory()->for($course)->create(['title' => 'کارت‌های قلب']);
         $this->enroll($course);
 
-        $dueCard = Flashcard::factory()->for($deck)->create(['is_free_designated' => true]);
-        Flashcard::factory()->for($deck)->create(['is_free_designated' => true]);
+        $dueCard = Flashcard::factory()->for($deck, 'deck')->create(['is_free_designated' => true]);
+        Flashcard::factory()->for($deck, 'deck')->create(['is_free_designated' => true]);
 
         $this->user->flashcardSchedules()->create([
             'flashcard_id' => $dueCard->id,

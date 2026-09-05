@@ -66,7 +66,10 @@ class PaymentTest extends TestCase
         $plan = Plan::factory()->monthly()->create(['price_irr' => 500000]);
 
         // Force the very next generated number to collide with an existing
-        // invoice, then let the retry draw a different suffix.
+        // invoice, then let the retry draw a different suffix. The request
+        // also draws 40-char strings internally (session id, CSRF token), so
+        // the factory branches on length instead of using a positional
+        // sequence that those draws would eat first.
         $stamp = 'INV-'.now()->format('YmdHis').'-';
         Invoice::factory()->create([
             'user_id' => $user->id,
@@ -74,7 +77,18 @@ class PaymentTest extends TestCase
             'number' => $stamp.'AAAAAAAA',
             'amount_irr' => 999999, // different price → never reused
         ]);
-        Str::createRandomStringsUsingSequence(['AAAAAAAA', 'BBBBBBBB']);
+        $suffixDraws = 0;
+        Str::createRandomStringsUsing(function (int $length) use (&$suffixDraws): string {
+            if ($length !== 8) {
+                // Unrelated framework draw (session id / CSRF): real entropy
+                // without recursing into the Str factory.
+                return substr(strtr(base64_encode(random_bytes($length * 2)), '+/', '-_'), 0, $length);
+            }
+
+            $suffixDraws++;
+
+            return $suffixDraws === 1 ? 'AAAAAAAA' : 'BBBBBBBB';
+        });
 
         try {
             $response = $this->actingAs($user)->post(route('checkout', $plan));

@@ -4,10 +4,31 @@ namespace Tests\Unit;
 
 use App\Models\UserFlashcardSchedule;
 use App\Services\SrsService;
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Eloquent\Model;
 use PHPUnit\Framework\TestCase;
 
 class SrsServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Eloquent models resolve their date format through the connection
+        // grammar, so even these pure-logic tests need a resolver. A capsule
+        // sqlite connection provides one without booting the framework.
+        $capsule = new Capsule;
+        $capsule->addConnection(['driver' => 'sqlite', 'database' => ':memory:']);
+        Model::setConnectionResolver($capsule->getDatabaseManager());
+    }
+
+    protected function tearDown(): void
+    {
+        Model::unsetConnectionResolver();
+
+        parent::tearDown();
+    }
+
     public function test_first_successful_review_schedules_one_day_ahead(): void
     {
         $result = (new SrsService)->review($this->schedule(), 4);

@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Subscription extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['invoice_id', 'user_id', 'plan_id', 'status', 'starts_at', 'ends_at', 'activated_at', 'gateway', 'gateway_reference'];
 
     protected function casts(): array

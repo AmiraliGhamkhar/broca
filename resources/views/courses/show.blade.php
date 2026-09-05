@@ -225,7 +225,7 @@
 @push('scripts')
     <script type="application/ld+json">
     {!! json_encode(array_filter([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'Course',
         'name' => $course->title,
         'url' => route('courses.show', $course),
@@ -237,11 +237,11 @@
         'contributor' => $course->reviewer ? ['@type' => 'Person', 'name' => $course->reviewer->name, 'jobTitle' => $course->reviewer->credentials] : null,
         'datePublished' => $course->published_at?->toIso8601String(),
         'dateModified' => $course->updated_at?->toIso8601String(),
-    ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ]), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@' . 'context' => 'https://schema.org',
         '@type' => 'BreadcrumbList',
         'itemListElement' => array_values(array_filter([
             ['@type' => 'ListItem', 'position' => 1, 'name' => __('app.name'), 'item' => route('home')],
@@ -249,7 +249,7 @@
             $course->subject ? ['@type' => 'ListItem', 'position' => 3, 'name' => $course->subject->name, 'item' => route('subjects.show', $course->subject)] : null,
             ['@type' => 'ListItem', 'position' => $course->subject ? 4 : 3, 'name' => $course->title, 'item' => route('courses.show', $course)],
         ])),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 @endpush
 @endsection

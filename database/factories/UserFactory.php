@@ -31,6 +31,11 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->unique()->numerify('09#########'),
+            // Mirror the users.status DB column default on the in-memory
+            // model too: actingAs() hands this exact instance to the request,
+            // and EnsureActive would otherwise read a NULL status and treat
+            // the user as suspended.
+            'status' => 'active',
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

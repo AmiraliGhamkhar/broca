@@ -132,8 +132,10 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         Route::get('/courses/{course:slug}/notes/{note:slug}', [NoteController::class, 'show'])->name('notes.show');
         Route::get('/notes/{note}/download', [NoteController::class, 'download'])->name('notes.download');
 
+        Route::get('/flashcards', [FlashcardController::class, 'index'])->name('flashcards.index');
         Route::get('/courses/{course:slug}/decks/{deck:slug}/study', [FlashcardController::class, 'study'])->name('decks.study');
         Route::post('/flashcards/{flashcard}/review', [FlashcardController::class, 'review'])->middleware('throttle:30,1')->name('flashcards.review');
+        Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
 
         Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
         Route::post('/quizzes/{quiz}/attempts', [QuizController::class, 'submit'])->name('quizzes.attempts.store');

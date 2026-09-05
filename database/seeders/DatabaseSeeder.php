@@ -415,7 +415,9 @@ class DatabaseSeeder extends Seeder
             [
                 'code' => 'free',
                 'name' => 'پلن پایه رایگان',
-                'description' => 'دسترسی نامحدود به دروس نمونه، ۲ ویدیوی اول هر دوره، ۱ جزوه و ۱۰ فلش‌کارت.',
+                // Global cap wording — mirrors EntitlementService constants;
+                // the quota is shared across the whole archive, not per course.
+                'description' => 'تا ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت و ۱ سؤال آزمون در کل آرشیو — برای ارزیابی پیش از خرید.',
                 'duration_months' => 0,
                 'price_irr' => 0,
                 'sort_order' => 1,

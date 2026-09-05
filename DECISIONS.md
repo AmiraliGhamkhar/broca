@@ -63,3 +63,35 @@ working-process rules. Newest first.
 7. AI-crawler visibility for free content (currently **allowed**).
 8. The 5-color brand palette design file — needed to replace placeholder hexes.
 9. Admin roles: single admin (current) or multiple permission levels?
+
+## Round 5 decisions (2026-09-05, first full-suite execution)
+
+1. **Signed routes own their model resolution.** Laravel runs implicit
+   route-model binding *before* route middleware, so a resource id in a
+   `signed` URL must be resolved manually in the controller
+   (`findOrFail`) — otherwise a tampered signature 404s instead of 403 and
+   leaks resource existence. Applied in `VideoController::media`; rule for
+   any future signed endpoint.
+2. **`subscriptions.status` is always written explicitly** ('scheduled' at
+   insert, `activate()` flips to 'active'). The column is NOT NULL with no
+   default; relying on model events/defaults here crashed every verified
+   payment.
+3. **Never write a bare `'@context'` literal in Blade.** Laravel 13 compiles
+   `@context` as the context-passing directive even inside
+   `{!! json_encode([...]) !!}`. Convention in this repo: `'@' . 'context'`
+   in every schema block.
+4. **Blog deletion from the admin panel is permanent** (`forceDelete`).
+   There is no restore UI, so soft deletes would only accumulate orphan
+   rows. The `SoftDeletes` trait stays on the model as a guard for
+   programmatic deletes.
+5. **The free tier is a product constant, not DB content.** If no
+   zero-price plan row exists, `PlanController` prepends a synthetic one —
+   the plans page must never hide the free tier, mirroring how
+   `EntitlementService` constants define the quota. Seeded wording states
+   the cap is global (whole archive), not per course.
+6. **Untrusted URLs are validated on every hop and pinned to the validated
+   IP.** The Telegram bot's URL-import path refuses relative redirects,
+   follows at most 3 absolute http(s) hops (each re-checked against public
+   IP space), and connects via `CURLOPT_RESOLVE` to close DNS-rebinding.
+   IPv6-only targets fail closed — acceptable trade-off for an admin-only
+   import path on cPanel shared hosting.

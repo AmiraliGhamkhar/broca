@@ -16,6 +16,45 @@ use Illuminate\View\View;
 
 class FlashcardController extends Controller
 {
+    /**
+     * Learner flashcard hub: every published deck belonging to the user's
+     * enrolled, published courses, with per-deck due counts for today.
+     */
+    public function index(Request $request): View
+    {
+        $user = $request->user();
+
+        $enrolledCourseIds = $user->enrollments()
+            ->where('status', 'active')
+            ->pluck('course_id');
+
+        $decks = FlashcardDeck::query()
+            ->with('course.subject', 'author', 'reviewer')
+            ->withCount(['cards' => fn ($q) => $q->published()])
+            ->published()
+            ->whereHas('course', fn ($q) => $q->published()->whereIn('id', $enrolledCourseIds))
+            ->orderBy('sort_order')
+            ->get();
+
+        $dueCounts = $decks->isEmpty()
+            ? collect()
+            : UserFlashcardSchedule::query()
+                ->join('flashcards', 'flashcards.id', '=', 'user_flashcard_schedules.flashcard_id')
+                ->where('user_flashcard_schedules.user_id', $user->id)
+                ->where('user_flashcard_schedules.due_at', '<=', now())
+                ->whereIn('flashcards.flashcard_deck_id', $decks->pluck('id'))
+                ->groupBy('flashcards.flashcard_deck_id')
+                ->selectRaw('flashcards.flashcard_deck_id as deck_id, count(*) as due')
+                ->pluck('due', 'deck_id');
+
+        return view('learner.flashcards', [
+            'decks' => $decks,
+            'dueCounts' => $dueCounts,
+            'dueToday' => $dueCounts->sum(),
+            'hasEnrollments' => $enrolledCourseIds->isNotEmpty(),
+        ]);
+    }
+
     public function study(Request $request, FlashcardDeck $deck): View
     {
         abort_unless($this->publishedDeck($deck), 404);

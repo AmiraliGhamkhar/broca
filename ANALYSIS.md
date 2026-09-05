@@ -446,3 +446,58 @@ Full re-read of the tree (app/, config/, database/, routes/, resources/, tests/)
 This is a **well-engineered, security-conscious Laravel 13 codebase** that punches well above the average: the payment state machine (row-locks, unique-constraint idempotency, reconcile/heal, kill switch), the fail-closed freemium entitlement layer, and the MySQL-based CI are all production-grade thinking. The code is consistently commented (in English) with Persian UX copy, every money path is integer-based, and the test suite covers the money and gating paths first-class.
 
 **Before launch** (matching the repo's own RUNBOOK gates): real legal copy, real ZarinPal merchant, real prices, a real video asset/provider. The two fixes I'd previously prioritized — (1) 2FA disable / recovery-code regeneration and (2) `PaymentController::callback` delegating to `PaymentFinalizer` — are implemented on this branch (see §10 fix status); run the suite locally to confirm.
+
+---
+
+## 12. Round 5 — first full-suite execution and the bugs it exposed (2026-09-05)
+
+Rounds 1–4 could only lint (`TOKEN_PARSE`) because no PHP runtime was available.
+Round 5 stood up a **PHP 8.4 WASM harness** (`@php-wasm/node`, vendored
+mini-composer with all 113 lock-pinned packages, generated `ClassLoader` +
+`installed.json`, `Sleep::fake()` under `WASM_HARNESS=1` to dodge the
+ASIFY-usleep crash in Laravel's auth `Timebox`) and **ran the real PHPUnit
+suite for the first time ever: 170 tests, 636 assertions — now fully green.**
+
+That run falsified several round 1–4 "verified" claims and exposed genuine
+production bugs no linter could see. Each fix below was made **and re-verified
+by re-running the suite**.
+
+### 12.1 Test-infrastructure reality (why earlier rounds' claims were wrong)
+
+| # | Claim vs reality | Fix |
+|---|---|---|
+| R5-1 | Rounds 2–4 asserted suite-green without running PHPUnit; several "fixed" suites were written against APIs/markup that never existed (`TestResponse::assertSecureCookie` is not a Laravel method in any version; hero markup assertions targeted removed HTML) | `SecurityHeadersTest` rewritten to inspect `response->headers->getCookies()`; stale hero assertions replaced with current-copy assertions |
+| R5-2 | 8 models used factories but lacked `HasFactory`; 3 Feature tests forgot `RefreshDatabase`; `QuizFactory` had no `published()` state; factories passed relation-**name** keys (`'deck' => Factory`) that the fillable guard silently drops (FK left NULL) | Traits added, `RefreshDatabase` added, `published()` state added, FK-keyed attributes used; `->for($model, 'relation')` only where the relation name is non-inferrable |
+| R5-3 | `UserFactory` omitted `status`, so `actingAs()` users missed the DB default and `EnsureActive` treated them as suspended — an artifact that only surfaces in tests | Factory mirrors the DB default (`status = 'active'`) |
+
+### 12.2 Genuine production bugs found by executing the code
+
+| # | Finding (what actually broke) | Fix |
+|---|---|---|
+| R5-4 | **Every successful payment 500'd**: `PaymentFinalizer::ensureSubscription()` inserted into `subscriptions` without `status`; the column is `NOT NULL` with no DB default, so the INSERT crashed after verification and no subscription was ever activated | Insert `'status' => 'scheduled'` (valid per `chk_subscriptions_status`) and let `activate()` flip it to `active` — the two-step intent now actually works |
+| R5-5 | **Signed media URLs leaked resource existence**: implicit route-model binding resolved `Video` *before* the `signed` middleware, so a tampered signature on an existing video returned 404 (and the model was resolved first) instead of the 403 the signature check owes | `VideoController::media()` takes the raw id and does `Video::query()->findOrFail($videoId)` inside the action, so `signed` fires first (verified: no-sig/bad-id ⇒ 404, tampered-real-id ⇒ 403, valid-sig ⇒ 200) |
+| R5-6 | **All JSON-LD blocks were corrupted on every page**: Laravel 13's Blade compiles `@context` as the new context-passing directive even inside `{!! json_encode([...]) !!}` literals, emitting raw `<?php` into the HTML/schema output (verified against compiled cache) | Every `'@context'` literal rewritten as `'@' . 'context'` (7 views); all schema blocks now also emit `JSON_PRETTY_PRINT` (matches the `"@type": "X"` assertions and reads cleanly for answer-engine parsers) |
+| R5-7 | **Registration 500'd on every submit** (round-4 find, now runtime-confirmed): `RegisteredUserController` used `PhoneNormalizer::…` without importing it | Import added; registration path exercised green |
+| R5-8 | **All `.md` twins 500'd**: `SiteMarkdown` linked `route('legal', …)` but the route is named `legal.show` | Both call sites corrected; twins verified 200 with correct content |
+| R5-9 | **An unfinished feature shipped half-built**: `learner/flashcards` + `learner/quizzes` hub views and a full `LearnerHubsTest` existed, but the routes/controllers never did — and `quiz-result` pages called `route('quizzes.index')`, 500'ing every quiz result in production | `Learner\FlashcardController::index` (enrolled published courses → published decks, per-deck due counts via `user_flashcard_schedules`) and `Learner\QuizController::index` (published quizzes, attempt stats tries/best/last) implemented; routes registered in the auth+active learner group |
+| R5-10 | **Video page discarded stored progress**: `videoPlayback()` hydrated with 0/false on every load, so "resume where you stopped" silently never worked | `VideoController::show()` loads the user's `VideoProgress` and the view emits `videoPlayback({percent}, {completed})`; the progress bar + "completed" chip render true state immediately |
+| R5-11 | Blog delete was a soft delete, leaving permanent orphan rows (no restore UI exists anywhere) | Admin destroy uses `forceDelete()`; the `SoftDeletes` trait is kept as a guard for programmatic deletes |
+| R5-12 | Plans page didn't state the free-tier semantics; the seeded free-plan description even said "first 2 videos **per course**" while `EntitlementService` enforces a **global** cap | Free-plan copy spells out the shared-archive quota (`تا ۲ ویدیوی منتخب، در کل آرشیو و همه دوره‌ها …`); seeder text aligned; and since the free tier is a product constant, `PlanController` now prepends a synthetic free plan whenever no zero-price row exists — the page can never hide the free tier again |
+| R5-13 | `PaymentTest` collision retry used `createRandomStringsUsingSequence`, but the framework's own 40-char draws (session id, CSRF token) consume the positional sequence before the invoice draw — the test could never collide | Test now installs a length-aware factory: 8-char draws return the scripted collision pair, everything else gets real entropy |
+| R5-14 | `<html>` carried a redundant `class="scroll-smooth"` while `scroll-behavior: smooth` already lives in `app.css` (with a reduced-motion override) | Class removed — behavior preserved, markup matches assertions |
+| R5-15 | `public/images/heart-placeholder.svg` was orphaned (the 2026-09 hero is a pure editorial card) with a README still describing it as in use | SVG deleted; README rewritten to document `og-default.png` (1200×630, Latin-only artwork) which is the only live asset |
+| R5-16 | **Telegram bot URL import had two SSRF bypasses**: `storeRemoteDocument` validated the host once, then fetched with redirects enabled — a public URL could 302 the fetcher to `127.0.0.1` (cPanel services) or the cloud metadata IP — and DNS could re-resolve to an internal address between validation and connect (rebinding) | Per-hop validation: `withoutRedirecting()` + manual follow of ≤3 absolute http(s) hops, each re-checked against public IP space; connection pinned to the validated IP via `CURLOPT_RESOLVE`; relative Locations refused outright; IPv6-only hosts fail closed. New `TelegramSsrfTest` (6 tests) locks the rules incl. redirect-to-loopback refusal with `Http::assertSentCount(1)` |
+
+### 12.3 What was verified, not assumed
+
+- **Full suite green**: `OK (176 tests, 654 assertions)` on PHP 8.4.23 / PHPUnit 12.5.33 via the WASM harness (sqlite `:memory:`, same env as `phpunit.xml`).
+- **SEO/GEO endpoints smoke-tested live**: `/sitemap.xml` (course URLs + `lastmod`), `/robots.txt` (sitemap reference, retrieval-agent blocks), `/llms.txt`, canonical link on home — all asserted against rendered output, not source reading.
+- **Lint**: 247 PHP files, 0 failures. **Build**: `vite build` green (CSS 59.07 kB / JS 54.41 kB).
+- The micro-interaction layer from round 4 was re-audited in context and kept as-is: it already implements purposeful motion only (state feedback, reveal, hover/press, RTL-correct `scaleX` progress) with CSS **and** JS `prefers-reduced-motion` fallbacks — adding more would be decoration, which the client brief explicitly rejects.
+
+### 12.4 Remaining launch gates (unchanged from RUNBOOK)
+
+Real legal copy, real ZarinPal merchant code, real prices, real video
+assets/provider. One architectural note carried forward: the Zibal gateway
+class is configured but has no route wiring — harmless dead code today, flag
+before anyone assumes dual-gateway support exists.

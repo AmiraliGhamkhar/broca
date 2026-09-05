@@ -7,7 +7,7 @@
 
 @section('content')
 @php($displayTimezone = config('broca.display_timezone'))
-<section class="section-shell section-stack section-stack-tight-top" x-data="videoPlayback()">
+<section class="section-shell section-stack section-stack-tight-top" x-data="videoPlayback({{ $initialPercent }}, {{ $initialCompleted ? 'true' : 'false' }})">
     <a href="{{ route('courses.show', $course) }}" class="button-secondary">
         <x-ui.icon name="stack" class="size-4" />
         بازگشت به صفحه دوره
@@ -136,13 +136,13 @@
 
 @push('scripts')
 <script>
-    function videoPlayback() {
+    function videoPlayback(initialPercent = 0, initiallyCompleted = false) {
         return {
             loading: false,
             manifest: null,
             error: '',
-            progressPercent: 0,
-            completed: false,
+            progressPercent: initialPercent,
+            completed: initiallyCompleted,
             lastSentAt: 0,
 
             async loadPlayback() {
