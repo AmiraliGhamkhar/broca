@@ -66,6 +66,33 @@ class AdminAuditLogTest extends TestCase
         $this->assertSame('عنوان جدید', $payload['title'] ?? null);
     }
 
+    public function test_redaction_recurses_into_nested_payloads(): void
+    {
+        // Round-6 audit B-3: the pre-fix sanitizer used ->except() on the
+        // top level only, so a nested key (e.g. settings[smtp][password])
+        // sailed into the log verbatim. The middleware logs the raw input,
+        // so the extra nested array rides along with an otherwise valid
+        // update request.
+        $admin = User::factory()->admin()->create();
+        $course = Course::factory()->create();
+
+        $this->actingAsAdmin($admin)->patch(route('admin.courses.update', $course), [
+            'subject_id' => $course->subject_id,
+            'title' => $course->title,
+            'status' => 'in_review',
+            'settings' => [
+                'smtp' => ['password' => 'nested-secret', 'host' => 'mail.brocamed.ir'],
+                'recovery_code' => 'AB12-CD34',
+            ],
+        ]);
+
+        $payload = AdminActivityLog::latest('id')->first()->payload ?? [];
+
+        $this->assertArrayNotHasKey('password', $payload['settings']['smtp'] ?? []);
+        $this->assertSame('mail.brocamed.ir', $payload['settings']['smtp']['host'] ?? null);
+        $this->assertArrayNotHasKey('recovery_code', $payload['settings'] ?? []);
+    }
+
     public function test_activity_log_page_is_admin_only(): void
     {
         $user = User::factory()->create();

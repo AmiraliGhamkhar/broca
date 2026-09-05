@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'پرداخت موفق — ' . __('app.name'))
+@section('robots', 'noindex, nofollow')
 
 @section('content')
     <section class="max-w-2xl mx-auto px-4 py-24 text-center">
@@ -14,7 +15,20 @@
             <dl class="mt-8 grid gap-3 text-sm">
                 <div class="flex items-center justify-between rounded-xl bg-surface-soft px-4 py-3">
                     <dt class="font-bold">شمارهٔ فاکتور</dt>
-                    <dd class="font-bold">{{ $invoice->number }}</dd>
+                    <dd class="font-bold flex items-center gap-2" dir="ltr">
+                        {{ $invoice->number }}
+                        {{-- Copy affordance: support asks users to read this
+                             string back — one click removes transcription
+                             errors, with a 1.5s confirmation tick (M-2). --}}
+                        <button type="button"
+                                x-data="{ copied: false }"
+                                @click="navigator.clipboard.writeText(@js($invoice->number)).then(() => { this.copied = true; setTimeout(() => this.copied = false, 1500); })"
+                                class="inline-flex items-center gap-1 rounded-full border border-hairline bg-white px-2.5 py-1 text-[11px] font-bold text-muted hover:text-ink hover:border-ink transition-colors"
+                                :aria-label="copied ? 'کپی شد' : 'کپی شمارهٔ فاکتور'">
+                            <span x-show="!copied" x-transition.opacity.duration.150ms>کپی</span>
+                            <span x-show="copied" x-cloak x-transition.opacity.duration.150ms class="text-teal">کپی شد ✓</span>
+                        </button>
+                    </dd>
                 </div>
                 <div class="flex items-center justify-between rounded-xl bg-surface-soft px-4 py-3">
                     <dt class="font-bold">پلن</dt>

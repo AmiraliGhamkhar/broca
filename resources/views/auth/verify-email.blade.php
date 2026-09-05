@@ -2,6 +2,7 @@
 
 @section('title', 'تأیید آدرس ایمیل — ' . __('app.name'))
 @section('meta_description', 'تأیید ایمیل برای فعال‌سازی کامل حساب بروکا و ادامه دسترسی به تجربه آموزشی.')
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <section class="section-shell section-stack">

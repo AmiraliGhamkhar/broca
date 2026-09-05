@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -159,6 +160,20 @@ class TelegramWebhookTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    public function test_backup_command_queues_the_job_instead_of_running_it_inline(): void
+    {
+        // Round-6 audit I-4: the dump + gzip + upload can outlive Telegram's
+        // webhook patience (~60s), triggering a retry and a duplicate dump.
+        // The work must move to the database queue (drained by the cron
+        // worker), never run inside the webhook request.
+        Bus::fake();
+
+        $this->postJson(route('telegram.webhook'), $this->message('/backup_db'), $this->headers())
+            ->assertOk();
+
+        Bus::assertDispatched(\App\Jobs\RunDatabaseBackup::class, fn (\App\Jobs\RunDatabaseBackup $job) => $job->chatId === 1001);
     }
 
     private function headers(): array

@@ -45,7 +45,10 @@ class CourseController extends Controller
         abort_if($data['status'] === 'published', 422, 'انتشار دوره باید از مسیر بررسی و انتشار انجام شود.');
 
         $course = new Course(collect($data)->except(['published_at'])->all());
-        $course->slug = Slug::unique($data['title'], fn (string $slug) => Course::where('slug', $slug)->exists());
+        // withTrashed: the slug UNIQUE index covers soft-deleted rows too, so
+        // the generator must see them or the INSERT 500s after a
+        // soft-delete + same-title recreate (Round-6 audit D-5).
+        $course->slug = Slug::unique($data['title'], fn (string $slug) => Course::withTrashed()->where('slug', $slug)->exists());
         $course->published_at = $this->publishedAt($data);
         $course->save();
 
@@ -69,7 +72,7 @@ class CourseController extends Controller
         $course->fill(collect($data)->except(['published_at'])->all());
 
         if ($data['title'] !== $course->getOriginal('title')) {
-            $course->slug = Slug::unique($data['title'], fn (string $slug) => Course::where('slug', $slug)->where('id', '!=', $course->id)->exists());
+            $course->slug = Slug::unique($data['title'], fn (string $slug) => Course::withTrashed()->where('slug', $slug)->where('id', '!=', $course->id)->exists());
         }
 
         $course->published_at = $this->publishedAt($data, $course);

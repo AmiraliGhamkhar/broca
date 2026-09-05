@@ -13,14 +13,22 @@ use Shetabit\Multipay\Payment;
 use Shetabit\Multipay\Receipt;
 
 /**
- * ZarinPal adapter over shetabit/payment (multipay). Amounts are integers in
- * Rial (smallest unit) — the driver config sets currency to 'R' so the
- * package does NOT multiply by 10.
+ * Zibal adapter over shetabit/payment (multipay), the secondary gateway
+ * (client decision 2026-09-05: finish driver + callback). Mirrors
+ * ZarinPalGateway so the two drivers stay behaviorally identical:
+ * integer-Rial amounts (currency 'R' in config — multipay multiplies by 10
+ * for 'T'), amount-bound server verification, receipt returned for the
+ * payment ledger.
  *
- * Zibal can be added the same way later: the driver already ships in the
- * package, only a callback route + param mapping are needed.
+ * Zibal's transaction id is the trackId (ZarinPal's is the Authority); the
+ * callback sends `trackId` + `success` instead of `Authority` + `Status` —
+ * the parameter mapping lives in PaymentController::zibalCallback.
+ *
+ * Selected via PAYMENT_GATEWAY=zibal (see AppServiceProvider's config-driven
+ * binding). Per-user gateway choice at checkout remains a future product
+ * decision (DECISIONS.md).
  */
-class ZarinPalGateway implements PaymentGateway
+class ZibalGateway implements PaymentGateway
 {
     public function __construct(private readonly Payment $payment)
     {
@@ -37,7 +45,10 @@ class ZarinPalGateway implements PaymentGateway
             ->purchase(
                 $multipayInvoice,
                 function ($driver, $transactionId) use ($invoice): void {
-                    // The ZarinPal authority IS the transaction id.
+                    // Zibal's trackId IS the transaction id — stored in the
+                    // same authority column as ZarinPal's, so the finalizer,
+                    // unique constraint and reconcile command stay
+                    // gateway-agnostic.
                     $invoice->initiate($this->getGatewayName(), (string) $transactionId);
                 }
             );
@@ -57,16 +68,13 @@ class ZarinPalGateway implements PaymentGateway
                 ->transactionId($invoice->authority)
                 ->verify();
         } catch (PreviouslyVerifiedException $exception) {
-            // The gateway already verified this authority once — treat as paid;
-            // invoice-level locking keeps activation idempotent. The driver
-            // signals 101 ("previously verified") by throwing, so recover the
-            // attached receipt when the package version provides one and fall
-            // back to a minimal driver-tagged receipt otherwise.
+            // Same 101-equivalent reading as the ZarinPal adapter: an already
+            // verified trackId is a paid invoice, not a failure.
             $attached = property_exists($exception, 'receipt') ? $exception->receipt : null;
 
-            // Receipt's constructor requires (driver, referenceId); in this
-            // recovery path the best available reference is the invoice's
-            // stored authority (ZarinPal's Authority string).
+            // Receipt's constructor requires (driver, referenceId); the
+            // authority column holds Zibal's trackId here — the same
+            // transaction id the gateway knows.
             return $attached instanceof Receipt
                 ? $attached
                 : new Receipt($this->getGatewayName(), (string) $invoice->authority);
@@ -81,11 +89,11 @@ class ZarinPalGateway implements PaymentGateway
 
     public function getGatewayName(): string
     {
-        return 'zarinpal';
+        return 'zibal';
     }
 
     private function callbackUrl(): string
     {
-        return (string) (config('payment.drivers.zarinpal.callbackUrl') ?: route('payments.zarinpal.callback'));
+        return (string) (config('payment.drivers.zibal.callbackUrl') ?: route('payments.zibal.callback'));
     }
 }

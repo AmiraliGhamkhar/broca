@@ -34,7 +34,7 @@
                     </span>
                     <span class="badge-outline">
                         <x-ui.icon name="wallet" class="size-3.5" />
-                        پرداخت امن و صدور فاکتور
+                        تعرفهٔ شفاف و اشتراک مشخص
                     </span>
                     <span class="badge-outline">
                         <x-ui.icon name="refresh" class="size-3.5" />
@@ -44,67 +44,30 @@
             </div>
 
             <div class="lg:col-span-5">
-                <div class="editorial-card is-dark space-y-5">
-                    <div class="flex items-start justify-between gap-4 pb-4 border-b border-white/10">
-                        <div class="flex items-center gap-3">
-                            <span class="icon-frame-ghost">
-                                <x-ui.icon name="spark" class="size-5" />
-                            </span>
-                            <div>
-                                <p class="text-xs font-bold text-white">نمای سریع تجربه یادگیری بروکا</p>
-                                <p class="mt-1 text-[11px] muted-on-dark">از آشنایی اولیه تا مرور نهایی و سنجش، همه‌چیز در یک جریان پیوسته قرار می‌گیرد.</p>
-                            </div>
-                        </div>
-                        <span class="badge-on-dark">پروفایل آموزشی فعال</span>
-                    </div>
-
-                    <div class="trust-list">
-                        <div class="trust-list-item is-dark">
-                            <span class="icon-frame-ghost">
-                                <x-ui.icon name="play" class="size-5" />
-                            </span>
-                            <div>
-                                <strong class="text-white">درس‌های ویدیویی ساخت‌یافته</strong>
-                                <span class="muted-on-dark">موضوعات بالینی و علوم پایه با آستانه مشاهده و پیگیری پیشرفت واقعی.</span>
-                            </div>
-                        </div>
-
-                        <div class="trust-list-item is-dark">
-                            <span class="icon-frame-ghost">
-                                <x-ui.icon name="document" class="size-5" />
-                            </span>
-                            <div>
-                                <strong class="text-white">جزوات و خلاصه‌های استاندارد</strong>
-                                <span class="muted-on-dark">فایل‌های PDF آموزشی برای مرور سریع، مطالعه جمع‌بندی و دسترسی آفلاین.</span>
-                            </div>
-                        </div>
-
-                        <div class="trust-list-item is-dark">
-                            <span class="icon-frame-ghost">
-                                <x-ui.icon name="stack" class="size-5" />
-                            </span>
-                            <div>
-                                <strong class="text-white">مرور فاصله‌دار و آزمون تحلیلی</strong>
-                                <span class="muted-on-dark">فلش‌کارت و آزمون در کنار هم تا یادگیری فقط مصرف محتوا نباشد، بلکه تثبیت شود.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-3 pt-2">
-                        <div class="rounded-2xl bg-white/5 p-3 border border-white/10">
-                            <small class="text-[11px] font-bold text-white/60">فرمت محتوا</small>
-                            <strong class="mt-2 block text-sm font-bold text-white">ویدیو + PDF + SRS</strong>
-                        </div>
-                        <div class="rounded-2xl bg-white/5 p-3 border border-white/10">
-                            <small class="text-[11px] font-bold text-white/60">مدل اعتماد</small>
-                            <strong class="mt-2 block text-sm font-bold text-white">نویسنده + بازبین</strong>
-                        </div>
-                        <div class="rounded-2xl bg-white/5 p-3 border border-white/10">
-                            <small class="text-[11px] font-bold text-white/60">شروع اولیه</small>
-                            <strong class="mt-2 block text-sm font-bold text-white">حساب رایگان</strong>
-                        </div>
-                    </div>
-                </div>
+                {{-- Editorial photograph (client decision 2026-09-05: photo
+                     instead of the cancelled 3D-heart video). The image IS
+                     the LCP element on mobile — it is preloaded via the
+                     'head' stack in welcome.blade.php, carries explicit
+                     dimensions (CLS) and ships as WebP ≤ 80KB with a JPEG
+                     fallback. Swap by replacing public/images/hero/hero.* and
+                     updating the alt text to match the new photograph. --}}
+                <figure class="relative m-0 overflow-hidden rounded-[2rem] border border-hairline-soft bg-white shadow-float">
+                    <picture>
+                        <source type="image/webp" srcset="/images/hero/hero.webp">
+                        <img src="/images/hero/hero.jpg"
+                             alt="ماکت آموزشی قلب روی پایهٔ سفید، در نور موزه‌ای"
+                             width="1200" height="1600"
+                             fetchpriority="high" decoding="async"
+                             class="block w-full aspect-[4/3] sm:aspect-[4/5] object-cover saturate-[.85] contrast-[.98]">
+                    </picture>
+                    <figcaption class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-white/85 px-5 py-3 backdrop-blur-sm border-t border-hairline-soft">
+                        <span class="text-[11px] font-bold text-ink">از مفهوم تا تثبیت؛ یادگیری ساخت‌یافتهٔ علوم پزشکی</span>
+                        <span class="badge-outline shrink-0">
+                            <x-ui.icon name="spark" class="size-3.5" />
+                            بازبینی علمی
+                        </span>
+                    </figcaption>
+                </figure>
             </div>
         </div>
     </div>

@@ -2,6 +2,7 @@
 
 @section('title', 'ورود به حساب کاربری — ' . __('app.name'))
 @section('meta_description', 'ورود به حساب بروکا برای دسترسی به دوره‌ها، فلش‌کارت‌ها، آزمون‌ها و مسیر یادگیری پزشکی.')
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <section class="section-shell section-stack section-stack-tight-top">

@@ -70,4 +70,16 @@ class ScheduledTasksTest extends TestCase
         // effectively permanent.
         $this->assertScheduled('broca:expire-subscriptions');
     }
+
+    public function test_session_and_cache_tables_are_pruned(): void
+    {
+        // Round-6 audit D-1: SESSION_DRIVER=database keeps a row (with IP +
+        // user agent) per visitor forever unless pruned — a capped shared
+        // disk and an unbounded PII retention window in one.
+        $this->assertScheduled('session:prune');
+
+        // Round-6 audit D-2: the database cache store never deletes expired
+        // rows; rate-limiter keys alone grow it by a row per user per window.
+        $this->assertScheduled('broca:prune-cache');
+    }
 }

@@ -23,7 +23,9 @@ class DashboardController extends Controller
                 'course.reviewer',
                 'course.videos' => fn ($q) => $q->published()->orderBy('sort_order'),
                 'course.notes' => fn ($q) => $q->published()->orderBy('sort_order'),
-                'course.decks' => fn ($q) => $q->published()->withCount('cards'),
+                // Published-only count matches the learner flashcards hub;
+                // counting drafts here over-promised what study pages serve (D-8).
+                'course.decks' => fn ($q) => $q->published()->withCount(['cards' => fn ($cq) => $cq->published()]),
                 'course.quizzes' => fn ($q) => $q->published(),
             ])
             ->latest('enrolled_at')
@@ -50,6 +52,7 @@ class DashboardController extends Controller
             ->published()
             ->whereNotIn('id', $enrolledCourseIds)
             ->orderBy('sort_order')
+            ->orderBy('id') // deterministic ordering (D-6)
             ->limit(4)
             ->get();
 

@@ -69,9 +69,40 @@ class LogAdminActivity
      */
     private function sanitize(Request $request): array
     {
-        return collect($request->input())
-            ->except(self::REDACTED_KEYS)
-            ->map(fn ($value) => is_scalar($value) ? mb_substr((string) $value, 0, 500) : $value)
-            ->all();
+        return $this->redactRecursive($request->input());
+    }
+
+    /**
+     * Redaction must recurse: nested keys (e.g. options[0][password]) would
+     * otherwise bypass the REDACTED_KEYS filter (Round-6 audit B-3).
+     * Redacted keys are REMOVED entirely — the pre-audit except() contract
+     * (asserted by AdminAuditLogTest / AdminTwoFactorManagementTest) is
+     * absence, and absence leaks less than a '[redacted]' marker would.
+     *
+     * @param  mixed  $value
+     * @param  int  $depth  Hard cap so pathological nesting cannot recurse unbounded.
+     * @return mixed
+     */
+    private function redactRecursive($value, int $depth = 0)
+    {
+        if ($depth > 5) {
+            return '[depth-limit]';
+        }
+
+        if (is_array($value)) {
+            $clean = [];
+
+            foreach ($value as $key => $child) {
+                if (is_string($key) && in_array(strtolower($key), self::REDACTED_KEYS, true)) {
+                    continue;
+                }
+
+                $clean[$key] = $this->redactRecursive($child, $depth + 1);
+            }
+
+            return $clean;
+        }
+
+        return is_scalar($value) ? mb_substr((string) $value, 0, 500) : $value;
     }
 }

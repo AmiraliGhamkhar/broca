@@ -2,6 +2,7 @@
 
 @section('title', 'تعیین گذرواژهٔ جدید — ' . __('app.name'))
 @section('meta_description', 'تعیین گذرواژه جدید برای حساب بروکا و بازگشت امن به فضای یادگیری.')
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <section class="section-shell section-stack section-stack-tight-top">

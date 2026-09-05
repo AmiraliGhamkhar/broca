@@ -4,21 +4,50 @@
 @section('meta_description', 'بروکا، پلتفرم فارسی آموزش پزشکی با ویدیوهای ساخت‌یافته، جزوات PDF، فلش‌کارت مرور فاصله‌دار، آزمون و شفافیت نویسنده و بازبین علمی.')
 @section('canonical', route('home'))
 
+@push('head')
+    {{-- The hero photograph is the LCP element on mobile; preloading it
+         saves the CSS → image discovery round trip. --}}
+    <link rel="preload" as="image" href="/images/hero/hero.jpg" imagesrcset="/images/hero/hero.webp" imagesizes="100vw" fetchpriority="high">
+@endpush
+
 @section('content')
 @php
     $trustSignals = [
         ['title' => 'بازبینی علمی برای محتوای آموزشی', 'copy' => 'هر محتوای پزشکی پیش از انتشار می‌تواند مسیر نویسنده و بازبین علمی را طی کند.'],
         ['title' => 'شروع رایگان برای ارزیابی کیفیت', 'copy' => 'پیش از خرید می‌توان با نمونه‌درس، جزوه و فلش‌کارت منتخب، کیفیت آموزش را در عمل ارزیابی کرد.'],
         ['title' => 'یادگیری چندرسانه‌ای در یک محیط', 'copy' => 'ویدیو، PDF، فلش‌کارت و آزمون به‌جای پراکندگی، در یک تجربه منسجم جمع شده‌اند.'],
-        ['title' => 'پرداخت شفاف و پیگیری‌پذیر', 'copy' => 'تعرفه‌ها، وضعیت اشتراک و مسیر پرداخت به‌صورت واضح و قابل پیگیری نمایش داده می‌شود.'],
+        ['title' => 'تعرفه‌های شفاف و پیگیری‌پذیر', 'copy' => 'تعرفه‌ها، وضعیت اشتراک و مسیر دسترسی به‌صورت واضح و قابل پیگیری نمایش داده می‌شود.'],
     ];
 
-    $specialties = [
-        ['label' => 'قلب و عروق', 'title' => 'فیزیولوژی قلب و همودینامیک', 'copy' => 'از پتانسیل عمل و گره‌های هدایتی تا همودینامیک عروق و تحلیل نوار قلب.', 'meta' => 'درس‌های ساخت‌یافته + جزوه PDF', 'link' => route('catalog', ['subject' => 'cardiovascular-physiology']), 'icon' => 'play'],
-        ['label' => 'نورولوژی', 'title' => 'نوروآناتومی و ناحیه بروکا', 'copy' => 'ساختار قشر مخ، مسیرهای عصبی، کالبدشناسی زبانی و ارتباط با سناریوهای بالینی.', 'meta' => 'اطلس آموزشی + مرور مفهومی', 'link' => route('catalog', ['subject' => 'neuroanatomy']), 'icon' => 'book'],
-        ['label' => 'آناتومی بالینی', 'title' => 'قفسه سینه و ساختارهای کلیدی', 'copy' => 'مرور استخوان‌بندی، عضلات، اعصاب و لندمارک‌های مهم با تمرکز بر فهم بالینی.', 'meta' => 'ویدیو + راهنمای مطالعه', 'link' => route('catalog', ['subject' => 'clinical-anatomy']), 'icon' => 'stack'],
-        ['label' => 'فیزیولوژی سلولی', 'title' => 'غشا، انتقال و سیناپس', 'copy' => 'مبانی انتقال یونی، تنظیم پتانسیل غشا و ارتباط آن با عملکرد عصبی و عضلانی.', 'meta' => 'مرور پایه برای آزمون‌ها', 'link' => route('catalog', ['subject' => 'cellular-physiology']), 'icon' => 'quiz'],
+    // DB-driven (Round-6 audit F-2): the grid lists real, visible subjects —
+    // hard-coded slugs here were the exact anti-pattern the footer fix
+    // removed (a renamed subject silently produced empty catalog pages).
+    // Editorial copy stays keyed by slug; a subject without a blurb falls
+    // back to its own name/description, so the grid can never 404.
+    $specialtyCopy = [
+        'cardiovascular-physiology' => ['icon' => 'play', 'title' => 'فیزیولوژی قلب و همودینامیک', 'copy' => 'از پتانسیل عمل و گره‌های هدایتی تا همودینامیک عروق و تحلیل نوار قلب.', 'meta' => 'درس‌های ساخت‌یافته + جزوه PDF'],
+        'neuroanatomy' => ['icon' => 'book', 'title' => 'نوروآناتومی و ناحیه بروکا', 'copy' => 'ساختار قشر مخ، مسیرهای عصبی، کالبدشناسی زبانی و ارتباط با سناریوهای بالینی.', 'meta' => 'اطلس آموزشی + مرور مفهومی'],
+        'clinical-anatomy' => ['icon' => 'stack', 'title' => 'قفسه سینه و ساختارهای کلیدی', 'copy' => 'مرور استخوان‌بندی، عضلات، اعصاب و لندمارک‌های مهم با تمرکز بر فهم بالینی.', 'meta' => 'ویدیو + راهنمای مطالعه'],
+        'cellular-physiology' => ['icon' => 'quiz', 'title' => 'غشا، انتقال و سیناپس', 'copy' => 'مبانی انتقال یونی، تنظیم پتانسیل غشا و ارتباط آن با عملکرد عصبی و عضلانی.', 'meta' => 'مرور پایه برای آزمون‌ها'],
     ];
+
+    $specialties = \Illuminate\Support\Facades\Cache::remember('landing_specialties', 300, function () use ($specialtyCopy) {
+        return \App\Models\Subject::query()
+            ->where('is_visible', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->limit(4)
+            ->get()
+            ->map(fn ($subject) => [
+                'label' => $subject->name,
+                'title' => $specialtyCopy[$subject->slug]['title'] ?? $subject->name,
+                'copy' => $specialtyCopy[$subject->slug]['copy'] ?? ($subject->description ?: 'مجموعهٔ درس، مرور و ارزیابی این شاخه در یک چارچوب آموزشی یکپارچه.'),
+                'meta' => $specialtyCopy[$subject->slug]['meta'] ?? 'درس‌های ساخت‌یافته + مرور فاصله‌دار',
+                'link' => route('subjects.show', $subject),
+                'icon' => $specialtyCopy[$subject->slug]['icon'] ?? 'stack',
+            ])
+            ->all();
+    });
 
     $pillars = [
         ['title' => 'ویدیوهای آموزشی کوتاه و هدفمند', 'copy' => 'هر درس با ساختار مشخص و قابل پیگیری ارائه می‌شود تا فراگیر دقیقاً بداند از کجا شروع کند و به کجا برسد.', 'icon' => 'play'],
@@ -53,6 +82,7 @@
     </div>
 </section>
 
+@if (! empty($specialties))
 <section class="section-shell section-stack">
     <div class="section-intro">
         <span class="eyebrow">حوزه‌های کلیدی آموزش</span>
@@ -85,6 +115,7 @@
         @endforeach
     </div>
 </section>
+@endif
 
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">

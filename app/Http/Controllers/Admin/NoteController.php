@@ -45,7 +45,8 @@ class NoteController extends Controller
         abort_if($data['status'] === 'published', 422, 'انتشار جزوه باید از مسیر بررسی و انتشار انجام شود.');
 
         $note = new Note(collect($data)->except(['is_free_designated', 'published_at'])->all());
-        $note->slug = Slug::unique($data['title'], fn (string $slug) => Note::where('course_id', $data['course_id'])->where('slug', $slug)->exists());
+        // withTrashed: UNIQUE(course_id, slug) covers soft-deleted rows (D-5).
+        $note->slug = Slug::unique($data['title'], fn (string $slug) => Note::withTrashed()->where('course_id', $data['course_id'])->where('slug', $slug)->exists());
         $note->storage_disk = $data['storage_disk'] ?? 'local';
         $note->storage_key = $data['storage_key'] ?? ('notes/' . $note->slug . '.pdf');
         $note->mime_type = $data['mime_type'] ?? 'application/pdf';
@@ -74,7 +75,7 @@ class NoteController extends Controller
 
         if ((int) $data['course_id'] !== (int) $note->course_id) {
             $note->course_id = (int) $data['course_id'];
-            $note->slug = Slug::unique($data['title'], fn (string $slug) => Note::where('course_id', $data['course_id'])->where('slug', $slug)->exists());
+            $note->slug = Slug::unique($data['title'], fn (string $slug) => Note::withTrashed()->where('course_id', $data['course_id'])->where('slug', $slug)->exists());
         }
 
         $note->storage_disk = $data['storage_disk'] ?? $note->storage_disk ?? 'local';

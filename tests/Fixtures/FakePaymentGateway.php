@@ -4,6 +4,7 @@ namespace Tests\Fixtures;
 
 use App\Contracts\PaymentGateway;
 use App\Models\Invoice;
+use Shetabit\Multipay\Receipt;
 
 class FakePaymentGateway implements PaymentGateway
 {
@@ -21,9 +22,15 @@ class FakePaymentGateway implements PaymentGateway
         return '/fake-gateway?authority=FAKE-AUTH-'.$invoice->id;
     }
 
-    public function verifyPayment(Invoice $invoice): bool
+    public function verifyPayment(Invoice $invoice): ?Receipt
     {
-        return $this->shouldVerify;
+        if (! $this->shouldVerify) {
+            return null;
+        }
+
+        // Receipt's constructor requires (driver, referenceId); the
+        // reference is readonly — pass it at construction.
+        return new Receipt($this->getGatewayName(), 'FAKE-REF-'.$invoice->id);
     }
 
     public function getGatewayName(): string
