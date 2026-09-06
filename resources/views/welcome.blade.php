@@ -127,13 +127,17 @@
 
         <div class="lg:col-span-7 subtle-grid cols-2">
             @foreach ($pillars as $item)
-                <div class="feature-card">
-                    <span class="icon-frame-soft mb-4">
-                        <x-ui.icon :name="$item['icon']" class="size-5" />
-                    </span>
-                    <h3 class="text-base font-extrabold text-ink">{{ $item['title'] }}</h3>
-                    <p class="mt-3">{{ $item['copy'] }}</p>
-                </div>
+                <article class="editorial-card h-full flex flex-col gap-4">
+                    <div class="flex items-start gap-4">
+                        <span class="icon-frame-soft icon-frame-round">
+                            <x-ui.icon :name="$item['icon']" class="size-5" />
+                        </span>
+                        <div>
+                            <h3 class="text-base font-extrabold text-ink">{{ $item['title'] }}</h3>
+                            <p class="mt-3 text-muted leading-7">{{ $item['copy'] }}</p>
+                        </div>
+                    </div>
+                </article>
             @endforeach
         </div>
     </div>
@@ -186,11 +190,11 @@
             <h2 class="text-2xl font-black text-ink mt-4">از ساخت حساب رایگان تا تصمیم خرید، مسیر باید روشن باشد</h2>
             <p class="section-copy max-w-2xl">برای ایجاد اعتماد، ابتدا تجربه واقعی یادگیری نمایش داده می‌شود. سپس پلن‌ها، سطح دسترسی، جزئیات پرداخت و وضعیت اشتراک با زبان روشن و بدون دعوت‌به‌اقدام‌های مبهم توضیح داده می‌شوند.</p>
             <div class="flex flex-wrap gap-3 mt-6">
-                <a href="{{ route('plans') }}" class="button-primary">
+                <a href="{{ route('plans') }}" class="btn-cta-primary">
                     <x-ui.icon name="wallet" class="size-4" />
                     مشاهده پلن‌های اشتراک
                 </a>
-                <a href="{{ route('blog.index') }}" class="button-secondary">
+                <a href="{{ route('blog.index') }}" class="btn-cta-secondary">
                     <x-ui.icon name="document" class="size-4" />
                     مشاهده مقالات آموزشی
                 </a>
@@ -251,8 +255,8 @@
         <h2 class="text-2xl sm:text-4xl font-black text-white max-w-3xl mx-auto leading-tight">همین حالا حساب رایگان بسازید و کیفیت تجربه یادگیری بروکا را از نزدیک ارزیابی کنید</h2>
         <p class="max-w-2xl mx-auto text-sm leading-8 text-white/70">نمونه‌درس‌ها، بخشی از جزوات، فلش‌کارت‌های منتخب و محتوای وبلاگ برای آشنایی اولیه در دسترس‌اند تا تصمیم خرید بر پایه تجربه واقعی گرفته شود.</p>
         <div class="flex flex-wrap justify-center gap-3 pt-2">
-            <a href="{{ route('register') }}" class="button-primary">ساخت حساب رایگان</a>
-            <a href="{{ route('catalog') }}" class="button-secondary bg-white text-ink">بررسی دوره‌ها</a>
+            <a href="{{ route('register') }}" class="btn-cta-primary">ساخت حساب رایگان</a>
+            <a href="{{ route('catalog') }}" class="btn-cta-secondary inline-flex items-center justify-center gap-2 min-h-[3rem] rounded border border-white/20 bg-white text-ink text-sm font-bold px-5 hover:bg-surface-soft transition-colors">بررسی دوره‌ها</a>
         </div>
     </div>
 </section>

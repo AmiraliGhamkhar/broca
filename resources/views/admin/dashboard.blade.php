@@ -107,7 +107,7 @@
                                 <span class="{{ $course->status === 'published' ? 'badge-success' : 'badge-neutral' }}">
                                     {{ $course->status === 'published' ? 'منتشر شده' : $course->status }}
                                 </span>
-                                <a href="{{ route('admin.courses.edit', $course) }}" class="px-4 py-2 rounded-full border border-ink/20 text-xs font-bold hover:bg-surface-soft transition-colors">ویرایش</a>
+                                <a href="{{ route('admin.courses.edit', $course) }}" class="px-4 py-2 rounded border border-ink/20 text-xs font-bold hover:bg-surface-soft transition-colors">ویرایش</a>
                             </div>
                         </div>
                     @empty

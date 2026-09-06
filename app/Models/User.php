@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Security: `is_admin` and `status` are deliberately NOT mass-assignable.
@@ -79,11 +80,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return is_array($this->recovery_codes) ? $this->recovery_codes : [];
     }
 
-    /** @param list<string> $codes Plaintext codes; only their hashes are stored. */
+    /** @param list<string> $codes Plaintext codes; only their bcrypt hashes are stored. */
     public function storeRecoveryCodes(array $codes): void
     {
+        // bcrypt (not sha256): recovery codes are short bearer secrets and
+        // sha256 of a 10-char code is GPU-bruteforceable in minutes after
+        // a DB leak. 10 codes per admin makes bcrypt cost negligible.
+        // Codes stored before this change no longer validate — admins
+        // regenerate them via the recovery-codes endpoint.
         $hashed = array_map(
-            fn (string $code): string => hash('sha256', strtoupper(trim($code))),
+            fn (string $code): string => Hash::make(strtoupper(trim($code))),
             $codes
         );
 
@@ -93,14 +99,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function consumeRecoveryCode(string $code): bool
     {
         $normalized = strtoupper(trim($code));
-        $expected = hash('sha256', $normalized);
 
-        return DB::transaction(function () use ($expected): bool {
+        return DB::transaction(function () use ($normalized): bool {
             $user = self::query()->whereKey($this->getKey())->lockForUpdate()->first();
             $codes = $user?->recoveryCodes() ?? [];
 
             foreach ($codes as $index => $stored) {
-                if (hash_equals($expected, (string) $stored)) {
+                if (is_string($stored) && Hash::check($normalized, $stored)) {
                     unset($codes[$index]);
                     $user->forceFill(['recovery_codes' => array_values($codes)])->save();
 

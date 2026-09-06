@@ -46,7 +46,7 @@
                     </label>
                 </div>
 
-                <button type="submit" class="w-full mt-4 rounded-full bg-ink py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all">
+                <button type="submit" class="w-full mt-4 rounded bg-ink py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all">
                     ذخیره تغییرات دسترسی
                 </button>
             </form>

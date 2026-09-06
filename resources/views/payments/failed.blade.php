@@ -16,7 +16,7 @@
                 <p class="mt-6 text-sm text-muted">فاکتور <span class="font-bold">{{ $invoice->number }}</span> — مبلغ {{ number_format((int) $invoice->amount_irr / 10) }} تومان</p>
             @endif
 
-            <a href="{{ route('plans') }}" class="inline-block mt-8 px-7 py-3 rounded-full bg-rausch text-white font-bold hover:bg-rausch-active transition-colors">بازگشت به پلن‌ها</a>
+            <a href="{{ route('plans') }}" class="inline-block mt-8 px-7 py-3 rounded bg-rausch text-white font-bold hover:bg-rausch-active transition-colors">بازگشت به پلن‌ها</a>
         </div>
     </section>
 @endsection

@@ -27,9 +27,9 @@
 
     <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
         @if (in_array($code, [419, 403], true))
-            <a href="{{ route('login') }}" class="rounded-full bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
+            <a href="{{ route('login') }}" class="rounded bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
         @endif
-        <a href="{{ route('home') }}" class="rounded-full {{ in_array($code, [419, 403], true) ? 'bg-surface-soft' : 'bg-ink text-white' }} px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به صفحهٔ اصلی</a>
+        <a href="{{ route('home') }}" class="rounded {{ in_array($code, [419, 403], true) ? 'bg-surface-soft' : 'bg-ink text-white' }} px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به صفحهٔ اصلی</a>
     </div>
 </section>
 @endsection

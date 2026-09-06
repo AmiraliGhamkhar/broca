@@ -56,7 +56,7 @@
                             <input id="enable_code" type="text" name="code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456"
                                    class="w-full max-w-xs p-3 rounded-xl border border-ink/20 text-center text-xl font-mono font-bold tracking-widest bg-white" dir="ltr">
                         </div>
-                        <button type="submit" class="rounded-full bg-ink px-6 py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all">
+                        <button type="submit" class="rounded bg-ink px-6 py-2.5 text-xs font-bold text-white hover:bg-rausch transition-all">
                             تأیید و فعال‌سازی ورود دومرحله‌ای
                         </button>
                     </form>
@@ -66,7 +66,7 @@
                     <p class="text-sm font-bold text-muted">برای امنیت پنل مدیریت، احراز هویت دو مرحله‌ای را فعال کنید.</p>
                     <form method="post" action="{{ route('admin.two-factor.start') }}">
                         @csrf
-                        <button type="submit" class="rounded-full bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-all">
+                        <button type="submit" class="rounded bg-ink px-7 py-3 text-xs font-bold text-white hover:bg-rausch transition-all">
                             شروع راه‌اندازی 2FA
                         </button>
                     </form>
@@ -85,7 +85,7 @@
                     </p>
                     <form method="post" action="{{ route('admin.two-factor.recovery-codes') }}">
                         @csrf
-                        <button type="submit" class="rounded-full border border-ink/20 px-6 py-2.5 text-xs font-bold text-ink hover:bg-surface-soft transition-all">
+                        <button type="submit" class="rounded border border-ink/20 px-6 py-2.5 text-xs font-bold text-ink hover:bg-surface-soft transition-all">
                             ساخت کدهای بازیابی جدید
                         </button>
                     </form>
@@ -101,7 +101,7 @@
                         <label for="disable_code" class="block text-xs font-bold text-ink">کد تأیید ۶ رقمی</label>
                         <input id="disable_code" type="text" name="code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456"
                                class="w-full p-3 rounded-xl border border-ink/20 text-center text-lg font-mono font-bold tracking-widest bg-white" dir="ltr">
-                        <button type="submit" class="rounded-full bg-rausch px-6 py-2.5 text-xs font-bold text-white hover:bg-rausch-active transition-all">
+                        <button type="submit" class="rounded bg-rausch px-6 py-2.5 text-xs font-bold text-white hover:bg-rausch-active transition-all">
                             غیرفعال‌سازی 2FA
                         </button>
                     </form>

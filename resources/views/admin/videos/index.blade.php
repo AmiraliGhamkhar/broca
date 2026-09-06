@@ -99,7 +99,7 @@
                                 <form method="post" action="{{ route('admin.videos.destroy', $video) }}" onsubmit="return confirm('آیا از حذف این ویدیو اطمینان دارید؟');">
                                     @csrf
                                     @method('delete')
-                                    <button type="submit" class="rounded-full border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </td>

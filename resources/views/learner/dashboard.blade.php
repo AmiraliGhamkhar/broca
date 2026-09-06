@@ -88,12 +88,12 @@
         <nav class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none" aria-label="بخش‌های آموزشی">
             <button type="button" @click="activeTab = 'courses'"
                     :class="activeTab === 'courses' ? 'bg-ink text-white shadow-sm' : 'bg-white text-ink/80 hover:bg-surface-soft border border-hairline-soft'"
-                    class="px-5 py-2.5 rounded-full text-xs font-bold transition-all">
+                    class="px-5 py-2.5 rounded text-xs font-bold transition-all">
                 دوره‌های من
             </button>
             <button type="button" @click="activeTab = 'flashcards'"
                     :class="activeTab === 'flashcards' ? 'bg-ink text-white shadow-sm' : 'bg-white text-ink/80 hover:bg-surface-soft border border-hairline-soft'"
-                    class="px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2">
+                    class="px-5 py-2.5 rounded text-xs font-bold transition-all flex items-center gap-2">
                 مرور کارت‌ها
                 @if ($dueFlashcardsCount > 0)
                     <span class="size-2 rounded-full bg-rausch"></span>
@@ -101,12 +101,12 @@
             </button>
             <button type="button" @click="activeTab = 'quizzes'"
                     :class="activeTab === 'quizzes' ? 'bg-ink text-white shadow-sm' : 'bg-white text-ink/80 hover:bg-surface-soft border border-hairline-soft'"
-                    class="px-5 py-2.5 rounded-full text-xs font-bold transition-all">
+                    class="px-5 py-2.5 rounded text-xs font-bold transition-all">
                 آزمون‌ها
             </button>
             <button type="button" @click="activeTab = 'discover'"
                     :class="activeTab === 'discover' ? 'bg-ink text-white shadow-sm' : 'bg-white text-ink/80 hover:bg-surface-soft border border-hairline-soft'"
-                    class="px-5 py-2.5 rounded-full text-xs font-bold transition-all">
+                    class="px-5 py-2.5 rounded text-xs font-bold transition-all">
                 کشف دوره‌های جدید
             </button>
         </nav>
@@ -244,7 +244,7 @@
                                 <span class="text-[11px] font-bold text-rausch">{{ $card->deck->course->title }} · {{ $card->deck->title }}</span>
                                 <h3 class="text-sm font-extrabold text-ink">{{ $card->front }}</h3>
                                 @if ($card->hint)
-                      class="text-xs text-muted">راهنما: {{ $card->hint }}</p>
+                                    <p class="text-xs text-muted">راهنما: {{ $card->hint }}</p>
                                 @endif
                             </div>
                             <a href="{{ route('decks.study', [$card->deck->course, $card->deck]) }}" class="button-primary">ورود به مرور</a>

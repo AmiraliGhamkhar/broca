@@ -46,7 +46,7 @@
                 @endif
             </dl>
 
-            <a href="{{ route('dashboard') }}" class="inline-block mt-8 px-7 py-3 rounded-full bg-rausch text-white font-bold hover:bg-rausch-active transition-colors">رفتن به داشبورد</a>
+            <a href="{{ route('dashboard') }}" class="inline-block mt-8 px-7 py-3 rounded bg-rausch text-white font-bold hover:bg-rausch-active transition-colors">رفتن به داشبورد</a>
         </div>
     </section>
 @endsection

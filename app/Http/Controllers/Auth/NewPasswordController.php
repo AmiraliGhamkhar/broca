@@ -37,13 +37,19 @@ class NewPasswordController extends Controller
 
                 // A password reset assumes the account was compromised —
                 // every live session of that user must die, not just the one
-                // doing the reset. Sessions live in the database on this
-                // stack, so remove the user's rows directly.
-                if (config('session.driver') === 'database') {
+                // doing the reset. Best-effort delete of the user's rows from
+                // the sessions table (driver-independent: no-op if the table
+                // doesn't exist, e.g. redis/file drivers).
+                try {
                     DB::table(config('session.table', 'sessions'))
                         ->where('user_id', $user->getKey())
                         ->delete();
+                } catch (\Throwable) {
+                    // Non-database session driver: remember-token rotation
+                    // below still invalidates "remember me" sessions.
                 }
+
+                $user->forceFill(['remember_token' => null])->save();
             }
         );
 

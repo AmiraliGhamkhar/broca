@@ -47,7 +47,7 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    'encrypt' => env('SESSION_ENCRYPT', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +169,10 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', env('APP_FORCE_HTTPS', false)),
+    // Secure-by-default everywhere except local dev: a TLS-terminating
+    // proxy (cPanel) needs Secure cookies even when APP_FORCE_HTTPS is
+    // not set in .env. TrustProxies marks the request secure upstream.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_FORCE_HTTPS', env('APP_ENV', 'production') !== 'local')),
 
     /*
     |--------------------------------------------------------------------------

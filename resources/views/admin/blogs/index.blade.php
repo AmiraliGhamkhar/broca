@@ -131,7 +131,7 @@
                                         @csrf
                                         @method('patch')
                                         <input type="hidden" name="status" value="published">
-                                        <button type="submit" class="rounded-full bg-teal px-4 py-2 text-xs font-bold text-white transition hover:opacity-90">انتشار</button>
+                                        <button type="submit" class="rounded bg-teal px-4 py-2 text-xs font-bold text-white transition hover:opacity-90">انتشار</button>
                                     </form>
                                 @elseif ($post->status === 'published')
                                     <a href="{{ route('blog.show', $post->slug) }}" target="_blank" class="button-secondary">مشاهده</a>
@@ -139,7 +139,7 @@
                                 <form method="post" action="{{ route('admin.blogs.destroy', $post) }}" onsubmit="return confirm('آیا از حذف این مقاله مطمئن هستید؟');">
                                     @csrf
                                     @method('delete')
-                                    <button type="submit" class="rounded-full border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </td>

@@ -17,11 +17,11 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 pt-1">
-                    <a href="{{ route('register') }}" class="button-primary">
+                    <a href="{{ route('register') }}" class="btn-cta-primary">
                         <x-ui.icon name="graduation" class="size-4" />
                         شروع رایگان و ساخت حساب
                     </a>
-                    <a href="{{ route('catalog') }}" class="button-secondary">
+                    <a href="{{ route('catalog') }}" class="btn-cta-secondary">
                         <x-ui.icon name="book" class="size-4" />
                         مشاهده کاتالوگ دوره‌ها
                     </a>
@@ -51,7 +51,7 @@
                      dimensions (CLS) and ships as WebP ≤ 80KB with a JPEG
                      fallback. Swap by replacing public/images/hero/hero.* and
                      updating the alt text to match the new photograph. --}}
-                <figure class="relative m-0 overflow-hidden rounded-[2rem] border border-hairline-soft bg-white shadow-float">
+                <figure class="relative m-0 overflow-hidden rounded-xl border border-hairline-soft bg-white shadow-float">
                     <picture>
                         <source type="image/webp" srcset="/images/hero/hero.webp">
                         <img src="/images/hero/hero.jpg"

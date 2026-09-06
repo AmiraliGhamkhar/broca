@@ -20,7 +20,10 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate(['identifier' => ['required', 'string'], 'password' => ['required', 'string']]);
+        $validated = $request->validate([
+            'identifier' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:1000'],
+        ]);
         $key = Str::transliterate(Str::lower($validated['identifier']).'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($key, 5)) {

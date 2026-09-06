@@ -14,12 +14,12 @@
     </p>
 
     <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
-        <a href="{{ route('home') }}" class="rounded-full bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به صفحهٔ اصلی</a>
-        <a href="{{ route('catalog') }}" class="rounded-full bg-surface-soft px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">مرور دوره‌ها</a>
+        <a href="{{ route('home') }}" class="rounded bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">بازگشت به صفحهٔ اصلی</a>
+        <a href="{{ route('catalog') }}" class="rounded bg-surface-soft px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">مرور دوره‌ها</a>
         @auth
-            <a href="{{ route('dashboard') }}" class="rounded-full border border-ink/30 px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">داشبورد من</a>
+            <a href="{{ route('dashboard') }}" class="rounded border border-ink/30 px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">داشبورد من</a>
         @else
-            <a href="{{ route('login') }}" class="rounded-full border border-ink/30 px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
+            <a href="{{ route('login') }}" class="rounded border border-ink/30 px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
         @endauth
     </div>
 

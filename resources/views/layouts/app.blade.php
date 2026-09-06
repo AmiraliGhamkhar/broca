@@ -128,19 +128,19 @@
                     <!-- Desktop Navigation Links -->
                     <nav class="hidden lg:flex items-center gap-1 text-xs font-bold" aria-label="ناوبری اصلی">
                         <a href="{{ route('catalog') }}"
-                           class="px-4 py-2.5 rounded-full transition-all {{ request()->routeIs('catalog*') || request()->routeIs('courses*') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
+                           class="px-4 py-2.5 rounded transition-all {{ request()->routeIs('catalog*') || request()->routeIs('courses*') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
                             {{ __('app.nav_catalog') }}
                         </a>
                         <a href="{{ route('plans') }}"
-                           class="px-4 py-2.5 rounded-full transition-all {{ request()->routeIs('plans') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
+                           class="px-4 py-2.5 rounded transition-all {{ request()->routeIs('plans') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
                             {{ __('app.nav_plans') }}
                         </a>
                         <a href="{{ route('blog.index') }}"
-                           class="px-4 py-2.5 rounded-full transition-all {{ request()->routeIs('blog*') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
+                           class="px-4 py-2.5 rounded transition-all {{ request()->routeIs('blog*') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
                             مقالات و وبلاگ
                         </a>
                         <a href="{{ route('legal.show', 'medical-disclaimer') }}"
-                           class="px-4 py-2.5 rounded-full transition-all {{ request()->is('medical-disclaimer') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
+                           class="px-4 py-2.5 rounded transition-all {{ request()->is('medical-disclaimer') ? 'bg-ink text-white' : 'text-ink hover:bg-surface-soft' }}">
                             بیانیه علمی
                         </a>
                     </nav>
@@ -154,9 +154,9 @@
                              which forces layout on every keystroke/focus.
                              Feedback now comes from border + shadow. -->
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="جستجوی دوره، فیزیولوژی، آناتومی..."
-                               class="w-56 lg:w-64 pl-10 pr-4 py-2.5 rounded-full border border-hairline bg-white text-xs font-medium focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                               class="w-56 lg:w-64 pl-10 pr-4 py-2.5 rounded border border-hairline bg-white text-xs font-medium focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
                         <button type="submit"
-                                class="absolute left-1.5 top-1/2 -translate-y-1/2 size-8 rounded-full bg-rausch text-white text-xs grid place-items-center hover:bg-rausch-active transition-colors"
+                                class="absolute left-1.5 top-1/2 -translate-y-1/2 size-8 rounded bg-rausch text-white text-xs grid place-items-center hover:bg-rausch-active transition-colors"
                                 aria-label="جستجو">
                             <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/>
@@ -167,11 +167,11 @@
                     @guest
                         <div class="flex items-center gap-2">
                             <a href="{{ route('login') }}"
-                               class="px-4 py-2.5 rounded-full border border-hairline text-xs font-bold text-ink hover:bg-surface-soft transition-all">
+                               class="px-4 py-2.5 rounded border border-hairline text-xs font-bold text-ink hover:bg-surface-soft transition-all">
                                 {{ __('app.cta_login') }}
                             </a>
                             <a href="{{ route('register') }}"
-                               class="px-5 py-2.5 rounded-full bg-rausch text-white text-xs font-bold hover:bg-rausch-active transition-all">
+                               class="px-5 py-2.5 rounded bg-rausch text-white text-xs font-bold hover:bg-rausch-active transition-all">
                                 {{ __('app.cta_register') }}
                             </a>
                         </div>
@@ -179,15 +179,15 @@
                         <!-- Authenticated Learner Menu -->
                         <div class="flex items-center gap-2" x-data="{ userMenu: false }">
                             <a href="{{ route('dashboard') }}"
-                               class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-soft text-ink font-bold text-xs hover:bg-hairline-soft transition-all">
-                                <span>📚</span>
+                               class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded bg-surface-soft text-ink font-bold text-xs hover:bg-hairline-soft transition-all">
+                                <x-ui.icon name="book" class="size-4" />
                                 <span>{{ __('app.nav_dashboard') }}</span>
                             </a>
 
                             @if (auth()->user()->is_admin)
                                 <a href="{{ route('admin.dashboard') }}"
-                                   class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-ink text-white font-bold text-xs hover:bg-rausch transition-all">
-                                    <span>⚙️</span>
+                                   class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded bg-ink text-white font-bold text-xs hover:bg-rausch transition-all">
+                                    <x-ui.icon name="shield" class="size-4" />
                                     <span>{{ __('app.nav_admin') }}</span>
                                 </a>
                             @endif
@@ -195,7 +195,7 @@
                             <!-- User Dropdown Trigger -->
                             <div class="relative">
                                 <button type="button" @click="userMenu = !userMenu"
-                                        class="flex items-center gap-2 p-1.5 rounded-full border border-hairline bg-white hover:bg-surface-soft transition-all focus:outline-none"
+                                        class="flex items-center gap-2 p-1.5 rounded border border-hairline bg-white hover:bg-surface-soft transition-all focus:outline-none"
                                         aria-haspopup="true" :aria-expanded="userMenu.toString()">
                                     <span class="grid size-8 place-items-center rounded-full bg-ink text-white text-xs font-bold">
                                         {{ mb_substr(auth()->user()->name, 0, 1) }}
@@ -203,7 +203,9 @@
                                     <span class="hidden md:block text-xs font-bold text-ink pl-2">
                                         {{ auth()->user()->name }}
                                     </span>
-                                    <span class="text-[11px] text-muted pl-1">▼</span>
+                                    <svg class="size-3 text-muted" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m3 4.5 3 3 3-3" />
+                                    </svg>
                                 </button>
 
                                 <!-- Dropdown Menu -->
@@ -214,11 +216,11 @@
                                      x-transition:leave="transition duration-100 ease-in"
                                      x-transition:leave-start="opacity-100"
                                      x-transition:leave-end="opacity-0 -translate-y-1"
-                                     class="absolute left-0 mt-2 w-64 rounded-2xl bg-white border border-hairline-soft shadow-float py-2 text-xs font-bold z-50">
+                                     class="absolute left-0 mt-2 w-64 rounded-lg bg-white border border-hairline-soft shadow-float py-2 text-xs font-bold z-50">
                                     <div class="px-4 py-2.5 border-b border-hairline-soft text-right">
                                         <p class="font-bold text-ink">{{ auth()->user()->name }}</p>
                                         <p class="text-[11px] text-muted font-mono" dir="ltr">{{ auth()->user()->email }}</p>
-                                        <span class="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch' : 'bg-surface-soft text-muted' }}">
+                                        <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[11px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch' : 'bg-surface-soft text-muted' }}">
                                             {{ auth()->user()->hasActiveSubscription() ? 'اشتراک ویژه فعال ✓' : 'حساب رایگان' }}
                                         </span>
                                     </div>
@@ -248,9 +250,11 @@
 
                     <!-- Mobile Menu Hamburger -->
                     <button type="button" @click="mobileNav = !mobileNav"
-                            class="lg:hidden p-2.5 rounded-full border border-hairline text-ink hover:bg-surface-soft"
+                            class="lg:hidden p-2.5 rounded border border-hairline text-ink hover:bg-surface-soft"
                             aria-label="باز کردن منو" :aria-expanded="mobileNav.toString()">
-                        <span class="text-xl leading-none">☰</span>
+                        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -266,31 +270,31 @@
                  class="lg:hidden pb-6 pt-2 border-t border-hairline-soft space-y-3">
                 <form method="get" action="{{ route('catalog') }}" class="flex items-center">
                     <input type="text" name="q" placeholder="جستجوی دوره‌ها..."
-                           class="w-full px-4 py-2.5 rounded-full border border-hairline bg-white text-xs">
+                           class="w-full px-4 py-2.5 rounded border border-hairline bg-white text-xs">
                 </form>
 
                 <div class="grid grid-cols-2 gap-2 text-xs font-bold pt-2">
-                    <a href="{{ route('catalog') }}" class="p-3 rounded-2xl bg-surface-soft text-center border border-hairline-soft">
+                    <a href="{{ route('catalog') }}" class="p-3 rounded-lg bg-surface-soft text-center border border-hairline-soft">
                         {{ __('app.nav_catalog') }}
                     </a>
-                    <a href="{{ route('plans') }}" class="p-3 rounded-2xl bg-surface-soft text-center border border-hairline-soft">
+                    <a href="{{ route('plans') }}" class="p-3 rounded-lg bg-surface-soft text-center border border-hairline-soft">
                         {{ __('app.nav_plans') }}
                     </a>
-                    <a href="{{ route('blog.index') }}" class="p-3 rounded-2xl bg-surface-soft text-center border border-hairline-soft">
+                    <a href="{{ route('blog.index') }}" class="p-3 rounded-lg bg-surface-soft text-center border border-hairline-soft">
                         وبلاگ مقالات
                     </a>
-                    <a href="{{ route('legal.show', 'medical-disclaimer') }}" class="p-3 rounded-2xl bg-surface-soft text-center border border-hairline-soft">
+                    <a href="{{ route('legal.show', 'medical-disclaimer') }}" class="p-3 rounded-lg bg-surface-soft text-center border border-hairline-soft">
                         بیانیه علمی
                     </a>
                 </div>
 
                 @auth
                     <div class="pt-2 border-t border-hairline-soft flex flex-wrap gap-2">
-                        <a href="{{ route('dashboard') }}" class="flex-1 py-2.5 rounded-full bg-surface-soft text-ink text-center font-bold text-xs">
+                        <a href="{{ route('dashboard') }}" class="flex-1 py-2.5 rounded bg-surface-soft text-ink text-center font-bold text-xs">
                             داشبورد من
                         </a>
                         @if (auth()->user()->is_admin)
-                            <a href="{{ route('admin.dashboard') }}" class="flex-1 py-2.5 rounded-full bg-ink text-white text-center font-bold text-xs">
+                            <a href="{{ route('admin.dashboard') }}" class="flex-1 py-2.5 rounded bg-ink text-white text-center font-bold text-xs">
                                 پنل مدیریت
                             </a>
                         @endif
@@ -313,12 +317,16 @@
                  x-transition:leave="transition duration-200 ease-in"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0 -translate-y-2">
-                <div class="rounded-full border border-hairline bg-white px-5 py-3 text-xs font-bold text-ink flex items-center justify-between shadow-float" role="status">
+                <div class="rounded border border-hairline bg-white px-5 py-3 text-xs font-bold text-ink flex items-center justify-between shadow-float" role="status">
                     <span class="flex items-center gap-2">
                         <span class="size-2 rounded-full bg-teal inline-block"></span>
                         <span>{{ session('status') }}</span>
                     </span>
-                    <button type="button" @click="dismiss" class="text-muted hover:text-ink transition-colors" aria-label="بستن پیام">✕</button>
+                    <button type="button" @click="dismiss" class="text-muted hover:text-ink transition-colors" aria-label="بستن پیام">
+                        <svg class="size-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l6 6M3 9l6-6" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         @endif
@@ -332,7 +340,7 @@
                  x-transition:leave="transition duration-200 ease-in"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0 -translate-y-2">
-                <div class="rounded-full border border-error-text/30 bg-rausch-tint px-5 py-3 text-xs font-bold text-error-text flex items-center justify-between shadow-float" role="alert">
+                <div class="rounded border border-error-text/30 bg-rausch-tint px-5 py-3 text-xs font-bold text-error-text flex items-center justify-between shadow-float" role="alert">
                     <span class="flex items-center gap-2">
                         <span class="size-2 rounded-full bg-error-text inline-block"></span>
                         <span>{{ session('error') }}</span>

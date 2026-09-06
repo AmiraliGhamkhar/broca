@@ -115,10 +115,10 @@
                                 درگاه پرداخت فعلاً برای این پلن غیرفعال است. پس از فعال‌سازی نهایی می‌توانید خرید را تکمیل کنید.
                             </p>
                         @else
-                            <a href="{{ route('dashboard') }}" class="button-soft w-full">ورود به داشبورد و استفاده از حساب رایگان</a>
+                            <a href="{{ route('dashboard') }}" class="btn-cta-soft w-full">ورود به داشبورد و استفاده از حساب رایگان</a>
                         @endif
                     @else
-                        <a href="{{ route('register') }}" class="button-primary w-full">ثبت‌نام و انتخاب این پلن</a>
+                        <a href="{{ route('register') }}" class="btn-cta-primary w-full">ثبت‌نام و انتخاب این پلن</a>
                     @endauth
                 </div>
             </article>

@@ -15,11 +15,11 @@
 
     <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
         @guest
-            <a href="{{ route('login') }}" class="rounded-full bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
+            <a href="{{ route('login') }}" class="rounded bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">ورود به حساب</a>
         @else
-            <a href="{{ route('plans') }}" class="rounded-full bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">دیدن پلان‌های اشتراک</a>
+            <a href="{{ route('plans') }}" class="rounded bg-ink px-7 py-4 font-bold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">دیدن پلان‌های اشتراک</a>
         @endguest
-        <a href="{{ route('catalog') }}" class="rounded-full bg-surface-soft px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">محتوای رایگان کاتالوگ</a>
+        <a href="{{ route('catalog') }}" class="rounded bg-surface-soft px-7 py-4 font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-coral">محتوای رایگان کاتالوگ</a>
     </div>
 </section>
 @endsection

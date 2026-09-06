@@ -94,7 +94,7 @@
                             </div>
                         </td>
                         <td class="p-3.5 text-left">
-                            <a href="{{ route('admin.users.show', $user) }}" class="px-3 py-1.5 rounded-full border border-ink/20 font-bold hover:bg-surface-soft">
+                            <a href="{{ route('admin.users.show', $user) }}" class="px-3 py-1.5 rounded border border-ink/20 font-bold hover:bg-surface-soft">
                                 مشاهده و ویرایش دسترسی
                             </a>
                         </td>
