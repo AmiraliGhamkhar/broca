@@ -96,7 +96,7 @@
 
         <div class="lg:col-span-5 space-y-4">
             @if ($course->cover_image_path)
-                <img src="{{ $course->cover_image_path }}" alt="{{ $course->title }}" class="w-full rounded-[2rem] object-cover max-h-[28rem] border border-hairline-soft shadow-float">
+                <img src="{{ $course->cover_image_path }}" alt="{{ $course->title }}" width="1200" height="630" loading="eager" fetchpriority="high" decoding="async" class="w-full rounded-2xl object-cover max-h-[28rem] border border-hairline-soft shadow-float">
             @endif
 
             <div class="meta-card">

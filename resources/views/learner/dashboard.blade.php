@@ -308,7 +308,7 @@
             @forelse ($availableCourses as $c)
                 <article class="course-card" data-reveal>
                     @if ($c->cover_image_path)
-                        <img src="{{ $c->cover_image_path }}" alt="{{ $c->title }}" class="aspect-[16/10] w-full object-cover">
+                        <img src="{{ $c->cover_image_path }}" alt="{{ $c->title }}" width="1200" height="750" loading="lazy" decoding="async" class="aspect-[16/10] w-full object-cover">
                     @endif
                     <div class="course-card__body">
                         <div class="course-card__meta">

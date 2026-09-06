@@ -109,7 +109,7 @@
                 @if ($post->cover_image_path)
                     <div class="meta-card is-soft">
                         <p class="text-xs font-bold text-ink">پیش‌نمایش تصویر شاخص</p>
-                        <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" class="mt-3 h-36 rounded-2xl border border-hairline-soft object-cover">
+                        <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" width="600" height="216" loading="lazy" decoding="async" class="mt-3 h-36 rounded-2xl border border-hairline-soft object-cover">
                     </div>
                 @endif
 

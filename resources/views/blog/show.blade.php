@@ -58,7 +58,7 @@
         </header>
 
         @if ($post->cover_image_path)
-            <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" class="mt-8 w-full rounded-[2rem] object-cover max-h-[32rem] border border-hairline-soft shadow-float">
+            <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" width="1200" height="630" loading="eager" fetchpriority="high" decoding="async" class="mt-8 w-full rounded-2xl object-cover max-h-[32rem] border border-hairline-soft shadow-float">
         @endif
 
         <div class="trust-banner mt-8">

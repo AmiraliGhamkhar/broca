@@ -36,7 +36,7 @@
             @foreach ($posts as $post)
                 <article class="course-card" data-reveal>
                     @if ($post->cover_image_path)
-                        <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" class="aspect-[16/10] w-full object-cover">
+                        <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" width="1200" height="750" loading="lazy" decoding="async" class="aspect-[16/10] w-full object-cover">
                     @else
                         <div class="aspect-[16/10] w-full bg-surface-soft border-b border-hairline-soft flex items-center justify-center">
                             <span class="icon-frame-soft icon-frame-xl icon-frame-round">

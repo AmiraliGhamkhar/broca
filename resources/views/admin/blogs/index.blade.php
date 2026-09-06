@@ -90,7 +90,7 @@
                         <td class="p-4">
                             <div class="flex items-start gap-3">
                                 @if ($post->cover_image_path)
-                                    <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" class="size-16 rounded-2xl border border-hairline-soft object-cover">
+                                    <img src="{{ $post->cover_image_path }}" alt="{{ $post->title }}" width="64" height="64" loading="lazy" decoding="async" class="size-16 rounded-2xl border border-hairline-soft object-cover">
                                 @else
                                     <span class="icon-frame-soft icon-frame-lg icon-frame-round shrink-0"><x-ui.icon name="document" class="size-5" /></span>
                                 @endif
