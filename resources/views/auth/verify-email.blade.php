@@ -12,7 +12,7 @@
         </span>
 
         <div class="space-y-3">
-            <span class="eyebrow">تأیید هویت ایمیلی</span>
+            <span class="sr-only">تأیید هویت ایمیلی</span>
             <h1 class="section-title mt-3">ایمیل خود را تأیید کنید</h1>
             <p class="text-sm leading-7 text-muted max-w-xl mx-auto">لینک تأیید حساب به ایمیل شما ارسال شده است. برای فعال‌سازی کامل حساب، صندوق ورودی یا پوشه Spam را بررسی کنید و روی لینک تأیید بزنید.</p>
         </div>

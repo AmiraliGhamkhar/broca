@@ -11,7 +11,7 @@
         <div class="form-panel p-8 sm:p-10">
             <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-hairline-soft">
                 <div>
-                    <span class="eyebrow">فرم مدیریت مقاله</span>
+                    <span class="sr-only">فرم مدیریت مقاله</span>
                     <h1 class="text-2xl font-black text-ink mt-4">{{ $post->exists ? 'ویرایش مقاله وبلاگ' : 'ایجاد مقاله جدید' }}</h1>
                     <p class="text-sm leading-7 text-muted mt-3">مقاله‌های پزشکی بهتر است ابتدا ذخیره و بازبینی شوند و سپس از مسیر انتشار رسمی منتشر گردند.</p>
                 </div>

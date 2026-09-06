@@ -7,7 +7,7 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
         <div class="lg:col-span-8 section-intro">
-            <span class="eyebrow">دانشنامه و تحلیل‌های آموزشی</span>
+            <span class="sr-only">دانشنامه و تحلیل‌های آموزشی</span>
             <h1 class="section-title mt-4">وبلاگ بروکا برای مرور مفهومی، تبیین علمی و هدایت به مسیر یادگیری عمیق‌تر</h1>
             <p class="section-copy max-w-3xl">این بخش برای محتوای آموزشی طراحی شده است؛ با تمرکز بر وضوح، خوانایی، نمایش نویسنده و بازبین علمی و اتصال طبیعی مقاله به دوره‌ها و برنامه یادگیری.</p>
         </div>

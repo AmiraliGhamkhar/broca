@@ -11,7 +11,7 @@
         <div class="form-panel p-8 sm:p-10">
             <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-hairline-soft">
                 <div>
-                    <span class="eyebrow">{{ $deck->title }} · {{ $deck->course->title ?? '' }}</span>
+                    <span class="sr-only">{{ $deck->title }} · {{ $deck->course->title ?? '' }}</span>
                     <h1 class="text-2xl font-black text-ink mt-4">{{ $card->exists ? 'ویرایش کارت حافظه' : 'افزودن کارت حافظه جدید' }}</h1>
                     <p class="text-sm leading-7 text-muted mt-3">روی کارت، پاسخ، سرنخ و وضعیت انتشار را طوری تنظیم کنید که مرور سریع و علمی باقی بماند.</p>
                 </div>

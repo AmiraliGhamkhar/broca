@@ -9,7 +9,7 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] xl:items-end">
         <div class="section-intro">
-            <span class="eyebrow">مدیریت محتوای اصلی</span>
+            <span class="sr-only">مدیریت محتوای اصلی</span>
             <h1 class="section-title mt-4">دوره‌های آموزشی</h1>
             <p class="section-copy mt-5">این صفحه برای مدیریت شناسنامه محتوایی دوره‌ها، اتصال به مبحث، تعیین نویسنده و بازبین علمی و کنترل چرخه انتشار استفاده می‌شود.</p>
         </div>

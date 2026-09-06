@@ -8,7 +8,7 @@
 <section class="section-shell section-stack section-stack-tight-top">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-5 space-y-6">
-            <span class="eyebrow">ورود امن به تجربه یادگیری</span>
+            <span class="sr-only">ورود امن به تجربه یادگیری</span>
             <div class="section-intro">
                 <h1 class="section-title mt-4">ورود به حساب بروکا</h1>
                 <p class="section-copy">برای ادامه دوره‌ها، مشاهده وضعیت اشتراک، مرور کارت‌ها و پیگیری پیشرفت آموزشی وارد حساب خود شوید.</p>

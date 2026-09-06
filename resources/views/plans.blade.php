@@ -13,7 +13,7 @@
 
 <section class="section-shell section-stack">
     <div class="text-center max-w-3xl mx-auto space-y-4">
-        <span class="eyebrow">تعرفه‌های شفاف و قابل اتکا</span>
+        <span class="sr-only">تعرفه‌های شفاف و قابل اتکا</span>
         <h1 class="section-title mt-2">پلن‌های اشتراک بروکا برای دسترسی حرفه‌ای به آموزش پزشکی</h1>
         <p class="section-copy max-w-2xl mx-auto">هدف این صفحه فقط فروش نیست؛ باید تفاوت حساب رایگان و اشتراک ویژه را شفاف نشان دهد، حس امنیت در پرداخت ایجاد کند و تصمیم خرید را ساده‌تر کند.</p>
     </div>
@@ -133,7 +133,7 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-4 section-intro">
-            <span class="eyebrow">حس امنیت در خرید</span>
+            <span class="sr-only">حس امنیت در خرید</span>
             <h2 class="section-title mt-4">چرا این صفحه باید حرفه‌ای و اعتمادپذیر به نظر برسد؟</h2>
             <p class="section-copy">کاربر در مرحله خرید بیش از هر زمان دیگری به شفافیت، زبان دقیق و نشانه‌های اعتماد نیاز دارد؛ نه فقط رنگ و دکمه زیبا.</p>
         </div>

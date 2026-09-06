@@ -7,7 +7,7 @@
 @section('content')
 <section class="section-shell section-stack">
     <div class="section-intro max-w-3xl">
-        <span class="eyebrow">مرور فاصله‌دار</span>
+        <span class="sr-only">مرور فاصله‌دار</span>
         <h1 class="section-title mt-4">فلش‌کارت‌های شما</h1>
         <p class="section-copy mt-5">تمام دسته‌های فلش‌کارت دوره‌هایی که در آن‌ها ثبت‌نام کرده‌اید اینجا نمایش داده می‌شود تا بتوانید مرور روزانه را بدون سردرگمی مدیریت کنید.</p>
     </div>

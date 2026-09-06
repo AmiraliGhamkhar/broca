@@ -11,7 +11,7 @@
         <div class="form-panel p-8 sm:p-10">
             <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-hairline-soft">
                 <div>
-                    <span class="eyebrow">فرم مدیریت مبحث</span>
+                    <span class="sr-only">فرم مدیریت مبحث</span>
                     <h1 class="text-2xl font-black text-ink mt-4">{{ $subject->exists ? 'ویرایش مبحث / شاخه علمی' : 'ایجاد مبحث جدید' }}</h1>
                     <p class="text-sm leading-7 text-muted mt-3">نام، توضیح و ترتیب نمایش این مبحث را طوری تنظیم کنید که در کاتالوگ و مسیرهای عمومی سایت واضح و حرفه‌ای دیده شود.</p>
                 </div>

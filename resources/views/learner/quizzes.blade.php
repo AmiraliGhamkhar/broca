@@ -8,7 +8,7 @@
 @php($displayTimezone = config('broca.display_timezone'))
 <section class="section-shell section-stack">
     <div class="section-intro max-w-3xl">
-        <span class="eyebrow">سنجش یادگیری</span>
+        <span class="sr-only">سنجش یادگیری</span>
         <h1 class="section-title mt-4">آزمون‌های شما</h1>
         <p class="section-copy mt-5">آزمون‌های دوره‌هایی که در آن‌ها ثبت‌نام کرده‌اید، اینجا با وضعیت تلاش‌ها، بهترین نتیجه و مسیر شروع دوباره نمایش داده می‌شوند.</p>
     </div>
@@ -31,7 +31,7 @@
     @if ($quizzes->isNotEmpty())
         <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3 mt-12">
             @foreach ($quizzes as $quiz)
-                @php($stats = $quizStats[$quiz->id])
+                @php($stats = $quizStats[$quiz->id] ?? ['tries' => 0, 'best' => null, 'last' => null])
                 @php($passThreshold = $quiz->pass_threshold_percent ?: 70)
                 <article class="editorial-card flex h-full flex-col">
                     <div class="flex items-start justify-between gap-4">

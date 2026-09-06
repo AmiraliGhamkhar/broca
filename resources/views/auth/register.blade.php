@@ -7,7 +7,7 @@
 <section class="section-shell section-stack section-stack-tight-top">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-5 space-y-6">
-            <span class="eyebrow">شروع حرفه‌ای با حساب رایگان</span>
+            <span class="sr-only">شروع حرفه‌ای با حساب رایگان</span>
             <div class="section-intro">
                 <h1 class="section-title mt-4">ساخت حساب در بروکا</h1>
                 <p class="section-copy">حساب کاربری شما نقطه شروع مسیر یادگیری، مدیریت دسترسی، ذخیره پیشرفت و سنجش کیفیت دوره‌ها پیش از خرید اشتراک است.</p>

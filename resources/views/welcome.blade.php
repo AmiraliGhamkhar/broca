@@ -85,7 +85,7 @@
 @if (! empty($specialties))
 <section class="section-shell section-stack">
     <div class="section-intro">
-        <span class="eyebrow">حوزه‌های کلیدی آموزش</span>
+        <span class="sr-only">حوزه‌های کلیدی آموزش</span>
         <h2 class="section-title mt-4">کتابخانه‌ای منسجم برای علوم پایه و آمادگی بالینی</h2>
         <p class="section-copy">به‌جای ارائه فهرستی پراکنده از محتوا، بروکا هر حوزه را با درس، مرور، جزوه و ارزیابی در یک چارچوب آموزشی یکپارچه ارائه می‌کند.</p>
     </div>
@@ -120,7 +120,7 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-5 section-intro">
-            <span class="eyebrow">متد یادگیری بروکا</span>
+            <span class="sr-only">متد یادگیری بروکا</span>
             <h2 class="section-title mt-4">طراحی برای فهم، مرور و سنجش؛ نه فقط تماشای محتوا</h2>
             <p class="section-copy">یک تجربه آموزشی حرفه‌ای زمانی شکل می‌گیرد که محتوای اصلی، مرور فعال و ارزیابی در یک مسیر مشخص کنار هم قرار بگیرند.</p>
         </div>
@@ -146,7 +146,7 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-4 section-intro">
-            <span class="eyebrow">اعتماد علمی</span>
+            <span class="sr-only">اعتماد علمی</span>
             <h2 class="section-title mt-4">ترکیب نویسنده، بازبین و مسیر انتشار مسئولانه</h2>
             <p class="section-copy">در آموزش پزشکی، اعتماد صرفاً از ظاهر خوب به‌دست نمی‌آید. مخاطب باید بداند محتوا چه کسی نوشته، چه کسی بازبینی کرده و با چه معیارهایی منتشر شده است.</p>
         </div>
@@ -186,7 +186,7 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div class="lg:col-span-7 editorial-card">
-            <span class="eyebrow">جریان شروع حرفه‌ای</span>
+            <span class="sr-only">جریان شروع حرفه‌ای</span>
             <h2 class="text-2xl font-black text-ink mt-4">از ساخت حساب رایگان تا تصمیم خرید، مسیر باید روشن باشد</h2>
             <p class="section-copy max-w-2xl">برای ایجاد اعتماد، ابتدا تجربه واقعی یادگیری نمایش داده می‌شود. سپس پلن‌ها، سطح دسترسی، جزئیات پرداخت و وضعیت اشتراک با زبان روشن و بدون دعوت‌به‌اقدام‌های مبهم توضیح داده می‌شوند.</p>
             <div class="flex flex-wrap gap-3 mt-6">
@@ -233,7 +233,7 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-4 section-intro">
-            <span class="eyebrow">پرسش‌های متداول</span>
+            <span class="sr-only">پرسش‌های متداول</span>
             <h2 class="section-title mt-4">چند سؤال مهم پیش از شروع</h2>
             <p class="section-copy">این بخش هم به تصمیم‌گیری آگاهانه کمک می‌کند و هم بخشی از تصویر حرفه‌ای و شفاف محصول است.</p>
         </div>

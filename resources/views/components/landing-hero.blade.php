@@ -2,7 +2,7 @@
     <div class="section-shell relative z-10">
         <div class="grid grid-cols-1 gap-10 py-16 lg:grid-cols-12 lg:items-center lg:py-20">
             <div class="lg:col-span-7 text-right space-y-6">
-                <span class="eyebrow">پلتفرم بازبینی‌شده آموزش پزشکی</span>
+                <span class="sr-only">پلتفرم بازبینی‌شده آموزش پزشکی</span>
 
                 <div class="space-y-4 max-w-3xl">
                     <h1 class="section-title">
@@ -28,17 +28,17 @@
                 </div>
 
                 <div class="hero-evidence">
-                    <span class="badge-outline">
-                        <x-ui.icon name="shield" class="size-3.5" />
-                        بازبینی علمی و انتشار کنترل‌شده
+                    <span class="badge-outline group/badge transition-colors duration-300 ease-out hover:border-rausch/40 hover:bg-rausch-tint/60 hover:text-rausch">
+                        <x-ui.icon name="shield" class="size-3.5 transition-transform duration-300 ease-out group-hover/badge:scale-110" />
+                        <span>بازبینی علمی و انتشار کنترل‌شده</span>
                     </span>
-                    <span class="badge-outline">
-                        <x-ui.icon name="wallet" class="size-3.5" />
-                        تعرفهٔ شفاف و اشتراک مشخص
+                    <span class="badge-outline group/badge transition-colors duration-300 ease-out hover:border-rausch/40 hover:bg-rausch-tint/60 hover:text-rausch">
+                        <x-ui.icon name="wallet" class="size-3.5 transition-transform duration-300 ease-out group-hover/badge:scale-110" />
+                        <span>تعرفهٔ شفاف و اشتراک مشخص</span>
                     </span>
-                    <span class="badge-outline">
-                        <x-ui.icon name="refresh" class="size-3.5" />
-                        مرور هوشمند با الگوریتم SM-2
+                    <span class="badge-outline group/badge transition-colors duration-300 ease-out hover:border-rausch/40 hover:bg-rausch-tint/60 hover:text-rausch">
+                        <x-ui.icon name="refresh" class="size-3.5 transition-transform duration-300 ease-out group-hover/badge:scale-110" />
+                        <span>مرور هوشمند با الگوریتم SM-2</span>
                     </span>
                 </div>
             </div>
@@ -60,11 +60,11 @@
                              fetchpriority="high" decoding="async"
                              class="block w-full aspect-[4/3] sm:aspect-[4/5] object-cover saturate-[.85] contrast-[.98]">
                     </picture>
-                    <figcaption class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-white/85 px-5 py-3 backdrop-blur-sm border-t border-hairline-soft">
-                        <span class="text-[11px] font-bold text-ink">از مفهوم تا تثبیت؛ یادگیری ساخت‌یافتهٔ علوم پزشکی</span>
+                    <figcaption class="absolute inset-x-0 bottom-0 flex items-center justify-end gap-3 bg-white/85 px-5 py-3 backdrop-blur-sm border-t border-hairline-soft">
+                        <span class="sr-only">از مفهوم تا تثبیت؛ یادگیری ساخت‌یافتهٔ علوم پزشکی</span>
                         <span class="badge-outline shrink-0">
                             <x-ui.icon name="spark" class="size-3.5" />
-                            بازبینی علمی
+                            <span class="sr-only">بازبینی علمی</span>
                         </span>
                     </figcaption>
                 </figure>

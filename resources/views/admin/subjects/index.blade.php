@@ -9,7 +9,7 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] xl:items-end">
         <div class="section-intro">
-            <span class="eyebrow">ساختار کاتالوگ</span>
+            <span class="sr-only">ساختار کاتالوگ</span>
             <h1 class="section-title mt-4">مباحث و درس‌نامه‌ها</h1>
             <p class="section-copy mt-5">موضوعات مادر دوره‌ها در اینجا تعریف می‌شوند تا مسیر عمومی سایت، کاتالوگ و ارتباط محتواها با هم منسجم بماند.</p>
         </div>

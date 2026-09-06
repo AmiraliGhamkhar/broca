@@ -8,7 +8,7 @@
 <section class="section-shell section-stack section-stack-tight-top">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-5 space-y-6">
-            <span class="eyebrow">بازیابی امن حساب</span>
+            <span class="sr-only">بازیابی امن حساب</span>
             <div class="section-intro">
                 <h1 class="section-title mt-4">بازیابی گذرواژه</h1>
                 <p class="section-copy">اگر گذرواژه را فراموش کرده‌اید، با وارد کردن ایمیل ثبت‌شده لینک بازیابی برای شما ارسال می‌شود تا بدون مراجعه پشتیبانی دوباره به حساب دسترسی داشته باشید.</p>

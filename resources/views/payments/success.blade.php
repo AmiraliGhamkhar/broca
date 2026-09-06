@@ -6,9 +6,7 @@
 @section('content')
     <section class="max-w-2xl mx-auto px-4 py-24 text-center">
         <div class="bg-white border border-hairline-soft rounded-3xl p-8 shadow-float">
-            <svg class="mx-auto h-16 w-16 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
+            <x-ui.icon name="check" class="mx-auto size-16 text-teal" />
             <h1 class="mt-4 text-2xl font-bold">پرداخت با موفقیت انجام شد</h1>
             <p class="mt-2 text-muted">اشتراک شما فعال شده است. از استفاده از خدمات بروکا لذت ببرید.</p>
 

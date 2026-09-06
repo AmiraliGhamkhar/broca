@@ -505,27 +505,6 @@ a.rounded-xl:active {
     max-width: 42rem;
 }
 
-.eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    border-radius: 999px;
-    border: 1px solid rgb(255 56 92 / 0.18);
-    background: var(--color-rausch-tint);
-    color: var(--color-rausch);
-    padding: 0.45rem 0.85rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.eyebrow::before {
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 999px;
-    background: currentColor;
-    content: "";
-}
-
 .section-title {
     color: var(--color-ink);
     font-family: var(--font-sans);

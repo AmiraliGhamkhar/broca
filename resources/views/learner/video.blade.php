@@ -16,7 +16,7 @@
     <div class="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.9fr)] xl:items-start">
         <div class="space-y-8">
             <div class="section-intro max-w-4xl">
-                <span class="eyebrow">ویدیوی آموزشی خصوصی</span>
+                <span class="sr-only">ویدیوی آموزشی خصوصی</span>
                 <p class="mt-4 text-sm font-bold text-rausch">{{ $course->subject?->name }} · {{ $course->title }}</p>
                 <h1 class="section-title mt-4">{{ $video->title }}</h1>
                 @if ($video->description)

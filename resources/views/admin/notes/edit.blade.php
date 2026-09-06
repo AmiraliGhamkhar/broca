@@ -11,7 +11,7 @@
         <div class="form-panel p-8 sm:p-10">
             <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-hairline-soft">
                 <div>
-                    <span class="eyebrow">فرم مدیریت جزوه</span>
+                    <span class="sr-only">فرم مدیریت جزوه</span>
                     <h1 class="text-2xl font-black text-ink mt-4">{{ $note->exists ? 'ویرایش جزوه' : 'افزودن جزوه جدید' }}</h1>
                     <p class="text-sm leading-7 text-muted mt-3">فایل خصوصی، توضیحات، انتساب به دوره و وضعیت دسترسی جزوه را از اینجا به‌روز کنید.</p>
                 </div>

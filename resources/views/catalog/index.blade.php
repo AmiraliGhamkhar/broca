@@ -26,7 +26,7 @@
 <section class="section-shell section-stack">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
         <div class="lg:col-span-7 section-intro">
-            <span class="eyebrow">کتابخانه آموزشی بروکا</span>
+            <span class="sr-only">کتابخانه آموزشی بروکا</span>
             <h1 class="section-title mt-4">دوره‌های پزشکی با ساختار روشن، بازبینی علمی و مسیر یادگیری قابل پیگیری</h1>
             <p class="section-copy max-w-3xl">هر دوره در بروکا فقط یک معرفی کوتاه نیست؛ مجموعه‌ای از ویدیو، جزوه، فلش‌کارت و ارزیابی است که در یک تجربه فارسی، منظم و قابل اعتماد به هم متصل شده‌اند.</p>
         </div>

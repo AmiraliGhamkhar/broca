@@ -6,9 +6,7 @@
 @section('content')
     <section class="max-w-2xl mx-auto px-4 py-24 text-center">
         <div class="bg-white border border-hairline-soft rounded-3xl p-8 shadow-float">
-            <svg class="mx-auto h-16 w-16 text-rausch" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+            <x-ui.icon name="cross" class="mx-auto size-16 text-rausch" />
             <h1 class="mt-4 text-2xl font-bold">پرداخت ناموفق بود</h1>
             <p class="mt-2 text-muted">در پردازش پرداخت شما مشکلی رخ داده است. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.</p>
 

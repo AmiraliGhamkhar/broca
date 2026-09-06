@@ -87,24 +87,6 @@
         <div class="sr-only" aria-hidden="true">نسخهٔ مارک‌داون این صفحه در آدرس {{ $markdownAlternate }} در دسترس است، بهینه‌شده برای ابزارهای هوش مصنوعی و LLM.</div>
     @endif
 
-    <!-- Top Announcement Bar -->
-    <aside class="bg-ink text-white text-xs py-2.5 px-4" aria-label="اطلاعیه">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2.5">
-                <span class="icon-frame-ghost icon-frame-sm icon-frame-round">
-                    <x-ui.icon name="shield" class="size-4" />
-                </span>
-                <span class="font-bold">محتوای بروکا با بازبینی علمی، دسترسی آزمایشی رایگان و مسیر یادگیری قابل پیگیری ارائه می‌شود.</span>
-            </div>
-            <div class="hidden sm:flex items-center gap-4 text-[11px] text-white/70">
-                <span>بازبینی دو مرحله‌ای پزشکی</span>
-                <span>•</span>
-                <span>شروع رایگان برای نمونه‌درس‌ها</span>
-                <span>•</span>
-                <a href="{{ route('plans') }}" class="text-white font-bold hover:underline">جزئیات دسترسی و اشتراک ←</a>
-            </div>
-        </div>
-    </aside>
 
     <!-- Main Navigation Bar -->
     <header class="site-header">
@@ -119,7 +101,7 @@
                             <span class="font-display text-2xl leading-none text-ink block group-hover:text-rausch transition-colors">
                                 {{ __('app.name') }}
                             </span>
-                            <span class="text-[11px] font-bold text-muted block">
+                            <span class="sr-only">
                                 آکادمی علوم پزشکی
                             </span>
                         </div>
@@ -158,9 +140,7 @@
                         <button type="submit"
                                 class="absolute left-1.5 top-1/2 -translate-y-1/2 size-8 rounded bg-rausch text-white text-xs grid place-items-center hover:bg-rausch-active transition-colors"
                                 aria-label="جستجو">
-                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"/>
-                            </svg>
+                            <x-ui.icon name="search" class="size-4" />
                         </button>
                     </form>
 
@@ -203,9 +183,7 @@
                                     <span class="hidden md:block text-xs font-bold text-ink pl-2">
                                         {{ auth()->user()->name }}
                                     </span>
-                                    <svg class="size-3 text-muted" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m3 4.5 3 3 3-3" />
-                                    </svg>
+                                    <x-ui.icon name="chevron-down" class="size-3 text-muted" />
                                 </button>
 
                                 <!-- Dropdown Menu -->
@@ -218,8 +196,7 @@
                                      x-transition:leave-end="opacity-0 -translate-y-1"
                                      class="absolute left-0 mt-2 w-64 rounded-lg bg-white border border-hairline-soft shadow-float py-2 text-xs font-bold z-50">
                                     <div class="px-4 py-2.5 border-b border-hairline-soft text-right">
-                                        <p class="font-bold text-ink">{{ auth()->user()->name }}</p>
-                                        <p class="text-[11px] text-muted font-mono" dir="ltr">{{ auth()->user()->email }}</p>
+                                        <span class="sr-only">{{ auth()->user()->name }} — {{ auth()->user()->email }}</span>
                                         <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[11px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch' : 'bg-surface-soft text-muted' }}">
                                             {{ auth()->user()->hasActiveSubscription() ? 'اشتراک ویژه فعال ✓' : 'حساب رایگان' }}
                                         </span>
@@ -252,9 +229,7 @@
                     <button type="button" @click="mobileNav = !mobileNav"
                             class="lg:hidden p-2.5 rounded border border-hairline text-ink hover:bg-surface-soft"
                             aria-label="باز کردن منو" :aria-expanded="mobileNav.toString()">
-                        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
-                        </svg>
+                        <x-ui.icon name="menu" class="size-5" />
                     </button>
                 </div>
             </div>
@@ -323,9 +298,7 @@
                         <span>{{ session('status') }}</span>
                     </span>
                     <button type="button" @click="dismiss" class="text-muted hover:text-ink transition-colors" aria-label="بستن پیام">
-                        <svg class="size-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l6 6M3 9l6-6" />
-                        </svg>
+                        <x-ui.icon name="close" class="size-3 text-muted" />
                     </button>
                 </div>
             </div>
@@ -345,7 +318,9 @@
                         <span class="size-2 rounded-full bg-error-text inline-block"></span>
                         <span>{{ session('error') }}</span>
                     </span>
-                    <button type="button" @click="dismiss" class="text-error-text/70 hover:text-error-text transition-colors" aria-label="بستن پیام">✕</button>
+                    <button type="button" @click="dismiss" class="text-error-text/70 hover:text-error-text transition-colors" aria-label="بستن پیام">
+                        <x-ui.icon name="close" class="size-3 text-error-text" />
+                    </button>
                 </div>
             </div>
         @endif
@@ -355,19 +330,6 @@
 
     <!-- Footer -->
     <footer class="border-t border-hairline-soft bg-white mt-20">
-        <!-- Medical Disclaimer Banner -->
-        <div class="bg-surface-soft border-b border-hairline-soft py-4 px-4">
-            <div class="max-w-7xl mx-auto flex items-center gap-3 text-xs text-ink/80 leading-6">
-                <span class="icon-frame-soft icon-frame-lg icon-frame-round">
-                    <x-ui.icon name="shield" class="size-4" />
-                </span>
-                <p>
-                    <strong class="text-ink font-bold">بیانیه مسئولیت پزشکی:</strong>
-                    محتوای آموزشی سامانه بروکا صرفاً برای ارتقای دانش دانشجویان و فراگیران علوم پزشکی تدوین شده و هیچ‌گونه توصیه، تشخیص یا درمان بالینی برای بیماران ارائه نمی‌دهد.
-                </p>
-            </div>
-        </div>
-
         <!-- Main Footer Links Grid -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 text-xs">
@@ -384,16 +346,6 @@
                     <p class="text-muted leading-7 text-xs max-w-sm">
                         بروکا پلتفرم آموزش تخصصی علوم پایه، فیزیولوژی، آناتومی و نورولوژی با تکیه بر متدهای یادگیری فعال، مرور فاصله‌دار (Spaced Repetition) و بازبینی علمی دو مرحله‌ای پیش از انتشار است.
                     </p>
-                    <div class="flex items-center gap-2 pt-2 flex-wrap">
-                        <span class="badge-soft">
-                            <x-ui.icon name="badge-check" class="size-3.5" />
-                            تأییدیه بازبینی پزشکی (YMYL)
-                        </span>
-                        <span class="badge-neutral">
-                            <x-ui.icon name="refresh" class="size-3.5" />
-                            الگوریتم یادگیری SM-2
-                        </span>
-                    </div>
                 </div>
 
                 <!-- Col 2: Courses & Specialties — rendered from the real
@@ -407,11 +359,21 @@
                             $footerSubjects = \Illuminate\Support\Facades\Cache::remember(
                                 'footer_subjects',
                                 300,
-                                fn () => \App\Models\Subject::query()->where('is_visible', true)->orderBy('sort_order')->limit(4)->get()
+                                // Cache plain arrays (slug + name), NOT Eloquent models:
+                                // the database cache store unserializes with
+                                // allowed_classes => false, which strips objects
+                                // into useless strings on retrieval.
+                                fn () => \App\Models\Subject::query()
+                                    ->where('is_visible', true)
+                                    ->orderBy('sort_order')
+                                    ->limit(4)
+                                    ->get(['slug', 'name'])
+                                    ->map(fn ($s) => ['slug' => $s->slug, 'name' => $s->name])
+                                    ->all()
                             );
                         @endphp
                         @forelse ($footerSubjects as $footerSubject)
-                            <li><a href="{{ route('subjects.show', $footerSubject) }}" class="hover:text-rausch transition-colors">{{ $footerSubject->name }}</a></li>
+                            <li><a href="{{ route('subjects.show', ['subject' => $footerSubject['slug']]) }}" class="hover:text-rausch transition-colors">{{ $footerSubject['name'] }}</a></li>
                         @empty
                             <li><a href="{{ route('catalog') }}" class="hover:text-rausch transition-colors">دوره‌های آموزشی</a></li>
                         @endforelse

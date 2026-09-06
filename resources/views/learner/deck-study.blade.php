@@ -21,7 +21,7 @@
     <div class="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.85fr)] xl:items-start">
         <div class="space-y-6">
             <div class="section-intro max-w-4xl">
-                <span class="eyebrow">مرور فاصله‌دار</span>
+                <span class="sr-only">مرور فاصله‌دار</span>
                 <p class="mt-4 text-sm font-bold text-rausch">{{ $deck->course->subject?->name }} · {{ $deck->course->title }}</p>
                 <h1 class="section-title mt-4">{{ $deck->title }}</h1>
                 <p class="section-copy mt-5">هر کارت را بخوانید، پاسخ را نمایش دهید و کیفیت یادآوری را ثبت کنید تا زمان مرور بعدی به‌شکل هوشمند تنظیم شود.</p>

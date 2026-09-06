@@ -11,7 +11,7 @@
         <div class="form-panel p-8 sm:p-10">
             <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-hairline-soft">
                 <div>
-                    <span class="eyebrow">فرم مدیریت دسته کارت</span>
+                    <span class="sr-only">فرم مدیریت دسته کارت</span>
                     <h1 class="text-2xl font-black text-ink mt-4">{{ $deck->exists ? 'ویرایش دسته کارت' : 'ساخت دسته کارت جدید' }}</h1>
                     <p class="text-sm leading-7 text-muted mt-3">عنوان، توضیح، دوره، صاحب محتوا و وضعیت انتشار دسته فلش‌کارت را از اینجا تنظیم کنید.</p>
                 </div>

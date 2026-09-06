@@ -9,7 +9,7 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)] xl:items-end">
         <div class="section-intro">
-            <span class="eyebrow">فایل‌های خصوصی و دانلودی</span>
+            <span class="sr-only">فایل‌های خصوصی و دانلودی</span>
             <h1 class="section-title mt-4">جزوات و خلاصه‌درس‌ها</h1>
             <p class="section-copy mt-5">در این بخش می‌توانید جزوات دوره‌ها را با مسیر ذخیره خصوصی، نویسنده، بازبین علمی، وضعیت انتشار و سهمیه رایگان مدیریت کنید.</p>
         </div>

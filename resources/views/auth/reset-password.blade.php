@@ -8,7 +8,7 @@
 <section class="section-shell section-stack section-stack-tight-top">
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
         <div class="lg:col-span-5 space-y-6">
-            <span class="eyebrow">بازگشت امن به حساب</span>
+            <span class="sr-only">بازگشت امن به حساب</span>
             <div class="section-intro">
                 <h1 class="section-title mt-4">تعیین گذرواژهٔ جدید</h1>
                 <p class="section-copy">در این مرحله گذرواژه جدیدی برای حساب خود انتخاب می‌کنید تا دوباره به دوره‌ها، پیشرفت آموزشی و فضای شخصی‌تان دسترسی داشته باشید.</p>

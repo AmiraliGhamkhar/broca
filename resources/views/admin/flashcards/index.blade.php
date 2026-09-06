@@ -9,7 +9,7 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.8fr)] xl:items-end">
         <div class="section-intro">
-            <span class="eyebrow">مرور فاصله‌دار و حافظه بلندمدت</span>
+            <span class="sr-only">مرور فاصله‌دار و حافظه بلندمدت</span>
             <h1 class="section-title mt-4">مدیریت دسته‌ها و فلش‌کارت‌ها</h1>
             <p class="section-copy mt-5">دسته‌های فلش‌کارت و کارت‌های هر دسته را با شفافیت در وضعیت انتشار، سهمیه رایگان و توضیح محتوایی مدیریت کنید.</p>
         </div>

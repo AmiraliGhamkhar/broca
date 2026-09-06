@@ -9,7 +9,7 @@
 <section class="section-shell section-stack">
     <div class="max-w-4xl mx-auto space-y-8">
         <div class="section-intro text-center max-w-3xl mx-auto">
-            <span class="eyebrow">نتیجه آزمون</span>
+            <span class="sr-only">نتیجه آزمون</span>
             <h1 class="section-title mt-4">{{ $quiz->title }}</h1>
             <p class="section-copy mt-5">نتیجه این تلاش بلافاصله ذخیره شده است و در صفحه آزمون‌های شما نیز به‌عنوان بخشی از سابقه یادگیری قابل مشاهده خواهد بود.</p>
         </div>

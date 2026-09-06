@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Support\Totp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AdminTwoFactorTest extends TestCase
@@ -124,12 +125,13 @@ class AdminTwoFactorTest extends TestCase
         $this->assertCount(10, $codes);
         $this->assertNotContains('OLD01-AAAAA', $codes);
 
-        // The DB stores sha256 hashes — plaintext is flashed to the session
+        // The DB stores bcrypt hashes — plaintext is flashed to the session
         // exactly once at generation time.
         $plaintext = session('recovery_codes');
         $this->assertIsArray($plaintext);
         $this->assertCount(10, $plaintext);
-        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $codes[0]);
+        $this->assertTrue(Hash::isHashed($codes[0]));
+        $this->assertTrue(Hash::check($plaintext[0], $codes[0]));
         $this->assertNotContains($plaintext[0], $codes);
 
         // Old codes are dead immediately.
@@ -146,7 +148,8 @@ class AdminTwoFactorTest extends TestCase
         $stored = $admin->fresh()->recoveryCodes();
         $this->assertCount(1, $stored);
         $this->assertNotSame('SECRET-XXXXX', $stored[0]);
-        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $stored[0]);
+        $this->assertTrue(Hash::isHashed($stored[0]));
+        $this->assertTrue(Hash::check('SECRET-XXXXX', $stored[0]));
         // Raw DB payload must not contain the plaintext anywhere.
         $this->assertStringNotContainsString('SECRET-XXXXX', (string) $admin->fresh()->getRawOriginal('recovery_codes'));
 

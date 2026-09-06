@@ -10,7 +10,7 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.8fr)] xl:items-end">
         <div class="section-intro">
-            <span class="eyebrow">وبلاگ و مقاله‌های آموزشی</span>
+            <span class="sr-only">وبلاگ و مقاله‌های آموزشی</span>
             <h1 class="section-title mt-4">مدیریت مقالات علمی</h1>
             <p class="section-copy mt-5">از اینجا مقاله‌های وبلاگ را با چرخه پیش‌نویس، بازبینی، انتشار و آرشیو مدیریت می‌کنید و شناسنامه نویسنده، بازبین و متادیتای جستجو را تکمیل نگه می‌دارید.</p>
         </div>

@@ -1,4 +1,6 @@
 import Alpine from "alpinejs";
+import "./smooth-cursor";
+import "./dia-text-reveal";
 
 window.Alpine = Alpine;
 

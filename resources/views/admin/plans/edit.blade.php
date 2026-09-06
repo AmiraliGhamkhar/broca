@@ -11,7 +11,7 @@
         <div class="form-panel p-8 sm:p-10">
             <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-hairline-soft">
                 <div>
-                    <span class="eyebrow">فرم مدیریت پلن</span>
+                    <span class="sr-only">فرم مدیریت پلن</span>
                     <h1 class="text-2xl font-black text-ink mt-4">ویرایش تعرفه پلن: {{ $plan->name }}</h1>
                     <p class="text-sm leading-7 text-muted mt-3">قیمت، مدت اعتبار، توضیح عمومی و وضعیت فعال‌بودن پلن را هم‌راستا با خرید و ربات تلگرام به‌روز نگه دارید.</p>
                 </div>

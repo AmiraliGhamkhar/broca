@@ -11,7 +11,7 @@
         <div class="form-panel p-8 sm:p-10">
             <div class="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-hairline-soft">
                 <div>
-                    <span class="eyebrow">{{ $quiz->title }} · {{ $quiz->course->title ?? '' }}</span>
+                    <span class="sr-only">{{ $quiz->title }} · {{ $quiz->course->title ?? '' }}</span>
                     <h1 class="text-2xl font-black text-ink mt-4">{{ $question->exists ? 'ویرایش سؤال آزمون' : 'افزودن سؤال چهارگزینه‌ای جدید' }}</h1>
                     <p class="text-sm leading-7 text-muted mt-3">صورت سؤال، گزینه صحیح، توضیح تشریحی و اطلاعات منبع اینجا تکمیل می‌شود.</p>
                 </div>
