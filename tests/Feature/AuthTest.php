@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Facades\Notification;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +88,40 @@ class AuthTest extends TestCase
         $this->assertSame('active', $user->status);
     }
 
+    public function test_registration_sends_the_apps_queued_verification_notification(): void
+    {
+        Notification::fake();
+
+        $this->post('/register', [
+            'name' => 'مهدی رضایی',
+            'email' => 'mehdi@example.com',
+            'phone' => '09129998877',
+            'password' => 'Xk9vP2mQ7zR4tW8n',
+            'password_confirmation' => 'Xk9vP2mQ7zR4tW8n',
+            'consent' => '1',
+        ]);
+
+        $user = User::query()->where('email', 'mehdi@example.com')->firstOrFail();
+
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
+        // The override must win: the framework's stock (English, sync)
+        // notification is never what gets queued.
+        Notification::assertNotSentTo($user, \Illuminate\Auth\Notifications\VerifyEmail::class);
+    }
+
+    public function test_guest_middleware_redirects_authed_users_to_dashboard(): void
+    {
+        $user = User::factory()->create(['status' => 'active']);
+
+        $this->actingAs($user)
+            ->get(route('login'))
+            ->assertRedirect(route('dashboard'));
+
+        $this->actingAs($user)
+            ->get(route('register'))
+            ->assertRedirect(route('dashboard'));
+    }
+
     public function test_login_accepts_email_or_phone(): void
     {
         $user = User::factory()->create([
@@ -139,6 +175,19 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->unverified()->create(['status' => 'active']);
         $this->actingAs($user)->get('/dashboard')->assertRedirect(route('verification.notice'));
+    }
+
+    public function test_password_reset_uses_the_apps_queued_reset_notification(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create(['email' => 'reset@example.com', 'status' => 'active']);
+
+        $this->post('/forgot-password', ['email' => 'reset@example.com'])->assertSessionHas('status');
+
+        Notification::assertSentTo($user, ResetPasswordNotification::class);
+        // The override must win over the framework's stock notification.
+        Notification::assertNotSentTo($user, \Illuminate\Auth\Notifications\ResetPassword::class);
     }
 
     public function test_password_reset_changes_the_password_and_kills_every_live_session(): void
