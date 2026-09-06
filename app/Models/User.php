@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,6 +19,12 @@ use Illuminate\Support\Facades\Hash;
  * Security: `is_admin` and `status` are deliberately NOT mass-assignable.
  * They are only set through forceFill() in factories/tests and explicit
  * admin tooling, so no request payload can ever grant admin or flip status.
+ *
+ * Email routing: `sendEmailVerificationNotification()` and
+ * `sendPasswordResetNotification()` are overridden below so verification and
+ * password-reset mail use the app's own Persian, queued notifications
+ * (VerifyEmailNotification / ResetPasswordNotification) rather than the
+ * framework's default English, synchronous ones.
  */
 #[Fillable(['name', 'email', 'phone', 'password'])]
 #[Hidden(['password', 'remember_token', 'totp_secret', 'recovery_codes'])]
@@ -63,6 +71,25 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * The verification mail must use the app's Persian, queued notification
+     * (VerifyEmailNotification) — the inherited MustVerifyEmail trait would
+     * otherwise send the framework's stock, synchronous, English email.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
+    }
+
+    /**
+     * Same for password-reset mail: route through the app's Persian, queued
+     * ResetPasswordNotification instead of the framework default.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function hasConfirmedTwoFactor(): bool

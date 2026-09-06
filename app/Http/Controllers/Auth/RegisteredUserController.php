@@ -47,6 +47,10 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
         auth()->login($user);
 
+        // Regenerate the session id now that the request carries real
+        // credentials: the pre-auth session must not become the authed one.
+        $request->session()->regenerate();
+
         return redirect()->route('verification.notice');
     }
 }
