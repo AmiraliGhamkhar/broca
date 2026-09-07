@@ -16,11 +16,13 @@ What exists, what works, and what is still a placeholder. Referenced from
 | Admin | Dashboard, subjects/courses/videos/notes/decks/cards/quizzes/questions CRUD, publication workflow, users, activity log, appearance, backups |
 | Telegram bot | Content + user management, cover images, backups, **and** an operations menu (health, plan restore, queue, SMS test) |
 | SEO / LLM | `robots.txt`, `sitemap.xml`, `/llms.txt`, `.md` twins with content negotiation |
+| Test suite | CI (MySQL 8, PHP 8.4) green on this branch: phone verification, plan lineup, admin login/recovery, Telegram ops and the SMS driver all covered |
 
 ## Known gaps / placeholders
 
 | Item | Note |
 |---|---|
+| **Committed assets** | `public/build` is committed for Node-less cPanel hosts; CI fails a push whose build output does not match the sources (`npm run build`). A rebuild after this round's markup was byte-identical, so nothing needs re-committing. |
 | **SMS panel not chosen** | Driver-based; defaults to `log`, so nothing is sent until `SMS_DRIVER=http` + `SMS_HTTP_URL` are set. `docs/SMS_AND_VERIFICATION.md` §3. |
 | Legal copy | Terms / privacy / medical disclaimer are placeholders (`v1-placeholder`) — real text required before launch. |
 | Prices | رایگان / ۲۷۰ تومان / ۶۰۰ تومان are the confirmed lineup, stored in the `plans` table and editable in the admin panel. |
