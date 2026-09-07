@@ -221,7 +221,7 @@
 
                                     <form method="post" action="{{ route('logout') }}" class="px-2">
                                         @csrf
-                                        <button type="submit" class="w-full text-right px-3 py-2 rounded-xl text-rausch hover:bg-rausch-tint font-bold">
+                                        <button type="submit" class="w-full text-right px-3 py-2 rounded-xl text-rausch-text hover:bg-rausch-tint font-bold">
                                             خروج از حساب کاربری
                                         </button>
                                     </form>
