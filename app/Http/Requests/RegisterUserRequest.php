@@ -90,6 +90,19 @@ class RegisterUserRequest extends FormRequest
             'email.unique' => 'این ایمیل قبلاً ثبت شده است.',
             'email.max' => 'آدرس ایمیل نمی‌تواند بیشتر از ۲۵۵ کاراکتر باشد.',
             'password.confirmed' => 'تکرار گذرواژه با خود آن مطابقت ندارد.',
+            /*
+             * The Password rule's own messages are English and arrive with the
+             * rule *name* as the key, so `attributes()` cannot translate them -
+             * without these, a real signup failure shows a Persian field name
+             * next to "validation.password.mixed". Kept in sync with
+             * PasswordPolicy::rule(): one rule, one copy per complaint.
+             */
+            'password.min' => 'گذرواژه باید حداقل '.\App\Support\PersianNumber::digits(\App\Support\PasswordPolicy::min()).' کاراکتر باشد.',
+            'password.max' => 'گذرواژه نمی‌تواند بیشتر از '.\App\Support\PersianNumber::digits(\App\Support\PasswordPolicy::BCRYPT_INPUT_LIMIT).' کاراکتر باشد (سقف هش رمز).',
+            'password.mixed' => 'گذرواژه باید شامل حروف بزرگ و کوچک باشد.',
+            'password.numbers' => 'گذرواژه باید دست‌کم یک رقم داشته باشد.',
+            'password.symbols' => 'گذرواژه باید دست‌کم یک نماد داشته باشد.',
+            'password.letters' => 'گذرواژه باید دست‌کم یک حرف داشته باشد.',
             'consent.accepted' => 'برای ساخت حساب، پذیرش شرایط و بیانیهٔ پزشکی لازم است.',
         ];
     }
