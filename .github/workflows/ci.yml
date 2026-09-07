@@ -45,17 +45,6 @@ jobs:
               line="${line//'%'/'%25'}"
               echo "::error::${line}"
             done
-
-            # ::error:: annotations are truncated and capped, which hides the
-            # assertion text that actually matters. Publish the raw failure
-            # blocks as a job summary: it renders on the PR's Checks tab, so a
-            # red run is diagnosable without log access.
-            {
-              echo '### Failed tests (raw output)'
-              echo '```'
-              awk '/^[0-9]+\) /{show=1} show' /tmp/test-output.log | head -180
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           }
 
@@ -126,6 +115,27 @@ jobs:
           DB_DATABASE: broca_test
           DB_USERNAME: root
           DB_PASSWORD: root
+
+      # The ::error:: annotations the test step emits are truncated and capped,
+      # which hides exactly the assertion text that decides whether a red run is
+      # application code or a wrong test expectation. This step always runs, so
+      # the tail of the suite output renders on the PR's Checks tab and a failure
+      # stays diagnosable without log access - which a sandboxed agent usually
+      # cannot reach anyway.
+      - name: Publish failure details to the job summary
+        if: failure()
+        run: |
+          if [ ! -f /tmp/test-output.log ]; then
+            echo "no test output was produced" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo '### Failed tests (raw suite output)'
+            echo ''
+            echo '```text'
+            tr -d '\033' < /tmp/test-output.log | tail -300
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # Non-blocking style gate until the codebase has had one pint pass.
       - name: Code style (pint, non-blocking)

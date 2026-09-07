@@ -71,13 +71,16 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
-        // No RateLimiter::hit()/clear() here on purpose: `admin-2fa-verify`
-        // counts every request to this route itself (see its `after` callback),
-        // because a recovery code is consumed on success and there is nothing
-        // for this controller to un-count.
         if (! $user?->is_admin || ! $user->hasConfirmedTwoFactor() || ! $user->consumeRecoveryCode($validated['recovery_code'])) {
+            RateLimiter::hit($this->throttleKey($request), 60);
+
             return back()->withErrors(['recovery_code' => 'کد بازیابی درست نیست یا پیش‌تر استفاده شده است.']);
         }
+
+        // A consumed code is single-use and valid, so it releases the budget
+        // rather than merely "not failing" — otherwise an admin who mistyped
+        // four times could never use the real code.
+        RateLimiter::clear($this->throttleKey($request));
 
         $request->session()->put(RequireAdminTwoFactor::SESSION_KEY, now()->timestamp);
         $request->session()->regenerate();

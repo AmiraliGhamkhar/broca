@@ -23,9 +23,10 @@ class AdminTwoFactorManagementTest extends TestCase
         $this->actingAs($admin)->post(route('admin.two-factor.start'));
         $admin = $admin->fresh();
 
-        // Five wrong codes are still answered by the controller; the sixth is
-        // refused before it runs, and the named limiter replies with a redirect
-        // plus a Persian notice rather than a raw 429 page.
+        // Five wrong codes are answered by the controller; the sixth is refused
+        // before it runs. The named limiter answers a form post with a redirect
+        // plus a Persian notice rather than a bare 429 page - the target of that
+        // redirect is back(), so it is deliberately not pinned here.
         for ($i = 0; $i < 5; $i++) {
             $this->actingAs($admin)
                 ->post(route('admin.two-factor.enable'), ['code' => '000000'])
@@ -34,8 +35,12 @@ class AdminTwoFactorManagementTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.two-factor.enable'), ['code' => '000000'])
-            ->assertRedirect(route('admin.two-factor.edit'))
             ->assertSessionHas('error');
+
+        $this->assertStringContainsString('دو مرحله‌ای', (string) session('error'));
+
+        // Refusing the request must not sign anyone in.
+        $this->assertNull($admin->fresh()->totp_confirmed_at);
     }
 
     /**
@@ -58,10 +63,12 @@ class AdminTwoFactorManagementTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.two-factor.disable'), ['code' => '000000'])
-            ->assertRedirect(route('admin.two-factor.edit'))
             ->assertSessionHas('error');
 
-        $this->assertStringContainsString('دو مرحله‌ای', session('error'));
+        $this->assertStringContainsString('دو مرحله‌ای', (string) session('error'));
+
+        // A throttled response must not disable anything either.
+        $this->assertNotNull($admin->fresh()->totp_confirmed_at);
     }
 
     public function test_recovery_code_regeneration_is_rate_limited(): void

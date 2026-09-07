@@ -281,6 +281,19 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
     auto-incremented, while `/recover` (whose controller has nothing to clear on
     success) is counted by the middleware as usual. Clearing on a correct code
     stays in the controller, which is what makes honest typos harmless.
+14. **Rate limiters are cache state, so the test case isolates them: `Cache::clear()`
+    plus a unique `REMOTE_ADDR` per test.** `RefreshDatabase` truncates tables, not
+    the cache, and the registration/login limiters are keyed by IP — every test in
+    the suite shares 127.0.0.1, so one drained bucket turns an unrelated assertion
+    into "Expected [201,301,302,303,307,308] but received 429". The isolation makes
+    the limiters invisible to tests that are not testing them while leaving
+    throttle behaviour fully testable inside a single test (constant address). The
+    2FA limiter now delegates *all* counting to the controllers
+    (`Limit::after(fn () => false)`), which is what makes "five wrong codes are
+    answered, the sixth is refused, a correct sixth after honest typos succeeds"
+    simultaneously true — and the `remember_web_` cookie test asks
+    `Auth::guard()->getRecallerName()` instead of rebuilding the name, because
+    Laravel 13 appends `sha1(SessionGuard::class)` to it.
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt

@@ -147,14 +147,21 @@ class AuthHardeningTest extends TestCase
             ->assertSee('ارسال دوباره لینک تأیید', false);
     }
 
-    public function test_the_login_form_shows_the_policy_hint_and_inline_errors(): void
+    /**
+     * The hint is rendered from the policy object instead of a second copy of
+     * the sentence, so the rule and the UI can never drift apart, and the form
+     * lists every error rather than only the first. Asserted against
+     * /register - the login view deliberately carries no policy hint, since
+     * "your password must…" is wrong copy on a sign-in form.
+     */
+    public function test_the_register_form_states_the_policy_and_lists_every_error(): void
     {
         $this->post('/register', $this->registration([
             'password' => 'short',
             'password_confirmation' => 'different',
         ]))->assertSessionHasErrors(['password', 'password_confirmation']);
 
-        $this->followingRedirects()->get(route('register'))
+        $this->get(route('register'))
             ->assertOk()
             ->assertSee(PasswordPolicy::hint(), false);
     }
@@ -225,7 +232,7 @@ class AuthHardeningTest extends TestCase
         // remember_web_{session.cookie}_{sha1(SessionGuard::class)}, so asserting
         // on a hand-written string would break on a framework rename while
         // proving nothing about this app.
-        $name = auth()->getGuard()->getRecallerName();
+        $name = \Illuminate\Support\Facades\Auth::guard()->getRecallerName();
         $this->assertStringStartsWith('remember_web_', $name);
 
         $this->post('/login', [

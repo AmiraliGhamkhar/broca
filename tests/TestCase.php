@@ -8,6 +8,8 @@ use App\Support\Totp;
 
 abstract class TestCase extends BaseTestCase
 {
+    private static int $limiterIpSequence = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -33,6 +35,14 @@ abstract class TestCase extends BaseTestCase
          * inside its own body.
          */
         \Illuminate\Support\Facades\Cache::clear();
+
+        /*
+         * Limiters are keyed by IP as well, and every test in the suite shares
+         * 127.0.0.1. A unique address per test (RFC 5737 documentation range, so it
+         * is obviously fake) removes the cross-test coupling; a throttle-specific
+         * test still sees one constant address for the whole of its own body.
+         */
+        $_SERVER['REMOTE_ADDR'] = '203.0.113.'.((self::$limiterIpSequence++ % 250) + 1);
     }
 
     protected function actingAsAdmin(User $admin): static

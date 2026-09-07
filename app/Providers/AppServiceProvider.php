@@ -207,14 +207,14 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('admin-2fa-verify', function (Request $request): Limit {
             return Limit::perMinute(5)
                 ->by('2fa-verify:'.($request->user()?->id ?? $request->ip()))
-                // Where the controller counts attempts itself (the sign-in
-                // challenge, enable and disable: they hit on a wrong code and
-                // clear on a right one) the middleware must not also hit, or
-                // one typo would consume two units of the budget and a correct
-                // sixth code would still be refused. /recover has no such
-                // bookkeeping — recovery codes are single-use bcrypt and never
-                // cleared — so the middleware counts those requests itself.
-                ->after(fn ($response) => $request->routeIs('admin.two-factor.recover'))
+                // Never auto-hit: all four code endpoints own their counting in
+                // the controller (RateLimiter::hit() on a rejected code,
+                // clear() on an accepted one). If the middleware also hit, one
+                // typo would cost two units of a five-unit budget, so an admin
+                // who types the code correctly on the sixth attempt is still
+                // refused - a punishment for honest users that buys nothing,
+                // because every request to these routes is already a guess.
+                ->after(fn ($response) => false)
                 ->response(function () use ($request) {
                     $message = 'تعداد تلاش‌ها برای تأیید کد دو مرحله‌ای زیاد است. لطفاً یک دقیقه بعد دوباره امتحان کنید.';
 
