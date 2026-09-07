@@ -96,7 +96,7 @@
                 <!-- Brand Logo -->
                 <div class="flex items-center gap-8">
                     <a href="{{ url('/') }}" class="flex items-center gap-3 group focus:outline-none">
-                        @php($brandLogoUrl = \App\Support\BrandAssets::logoUrl())
+                        <?php $brandLogoUrl = \App\Support\BrandAssets::logoUrl(); ?>
                         @if ($brandLogoUrl !== null)
                             <img src="{{ $brandLogoUrl }}" alt="{{ __('app.name') }}" class="h-10 w-auto max-w-[10rem] object-contain">
                         @else

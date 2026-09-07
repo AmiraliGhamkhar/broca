@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Support\BrandAssets;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -15,7 +15,7 @@ use Tests\TestCase;
  */
 class BrandAssetsTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     /** Standard 1×1 transparent PNG. */
     private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
@@ -82,7 +82,8 @@ class BrandAssetsTest extends TestCase
 
     public function test_svg_is_rejected_at_the_bot_boundary(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('فرمت تصویر پذیرفته نمی‌شود؛ از PNG یا JPG استفاده کنید.');
 
         // The bot's upload extractor refuses SVG before BrandAssets ever
         // sees it; the boundary contract here is that the support class is

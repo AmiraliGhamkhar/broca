@@ -10,8 +10,7 @@
          only advertised while a current twin exists (BrandAssets removes a
          stale one on upload), and both URLs follow operator uploads via
          /set_hero. --}}
-    @php($heroPreloadJpg = \App\Support\BrandAssets::heroJpgUrl())
-    @php($heroPreloadWebp = \App\Support\BrandAssets::heroWebpUrl())
+    <?php $heroPreloadJpg = \App\Support\BrandAssets::heroJpgUrl(); $heroPreloadWebp = \App\Support\BrandAssets::heroWebpUrl(); ?>
     <link rel="preload" as="image" href="{{ $heroPreloadJpg }}" @if ($heroPreloadWebp !== null) imagesrcset="{{ $heroPreloadWebp }} 1x" @endif imagesizes="100vw" fetchpriority="high">
 @endpush
 

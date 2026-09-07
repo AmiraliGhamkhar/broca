@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Contracts\PaymentGateway;
 use App\Models\Invoice;
 use App\Models\Subscription;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\Fixtures\FakePaymentGateway;
 use Tests\TestCase;
 
@@ -17,7 +17,7 @@ use Tests\TestCase;
  */
 class ZibalCallbackTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     private FakePaymentGateway $gateway;
 

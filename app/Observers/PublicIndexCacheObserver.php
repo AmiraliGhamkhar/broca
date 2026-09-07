@@ -58,11 +58,4 @@ class PublicIndexCacheObserver
     {
         self::flush();
     }
-
-    public static function flush(): void
-    {
-        foreach (self::KEYS as $key) {
-            Cache::forget($key);
-        }
-    }
 }

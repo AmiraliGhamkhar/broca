@@ -27,7 +27,7 @@ final class BrandAssets
     /** Absolute public URL of an uploaded logo image, or null (letter-mark fallback). */
     public static function logoUrl(): ?string
     {
-        return self::$memo['logo'] ??= self::firstPublicFile('brand/logo', ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif']);
+        return self::$memo['logo'] ??= self::firstPublicFile('images/brand/logo', ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif']);
     }
 
     /** Absolute public URL of the hero WebP source, or null (JPEG-only rendering). */
@@ -47,14 +47,14 @@ final class BrandAssets
             return null;
         }
 
-        return self::firstPublicFile('hero/hero', ['webp'])
+        return self::firstPublicFile('images/hero/hero', ['webp'])
             ?? (is_file(public_path('images/hero/hero.webp')) ? asset('images/hero/hero.webp') : null);
     }
 
     /** Absolute public URL of the hero JPEG (the <img> fallback — always rendered). */
     public static function heroJpgUrl(): string
     {
-        $url = self::firstPublicFile('hero/hero', ['jpg', 'jpeg']);
+        $url = self::firstPublicFile('images/hero/hero', ['jpg', 'jpeg']);
 
         return $url ?? (is_file(public_path('images/hero/hero.jpg')) ? asset('images/hero/hero.jpg') : asset('images/og-default.png'));
     }
@@ -149,13 +149,17 @@ final class BrandAssets
         try {
             imagewebp($canvas, null, 82);
             $webp = (string) ob_get_clean();
-            Storage::disk('public')->put('images/hero/hero.webp', $webp);
-            Storage::disk('public')->delete('images/hero/hero.webp.absent');
-        } finally {
+        } catch (\Throwable $exception) {
             ob_end_clean();
+
+            throw $exception;
+        } finally {
             imagedestroy($canvas);
             imagedestroy($source);
         }
+
+        Storage::disk('public')->put('images/hero/hero.webp', $webp);
+        Storage::disk('public')->delete('images/hero/hero.webp.absent');
 
         // The uploaded file itself keeps its own extension (jpg/png/webp);
         // the hero <img> fallback reads images/hero/hero.jpg — normalize a

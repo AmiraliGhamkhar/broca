@@ -30,7 +30,7 @@ class ProvisionPlaceholderMedia extends Command
         $sourceVideos = database_path('placeholder-media/videos');
         $sourceNotes = database_path('placeholder-media/notes');
 
-        $destVideos = public_path('videos');
+        $destVideos = storage_path('app/private/videos');
         $destNotes = storage_path('app/private/notes');
 
         if (! is_dir($sourceVideos) || ! is_dir($sourceNotes)) {
