@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\PhoneVerificationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CatalogController;
@@ -134,12 +135,42 @@ Route::middleware(['auth', 'active'])->group(function (): void {
             : 'ایمیل شما تأیید شد؛ اکنون می‌توانید از همهٔ امکانات حساب استفاده کنید.');
     })->middleware('signed')->name('verification.verify');
     Route::post('/email/verification-notification', function (Request $request) {
-        $request->user()->sendEmailVerificationNotification();
+        // Delivered inline, so an SMTP outage throws instead of leaving the
+        // user staring at an inbox that will never fill. Reported for the
+        // operator, worded for the user — and the SMS path stays available.
+        try {
+            $request->user()->sendEmailVerificationNotification();
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->with('error',
+                'ارسال ایمیل در این لحظه ممکن نیست. از کد پیامکی استفاده کنید یا چند دقیقه دیگر دوباره تلاش کنید.');
+        }
 
         return back()->with('status', 'لینک تأیید دوباره ارسال شد.');
     })->middleware('throttle:verification-resend')->name('verification.send');
 
-    Route::middleware('verified')->group(function (): void {
+    /*
+     * MOBILE VERIFICATION — the second path into an activated account.
+     *
+     * /email/verify/* is the emailed link; these two are the SMS code sent to
+     * the number the user registered with. Either one satisfies the
+     * `verified.contact` gate, because a signup funnel with a single route in
+     * is a single outage away from "nobody can sign up" (see
+     * App\Http\Middleware\EnsureVerifiedContact).
+     *
+     * Both are throttled: a resend costs money at the panel, and `verify` is
+     * a guessing surface (the service additionally caps attempts per code).
+     */
+    Route::post('/phone/verification-notification', [PhoneVerificationController::class, 'send'])
+        ->middleware('throttle:verification-resend')
+        ->name('verification.phone.send');
+
+    Route::post('/phone/verify', [PhoneVerificationController::class, 'verify'])
+        ->middleware('throttle:phone-verify')
+        ->name('verification.phone.verify');
+
+    Route::middleware('verified.contact')->group(function (): void {
         // Throttled: each call may create an invoice and always performs an
         // outbound ZarinPal purchase request. Unbounded, a double-clicking
         // user (or a script) can spray gateway requests and invoice rows —
@@ -174,10 +205,10 @@ Route::middleware(['auth', 'active'])->group(function (): void {
 
 // Short-lived signed media URL issued by the video provider.
 Route::get('/video-playback/{video}', [VideoController::class, 'media'])
-    ->middleware(['signed', 'auth', 'active', 'verified'])
+    ->middleware(['signed', 'auth', 'active', 'verified.contact'])
     ->name('videos.media');
 
-Route::middleware(['auth', 'active', 'verified', 'admin'])->group(function (): void {
+Route::middleware(['auth', 'active', 'verified.contact', 'admin'])->group(function (): void {
     // NOT audited on purpose: challenge/verify/recover carry one-time codes.
     Route::get('/admin/two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('admin.two-factor.challenge');
     Route::post('/admin/two-factor/challenge', [TwoFactorController::class, 'verify'])->middleware('throttle:admin-2fa-verify')->name('admin.two-factor.verify');
@@ -189,7 +220,7 @@ Route::middleware(['auth', 'active', 'verified', 'admin'])->group(function (): v
 | Admin (staff only)
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit'])->group(function (): void {
+Route::prefix('admin')->middleware(['auth', 'active', 'verified.contact', 'admin', 'admin.audit'])->group(function (): void {
     Route::get('/two-factor', [TwoFactorController::class, 'edit'])->name('admin.two-factor.edit');
     Route::post('/two-factor/start', [TwoFactorController::class, 'start'])->name('admin.two-factor.start');
     // TOTP code verification must be rate-limited exactly like the login
@@ -199,7 +230,7 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admi
     Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->middleware('throttle:admin-2fa-codes')->name('admin.two-factor.recovery-codes');
 });
 
-Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {
+Route::prefix('admin')->middleware(['auth', 'active', 'verified.contact', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {
     Route::get('/', AdminDashboardController::class)->name('admin.dashboard');
     Route::get('/appearance', [AppearanceController::class, 'edit'])->name('admin.appearance.edit');
     Route::patch('/appearance', [AppearanceController::class, 'update'])->name('admin.appearance.update');

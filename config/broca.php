@@ -30,6 +30,58 @@ return [
     // SMTP path. Never set it in production.
     'mail_to' => env('BROCA_MAIL_TO'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Transactional delivery — verification mail, verification SMS, reset mail
+    |--------------------------------------------------------------------------
+    |
+    | `queue` is the queue connection these three notifications are pushed to.
+    |
+    | IT DEFAULTS TO `sync`, AND THAT IS THE FIX FOR THE LAUNCH BLOCKER.
+    |
+    | They are the only messages a user must receive *during* the request that
+    | creates the account: on a host whose cron-driven queue worker is missing,
+    | misconfigured, or silently dead, a `database` connection means the mail
+    | sits in `jobs` forever — the account is created, nobody can verify, and
+    | every new signup (and every password reset) is stuck. Sending inline is
+    | a few hundred milliseconds of SMTP on one request, and it is the
+    | difference between "signup works" and "nobody can sign up".
+    |
+    | On a host with a proven, monitored worker, set
+    | BROCA_NOTIFICATIONS_QUEUE=database to move the SMTP round-trip off the
+    | request. Everything else (backups, media jobs) keeps using the default
+    | QUEUE_CONNECTION.
+    */
+    'notifications' => [
+        'queue' => (string) env('BROCA_NOTIFICATIONS_QUEUE', 'sync'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mobile verification (SMS one-time code)
+    |--------------------------------------------------------------------------
+    |
+    | Signup asks for a mobile number, so proving control of it is what lets a
+    | user who never receives the verification mail (spam folder, corporate
+    | filter, a mail server the host cannot reach) still activate the account
+    | — see App\Http\Middleware\EnsureVerifiedContact: EITHER a verified email
+    | OR a verified mobile unlocks the dashboard and checkout.
+    |
+    | The TTL is deliberately short and the attempt budget deliberately small:
+    | a 6-digit code is 10^6 possibilities, and the code is stored bcrypt-
+    | hashed, so the window is what protects a dump of the table.
+    */
+    'phone_verification' => [
+        'enabled' => (bool) env('BROCA_PHONE_VERIFICATION', true),
+        // 6 digits is the longest code a person retypes without error.
+        'code_length' => (int) env('BROCA_PHONE_CODE_LENGTH', 6),
+        'ttl_minutes' => (int) env('BROCA_PHONE_CODE_TTL', 10),
+        'max_attempts' => (int) env('BROCA_PHONE_CODE_ATTEMPTS', 5),
+        // Per-user cooldown between codes; also the anti-SMS-pumping valve,
+        // because a text message costs real money per send.
+        'resend_cooldown_seconds' => (int) env('BROCA_PHONE_RESEND_COOLDOWN', 60),
+    ],
+
     // Kill switch for the checkout while payment incidents are being
     // investigated. Plans stay visible; purchase buttons are replaced by a
     // notice (see the plans view).

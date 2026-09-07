@@ -28,7 +28,22 @@ class PasswordResetLinkController extends Controller
             ? mb_strtolower(trim($validated['email']))
             : trim($validated['email']);
 
-        $status = Password::sendResetLink(['email' => $email]);
+        /*
+         * Reset mail is delivered inline (config/broca.php
+         * `notifications.queue`), so an unreachable SMTP server throws here
+         * instead of failing quietly in a worker. Swallowing that into
+         * "check your inbox" would be a lie the user cannot debug; reporting
+         * it and saying the mail did not go out is the honest answer, and it
+         * is the same answer for every address (no enumeration).
+         */
+        try {
+            $status = Password::sendResetLink(['email' => $email]);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->withInput($request->only('email'))->with('error',
+                'ارسال ایمیل در این لحظه ممکن نیست. چند دقیقه دیگر دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.');
+        }
 
         if ($status === Password::RESET_LINK_SENT) {
             return back()->with('status', 'لینک بازیابی گذرواژه به ایمیل شما ارسال شد.');

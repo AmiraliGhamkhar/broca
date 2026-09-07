@@ -23,6 +23,20 @@
         </div>
     </div>
 
+    @if ($missingCanonical !== [])
+        <div class="mt-8 rounded-2xl border border-rausch/30 bg-rausch-tint p-5 text-xs leading-7 text-rausch" role="alert">
+            <p class="text-sm font-extrabold">چیدمان پلن‌ها ناقص است</p>
+            <p class="mt-2">
+                این پلن‌های پیش‌فرض در جدول پلن‌ها وجود ندارند و بنابراین روی صفحهٔ <a href="{{ route('plans') }}" class="font-bold underline">/plans</a> نمایش داده نمی‌شوند:
+                <span dir="ltr" class="font-mono font-bold">{{ implode('، ', $missingCanonical) }}</span>.
+            </p>
+            <p class="mt-2">
+                برای بازگرداندن چیدمان استاندارد (رایگان / یک‌ماهه / سه‌ماهه) روی سرور اجرا کنید:
+                <code dir="ltr" class="rounded bg-white px-2 py-1 font-mono">php artisan broca:sync-plans</code>
+            </p>
+        </div>
+    @endif
+
     <div class="grid gap-4 md:grid-cols-3 mt-10">
         <div class="meta-card is-soft">
             <p class="text-xs font-bold text-ink">تعداد پلن‌ها</p>

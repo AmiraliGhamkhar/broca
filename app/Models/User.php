@@ -14,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Support\PhoneNormalizer;
 
 /**
  * Security: `is_admin` and `status` are deliberately NOT mass-assignable.
@@ -27,7 +28,10 @@ use Illuminate\Support\Facades\Hash;
  * framework's default English, synchronous ones.
  */
 #[Fillable(['name', 'email', 'phone', 'password'])]
-#[Hidden(['password', 'remember_token', 'totp_secret', 'recovery_codes'])]
+// `phone_verification_code` is a bcrypt hash, but it is a live credential for
+// as long as it is unexpired — keeping it out of array/JSON output stops it
+// leaking through an admin export or a careless `toArray()` in a log line.
+#[Hidden(['password', 'remember_token', 'totp_secret', 'recovery_codes', 'phone_verification_code'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
@@ -71,6 +75,52 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * The account is usable once EITHER contact channel is proven: the
+     * emailed link or the SMS code. Signup must not have a single point of
+     * failure — see App\Http\Middleware\EnsureVerifiedContact.
+     */
+    public function hasVerifiedContact(): bool
+    {
+        return $this->hasVerifiedEmail() || $this->hasVerifiedPhone();
+    }
+
+    public function hasVerifiedPhone(): bool
+    {
+        return $this->phone_verified_at !== null;
+    }
+
+    public function markPhoneAsVerified(): void
+    {
+        $this->forceFill([
+            'phone_verified_at' => now(),
+            'phone_verification_code' => null,
+            'phone_verification_expires_at' => null,
+            'phone_verification_attempts' => 0,
+        ])->save();
+    }
+
+    /**
+     * Where text messages for this account go.
+     *
+     * `phone` is already canonical (`09…`) — registration and
+     * broca:identifiers:normalize both write it that way — but it is
+     * re-normalized here so an account imported by hand, or written before
+     * normalization existed, still receives its code.
+     */
+    public function routeNotificationForSms(): ?string
+    {
+        if (! is_string($this->phone) || trim($this->phone) === '') {
+            return null;
+        }
+
+        try {
+            return PhoneNormalizer::normalize($this->phone);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
     }
 
     /**
@@ -196,6 +246,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'phone_verification_expires_at' => 'datetime',
+            'phone_verification_last_sent_at' => 'datetime',
+            'phone_verification_attempts' => 'integer',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'totp_confirmed_at' => 'datetime',

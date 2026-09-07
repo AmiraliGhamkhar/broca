@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Plan;
+use App\Support\PlanCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -11,7 +12,9 @@ use Tests\TestCase;
  * markup (.prc-05), styled with the Broca palette in resources/css/app.css.
  * The lineup is three cards — رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان —
  * and the prices are DB content (price_irr in Rial), so the test seeds the
- * rows instead of relying on the seeder having been run.
+ * rows instead of relying on the seeder having been run. It seeds them from
+ * PlanCatalog, the same source the seeder and `broca:sync-plans` read, so the
+ * numbers cannot drift apart.
  */
 class PlansPageTest extends TestCase
 {
@@ -19,30 +22,9 @@ class PlansPageTest extends TestCase
 
     private function seedCanonicalLineup(): void
     {
-        Plan::updateOrCreate(['code' => 'free'], [
-            'name' => 'پلن پایه رایگان',
-            'description' => 'تا ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت و ۱ سؤال آزمون در کل آرشیو — برای ارزیابی پیش از خرید.',
-            'duration_months' => 0,
-            'price_irr' => 0,
-            'sort_order' => 1,
-            'is_active' => true,
-        ]);
-        Plan::updateOrCreate(['code' => 'monthly'], [
-            'name' => 'اشتراک یک‌ماهه طلایی',
-            'description' => 'دسترسی نامحدود به تمام ویدیوهای بالینی، جزوات اختصاصی، آزمون‌ها و سیستم هوشمند SRS برای ۳۰ روز.',
-            'duration_months' => 1,
-            'price_irr' => 2700, // 270 Toman
-            'sort_order' => 2,
-            'is_active' => true,
-        ]);
-        Plan::updateOrCreate(['code' => 'quarterly'], [
-            'name' => 'اشتراک سه‌ماهه جامع',
-            'description' => 'دسترسی کامل به کل آرشیو دوره‌ها، آزمون‌های جامع و دسته‌های فلش‌کارت برای ۹۰ روز با تخفیف ویژه.',
-            'duration_months' => 3,
-            'price_irr' => 6000, // 600 Toman
-            'sort_order' => 3,
-            'is_active' => true,
-        ]);
+        foreach (PlanCatalog::lineup() as $plan) {
+            Plan::updateOrCreate(['code' => $plan['code']], $plan);
+        }
     }
 
     public function test_plans_page_renders_the_three_pricing_cards(): void
@@ -89,13 +71,10 @@ class PlansPageTest extends TestCase
 
     public function test_free_tier_is_surfaced_even_when_no_zero_price_row_exists(): void
     {
-        Plan::updateOrCreate(['code' => 'monthly'], [
-            'name' => 'اشتراک یک‌ماهه طلایی',
-            'duration_months' => 1,
-            'price_irr' => 2700,
-            'sort_order' => 2,
-            'is_active' => true,
-        ]);
+        // Only the paid tier exists: the controller must still prepend free.
+        $monthly = PlanCatalog::byCode(PlanCatalog::MONTHLY);
+        $this->assertNotNull($monthly);
+        Plan::updateOrCreate(['code' => $monthly['code']], $monthly);
 
         $html = $this->get(route('plans'))->assertOk()->getContent();
 

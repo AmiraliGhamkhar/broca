@@ -37,6 +37,13 @@ deployment:
 
     - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan migrate --force'
 
+    # Product data the migrations do NOT create: the canonical plan lineup
+    # (free / 1-month 270 Toman / 3-month 600 Toman). The seeder is never run
+    # on this host, so without this the plans table stays empty and /plans
+    # renders a single card instead of three. Idempotent — it only creates
+    # what is missing and never overwrites a price an operator has edited.
+    - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan broca:sync-plans'
+
     - 'export D=/home/brocamed/broca; export P=/opt/cpanel/ea-php84/root/usr/bin/php; test -x "$P" || P=$(command -v php); cd "$D" && "$P" artisan storage:link || true'
 
     # Rebuild caches. NOTE: after config:cache, env() outside config/ returns

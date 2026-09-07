@@ -58,7 +58,11 @@ working-process rules. Newest first.
 2. ~~Real Toman prices for 1-month / 3-month plans (seeder uses
    placeholders).~~ **Resolved 2026-09-07** — client confirmed the lineup:
    رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان (see "Round 7").
-3. OTP SMS verification required at launch?
+3. ~~OTP SMS verification required at launch?~~ **Resolved 2026-09-07** —
+   registration now sends a one-time code to the mobile number *in addition*
+   to the emailed link, and either one activates the account (see "Round 9").
+   The SMS panel itself is still an open choice: the driver is generic HTTP
+   and defaults to `log` until the client names a provider.
 4. Video hosting/CDN provider preference.
 5. Content volume at launch (sizes the admin workflow).
 6. ZarinPal and/or Zibal — primary or user-choice at checkout?
@@ -306,6 +310,85 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
     route limiter is what actually refuses a scripted guesser. Lesson recorded
     because the code comment is the only place a reader would learn it: do not
     let two layers decide admission on one budget.
+## Round 9 decisions (2026-09-07, delivery, admin access, plan lineup)
+
+Driven by four reports from the live site: *registration reached nobody*,
+*the admin could not sign in with correct credentials*, *two of the three
+pricing cards were missing*, and *the operator had no way to see any of it
+without SSH*.
+
+1. **Registration now delivers two independent proofs of contact: the emailed
+   link AND an SMS one-time code — either one activates the account.** This
+   resolves open question 3 ("OTP SMS verification required at launch?") in the
+   form that survives a mail outage: the signup funnel used to have exactly one
+   way in, so every failure of that one path (queue not drained, SMTP blocked,
+   provider dropping mail, a spam folder) produced the same dead account. The
+   gate is `App\Http\Middleware\EnsureVerifiedContact` (aliased
+   `verified.contact`) — email **or** mobile — and it is wired into the routes
+   explicitly rather than by overriding the framework's `verified` alias, so no
+   future alias-merge order can silently change what guards `/checkout`.
+2. **Transactional mail and SMS are delivered inline by default
+   (`BROCA_NOTIFICATIONS_QUEUE=sync`).** They are the only messages a user must
+   receive *during* the request that creates the account. With `database`, a
+   host whose cron worker is missing, misconfigured or silently dead keeps the
+   mail in `jobs` forever: the account is created and nobody can ever verify
+   it. Inline costs a few hundred milliseconds of SMTP once per signup and
+   removes that dependency; a host with a monitored worker opts back in with
+   one env var. Backups and media jobs still use `QUEUE_CONNECTION`.
+3. **A failed send never fails the signup.** Both channels are dispatched
+   inside their own `try/catch` after the session exists, both are `report()`ed,
+   and the notice page offers a resend for each. When *neither* channel could
+   leave the building the app logs `critical` — the one case an on-call
+   engineer must see next to the account rather than buried in a transport
+   exception.
+4. **SMS is driver-based with a `log` default.** No panel had been chosen, and
+   hard-coding a vendor we cannot test would have shipped a credential nobody
+   verified. `log` writes the message (and the code, outside production) to
+   `laravel.log`, so the whole flow is exercisable with zero spend;
+   `null` discards; `http` describes the request entirely in env — URL,
+   method, JSON body template with `:to :message :from :code :reference`
+   placeholders, success status, and an optional `success_contains` substring
+   gate, because most panels answer HTTP 200 with an error body. Switching
+   vendor is an env change, not a code change.
+5. **The mobile code is stored bcrypt-hashed, expires in 10 minutes, allows 5
+   attempts and is cleared on use/expiry/lockout.** A 6-digit code is 10⁶
+   possibilities, so the window and the attempt budget — not the hash alone —
+   are what make a table dump unprofitable.
+6. **Login resolves the account tolerantly and says why it refused.**
+   `App\Support\UserLookup` matches the canonical form first (indexed) and
+   then the historical spellings a row may still hold (`Admin@Example.com `,
+   `+98912…`, Persian digits) — one implementation shared with the operator
+   commands, so "the command says the account is fine but the form says the
+   password is wrong" cannot happen. A found-but-inactive account now gets its
+   own message: showing it costs nothing (the visitor already knows the account
+   exists) and it ends the worst support case the app had — an operator typing
+   a correct password into a suspended account and being told the password is
+   wrong. Unknown identifiers keep the single neutral message.
+7. **The canonical plan lineup lives in code (`App\Support\PlanCatalog`) and
+   is reconciled into the database by `broca:sync-plans`, which the deploy hook
+   now runs.** The pipeline migrates but never seeds, so on a host whose
+   `plans` table was never populated `/plans` rendered the controller's
+   synthetic free tier and nothing else — one card where the client expects
+   three. The command is idempotent and, without `--reset`, never overwrites a
+   price an operator edited. The seeder reads the same array, so there is no
+   second copy of the numbers; the admin panel and the bot both surface a
+   missing lineup instead of leaving it silent.
+8. **The Telegram bot refuses to suspend or demote the last active admin.**
+   The web panel always refused; the bot did not, so one tap could leave the
+   site with no administrator able to sign in — which is itself one of the ways
+   "the admin cannot log in" happens. The bot also gained an operations menu
+   (health report, plan-lineup restore, queue status + manual drain, SMS test)
+   and per-account email/mobile verification, rendered from the same
+   `App\Services\OpsHealthReport` as `php artisan broca:ops:health` so the
+   phone and the shell never disagree.
+9. **Four operator commands, because you cannot fix a broken login from inside
+   a session that requires the login to work:** `broca:user:diagnose`
+   (read-only: finds the account, then names which of the four blockers is in
+   the way), `broca:user:repair` (`--activate --verify-email --verify-phone
+   --normalize --promote --demote --password --logout`; the last-admin guard is
+   absolute, not a prompt), `broca:identifiers:normalize` (rewrites every
+   stored email/phone into the canonical spelling) and `broca:sms:test`.
+
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt
