@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 
 /**
  * Operator-manageable brand assets: the navbar/footer logo and the landing
@@ -84,6 +85,14 @@ final class BrandAssets
         }
 
         $extension = strtolower($image['extension']);
+
+        // Defense in depth: the bot's upload extractor refuses SVG already
+        // (an SVG logo is same-origin scriptable — stored-XSS vector), but
+        // this class is the last line for any future caller too.
+        if (in_array($extension, ['svg', 'html', 'htm', 'php'], true)) {
+            throw new InvalidArgumentException('فرمت تصویر پذیرفته نمی‌شود؛ از PNG یا JPG استفاده کنید.');
+        }
+
         $storageKey = $directory.'/'.$basename.'.'.$extension;
         Storage::disk('public')->put($storageKey, $image['body']);
 

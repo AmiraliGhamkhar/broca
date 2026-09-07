@@ -32,7 +32,7 @@
             </div>
             <div class="meta-card is-soft text-center">
                 <p class="text-xs font-bold text-ink">وضعیت</p>
-                <p class="mt-3 text-lg font-black {{ $attempt->passed ? 'text-teal' : 'text-rausch' }}">{{ $attempt->passed ? 'قبول' : 'نیازمند مرور بیشتر' }}</p>
+                <p class="mt-3 text-lg font-black {{ $attempt->passed ? 'text-teal' : 'text-rausch-text' }}">{{ $attempt->passed ? 'قبول' : 'نیازمند مرور بیشتر' }}</p>
             </div>
         </div>
 

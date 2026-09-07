@@ -2858,14 +2858,20 @@ class TelegramBotService
     {
         $user = User::query()->findOrFail($id);
         $suspending = $user->status === 'active';
+        $lastActiveAdmin = $suspending && $user->is_admin && User::query()
+            ->where('is_admin', true)
+            ->where('status', 'active')
+            ->whereKeyNot($user->getKey())
+            ->doesntExist();
 
-        $this->api->sendMessage($chatId, implode("\n", [
+        $this->api->sendMessage($chatId, implode("\n", array_filter([
             'تغییر وضعیت حساب را تأیید می‌کنید؟',
             'کاربر: #'.$user->id.' — '.$user->name,
             'از: '.$this->userStatusLabel((string) $user->status),
             'به: '.($suspending ? '⛔️ معلق' : '✅ فعال'),
             $suspending ? '⚠️ کاربر معلق فوراً از همهٔ نشست‌های فعال خارج می‌شود.' : '',
-        ]), [
+            $lastActiveAdmin ? '⛔️ این حساب تنها مدیرِ فعال است و تعلیق آن رد خواهد شد.' : '',
+        ])), [
             'reply_markup' => $this->inlineKeyboard([
                 [$this->button('✅ تأیید', 'confirmuserstatus:'.$user->id)],
                 [$this->button('↩️ بازگشت', 'manage:user:'.$user->id)],
@@ -2875,13 +2881,47 @@ class TelegramBotService
 
     private function applyUserStatus(int $chatId, int $id): void
     {
-        $user = User::query()->findOrFail($id);
-        $user->status = $user->status === 'active' ? 'suspended' : 'active';
-        $user->save();
+        // The web panel refuses self-suspension; the bot cannot identify
+        // "self" (TelegramAdmin carries no site user_id), so it enforces the
+        // stronger invariant instead: the LAST ACTIVE admin account can
+        // never be suspended, or the panel would be locked for everyone.
+        $result = DB::transaction(function () use ($id): array {
+            $target = User::query()->whereKey($id)->lockForUpdate()->first();
 
-        $this->api->sendMessage($chatId, '✅ وضعیت کاربر #'.$user->id.' به '.$this->userStatusLabel((string) $user->status).' تغییر کرد.', [
+            if ($target === null) {
+                return [null, 'کاربر یافت نشد.'];
+            }
+
+            if ($target->status === 'active' && $target->is_admin
+                && User::query()
+                    ->where('is_admin', true)
+                    ->where('status', 'active')
+                    ->whereKeyNot($target->getKey())
+                    ->doesntExist()) {
+                return [null, 'این حساب تنها مدیرِ فعال سیستم است؛ تعلیق آن دسترسی همه به پنل مدیریت را قطع می‌کند.'];
+            }
+
+            $target->status = $target->status === 'active' ? 'suspended' : 'active';
+            $target->save();
+
+            return [$target, null];
+        });
+
+        [$target, $error] = $result;
+
+        if ($error !== null) {
+            $this->api->sendMessage($chatId, '❌ '.$error, [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'manage:user:'.$id)],
+                ]),
+            ]);
+
+            return;
+        }
+
+        $this->api->sendMessage($chatId, '✅ وضعیت کاربر #'.$target->id.' به '.$this->userStatusLabel((string) $target->status).' تغییر کرد.', [
             'reply_markup' => $this->inlineKeyboard([
-                [$this->button('↩️ بازگشت به کارت کاربر', 'manage:user:'.$user->id)],
+                [$this->button('↩️ بازگشت به کارت کاربر', 'manage:user:'.$target->id)],
             ]),
         ]);
     }
@@ -2907,8 +2947,11 @@ class TelegramBotService
 
     private function applyUserAdmin(int $chatId, int $id): void
     {
-        // Same invariant as the admin panel, now under a row lock: two
-        // concurrent demotions can never remove the final administrator.
+        // Same invariant as the admin panel, now under a row lock: the demotion
+        // must leave at least one ACTIVE admin. (The web panel additionally
+        // refuses self-demotion; the bot cannot identify "self" because
+        // TelegramAdmin carries no site user_id, so the active-admin invariant
+        // is the enforceable one here.)
         $result = DB::transaction(function () use ($id): array {
             $target = User::query()->whereKey($id)->lockForUpdate()->first();
 
@@ -2916,8 +2959,13 @@ class TelegramBotService
                 return [null, 'کاربر یافت نشد.'];
             }
 
-            if ($target->is_admin && User::query()->where('is_admin', true)->count() <= 1) {
-                return [null, 'حداقل یک مدیر باید در سیستم باقی بماند؛ سلب مدیریت این حساب ممکن نیست.'];
+            if ($target->is_admin
+                && User::query()
+                    ->where('is_admin', true)
+                    ->where('status', 'active')
+                    ->whereKeyNot($target->getKey())
+                    ->doesntExist()) {
+                return [null, 'حداقل یک مدیر فعال باید در سیستم باقی بماند؛ سلب مدیریت این حساب ممکن نیست.'];
             }
 
             $target->forceFill(['is_admin' => ! $target->is_admin])->save();
