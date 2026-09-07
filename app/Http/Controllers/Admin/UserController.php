@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -75,6 +76,18 @@ class UserController extends Controller
             'status' => $validated['status'],
             'is_admin' => $request->boolean('is_admin'),
         ])->save();
+
+        // Suspension must bite now, not on the user's next request: the
+        // session rows are deleted so a live tab loses its cookie immediately
+        // instead of keeping read access until `active` middleware next runs.
+        // Best-effort — a non-database session driver has no table to clear.
+        try {
+            DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $user->getKey())
+                ->delete();
+        } catch (\Throwable) {
+            // file/redis/cache drivers: EnsureActive still locks them out.
+        }
 
         return back()->with('status', 'اطلاعات کاربر با موفقیت به‌روزرسانی شد.');
     }

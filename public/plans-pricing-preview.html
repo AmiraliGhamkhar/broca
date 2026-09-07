@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>پیش‌نمایش کارت‌های قیمت — بروکا</title>
+<!-- Static, no-Laravel preview of the three pricing cards as /plans renders them.
+     Serves the real compiled stylesheet (public/build) so nothing here drifts
+     from the production look. Preview-only; not part of the app routes. -->
+<link id="app-css" rel="stylesheet" href="">
+<script>
+    // Resolve the current Vite artifact from the manifest so this preview can
+    // never pin a hashed filename that disappears on the next build.
+    fetch('/build/manifest.json')
+        .then((r) => r.json())
+        .then((m) => {
+            // Manifest paths are relative to /build, not to the site root.
+            document.getElementById('app-css').href = '/build/' + m['resources/css/app.css'].file;
+        })
+        .catch(() => {});
+</script>
+<style>
+    .preview-note {
+        border: 1px dashed var(--color-border-strong);
+        border-radius: 0.75rem;
+        background: var(--color-surface-soft);
+        color: var(--color-muted);
+        padding: 0.75rem 1rem;
+        font-size: 0.75rem;
+        line-height: 1.9;
+        margin-bottom: 1.5rem;
+    }
+</style>
+</head>
+<body>
+<main>
+<section class="section-shell section-stack">
+    <div class="text-center max-w-3xl mx-auto space-y-4">
+        <h1 class="section-title mt-2">پلن‌های اشتراک بروکا برای دسترسی حرفه‌ای به آموزش پزشکی</h1>
+        <p class="section-copy max-w-2xl mx-auto">پیش‌نمایش ثابت سه کارت قیمت، دقیقاً با همان نشانه‌گذاری <code>.prc-05</code> و همان پالت رنگی که در <code>/plans</code> استفاده می‌شود.</p>
+    </div>
+
+    <div class="trust-strip mt-10">
+        <div class="trust-card">
+            <strong>قیمت‌گذاری شفاف</strong>
+            <span>مبلغ هر پلن و بازه دسترسی آن روشن و بدون ابهام نمایش داده می‌شود.</span>
+        </div>
+        <div class="trust-card">
+            <strong>پرداخت امن زرین‌پال</strong>
+            <span>فرآیند پرداخت با ثبت وضعیت فاکتور و پیگیری سمت سرور همراه است.</span>
+        </div>
+        <div class="trust-card">
+            <strong>شروع رایگان پیش از خرید</strong>
+            <span>کاربر می‌تواند قبل از پرداخت، تجربه واقعی کیفیت محتوا را بسنجد.</span>
+        </div>
+        <div class="trust-card">
+            <strong>نمایش واضح وضعیت اشتراک</strong>
+            <span>اگر اشتراک فعال داشته باشید، سیستم آن را به‌وضوح اعلام می‌کند.</span>
+        </div>
+    </div>
+
+    <p class="preview-note mt-10">مبالغ از جدول <code>plans</code> خوانده می‌شوند (ریال در دیتابیس، تومان در نما): رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان.</p>
+
+    <div class="prc-05">
+        <div class="prc-05__grid">
+
+            <article class="prc-05__card">
+                <div class="prc-05__head">
+                    <div>
+                        <h3 class="prc-05__name">پلن پایه رایگان</h3>
+                        <p class="prc-05__description">تا ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت و ۱ سؤال آزمون در کل آرشیو — برای ارزیابی پیش از خرید.</p>
+                    </div>
+                    <span class="prc-05__duration is-free">دسترسی رایگان</span>
+                </div>
+
+                <p class="prc-05__price is-free">رایگان</p>
+                <p class="prc-05__per">بدون پرداخت — دسترسی رایگان تا سقف سهمیهٔ حساب پایه</p>
+
+                <ul>
+                    <li>
+                        <strong>شروع با نمونه‌درس‌های منتخب</strong>
+                        <span>تا ۲ ویدیوی منتخب، در کل آرشیو و همه دوره‌ها — سهمیهٔ رایگان به‌صورت جدا برای هر دوره محاسبه نمی‌شود، بلکه در کل آرشیو (همه دوره‌ها روی هم) به‌کار می‌رود تا سبک تدریس و ساختار محتوا را ارزیابی کنید.</span>
+                    </li>
+                    <li>
+                        <strong>امکان مشاهده نمونه جزوه</strong>
+                        <span>کاربر قبل از خرید می‌تواند با سبک جزوات و کیفیت آن‌ها آشنا شود.</span>
+                    </li>
+                    <li>
+                        <strong>مرور و آزمون برای آشنایی اولیه</strong>
+                        <span>سطح رایگان برای شناخت مدل یادگیری و تصمیم‌گیری آگاهانه طراحی شده است.</span>
+                    </li>
+                </ul>
+
+                <div class="prc-05__actions">
+                    <a href="#" class="prc-05__cta">ثبت‌نام و انتخاب این پلن</a>
+                </div>
+            </article>
+
+            <article class="prc-05__card">
+                <div class="prc-05__head">
+                    <div>
+                        <h3 class="prc-05__name">اشتراک یک‌ماهه طلایی</h3>
+                        <p class="prc-05__description">دسترسی نامحدود به تمام ویدیوهای بالینی، جزوات اختصاصی، آزمون‌ها و سیستم هوشمند SRS برای ۳۰ روز.</p>
+                    </div>
+                    <span class="prc-05__duration is-paid">۱ ماه دسترسی</span>
+                </div>
+
+                <p class="prc-05__price" dir="ltr">270 <span class="prc-05__currency">تومان</span></p>
+                <p class="prc-05__per">مبلغ یک‌بار برای ۱ ماه دسترسی</p>
+
+                <ul>
+                    <li>
+                        <strong>دسترسی گسترده به ویدیوهای آموزشی</strong>
+                        <span>تمام درس‌های ویدیویی منتشرشده قابل استفاده هستند.</span>
+                    </li>
+                    <li>
+                        <strong>دسترسی به جزوات و فایل‌های PDF</strong>
+                        <span>جزوات و فایل‌های آموزشی منتشرشده برای مطالعه و جمع‌بندی در دسترس‌اند.</span>
+                    </li>
+                    <li>
+                        <strong>مرور فاصله‌دار و سنجش یادگیری</strong>
+                        <span>فلش‌کارت‌ها و آزمون‌ها بخشی از چرخه یادگیری روزانه شما می‌شوند.</span>
+                    </li>
+                </ul>
+
+                <div class="prc-05__actions">
+                    <a href="#" class="prc-05__cta">خرید اشتراک و ورود به درگاه امن</a>
+                    <p class="prc-05__fineprint">پرداخت از طریق زرین‌پال انجام می‌شود و وضعیت فاکتور بعد از بازگشت از درگاه قابل پیگیری است.</p>
+                </div>
+            </article>
+
+            <article class="prc-05__card is-featured">
+                <span class="prc-05__ribbon">پیشنهاد متعادل برای بیشتر دانشجویان</span>
+                <div class="prc-05__head">
+                    <div>
+                        <h3 class="prc-05__name">اشتراک سه‌ماهه جامع</h3>
+                        <p class="prc-05__description">دسترسی کامل به کل آرشیو دوره‌ها، آزمون‌های جامع و دسته‌های فلش‌کارت برای ۹۰ روز با تخفیف ویژه.</p>
+                    </div>
+                    <span class="prc-05__duration is-paid">۳ ماه دسترسی</span>
+                </div>
+
+                <p class="prc-05__price" dir="ltr">600 <span class="prc-05__currency">تومان</span></p>
+                <p class="prc-05__per">معادل <bdi dir="ltr">200</bdi> تومان برای هر ماه — <strong>۲۶٪</strong> ارزان‌تر از پلن یک‌ماهه</p>
+
+                <ul>
+                    <li>
+                        <strong>دسترسی گسترده به ویدیوهای آموزشی</strong>
+                        <span>تمام درس‌های ویدیویی منتشرشده قابل استفاده هستند.</span>
+                    </li>
+                    <li>
+                        <strong>دسترسی به جزوات و فایل‌های PDF</strong>
+                        <span>جزوات و فایل‌های آموزشی منتشرشده برای مطالعه و جمع‌بندی در دسترس‌اند.</span>
+                    </li>
+                    <li>
+                        <strong>مرور فاصله‌دار و سنجش یادگیری</strong>
+                        <span>فلش‌کارت‌ها و آزمون‌ها بخشی از چرخه یادگیری روزانه شما می‌شوند.</span>
+                    </li>
+                </ul>
+
+                <div class="prc-05__actions">
+                    <a href="#" class="prc-05__cta">خرید اشتراک و ورود به درگاه امن</a>
+                    <p class="prc-05__fineprint">پرداخت از طریق زرین‌پال انجام می‌شود و وضعیت فاکتور بعد از بازگشت از درگاه قابل پیگیری است.</p>
+                </div>
+            </article>
+
+        </div>
+    </div>
+</section>
+</main>
+</body>
+</html>

@@ -98,11 +98,15 @@ jobs:
         run: |
           set -o pipefail
           php artisan test 2>&1 | tee /tmp/test-output.log || {
+            # PHPUnit colours its output, and the failure detail (the asserted
+            # expression, the file:line) arrives on lines that a grep over the
+            # raw file cannot match. Strip the escapes first, then take context
+            # around each FAILED marker - that is the text that decides whether
+            # a red run is application code or a wrong expectation.
+            perl -pe 's/\e\[[0-9;]*m//g' /tmp/test-output.log > /tmp/test-output.txt
             {
               echo "FAILED TESTS SUMMARY:"
-              grep -E "FAILED|Failed asserting|Expected response status|SQLSTATE|Exception:|Error:" /tmp/test-output.log | grep -v "^\s*✓" | head -60
-              echo "---TAIL---"
-              tail -40 /tmp/test-output.log
+              grep -B 1 -A 6 -E "FAILED |Failed asserting|Expected response status|SQLSTATE|Exception:" /tmp/test-output.txt | sed -e 's/^ *//' | grep -v "^[[:space:]]*$" | head -200
             } | while IFS= read -r line; do
               line="${line//'%'/'%25'}"
               echo "::error::${line}"
@@ -115,6 +119,30 @@ jobs:
           DB_DATABASE: broca_test
           DB_USERNAME: root
           DB_PASSWORD: root
+
+      # The ::error:: annotations the test step emits are truncated and capped,
+      # which hides exactly the assertion text that decides whether a red run is
+      # application code or a wrong test expectation. This step always runs, so
+      # the tail of the suite output renders on the PR's Checks tab and a failure
+      # stays diagnosable without log access - which a sandboxed agent usually
+      # cannot reach anyway.
+      - name: Publish failure details to the job summary
+        if: failure()
+        run: |
+          if [ ! -f /tmp/test-output.txt ]; then
+            echo "no test output was produced" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo '### Failed tests (suite output, escapes stripped)'
+            echo ''
+            echo '```text'
+              grep -B 1 -A 8 -E "FAILED |Failed asserting|Expected response status|SQLSTATE|Exception:" /tmp/test-output.txt | sed -e 's/^ *//' | head -400
+              echo ''
+              echo '--- last 60 lines of the suite output ---'
+              tail -60 /tmp/test-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # Non-blocking style gate until the codebase has had one pint pass.
       - name: Code style (pint, non-blocking)

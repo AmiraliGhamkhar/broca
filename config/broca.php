@@ -9,6 +9,27 @@ return [
     'privacy_version' => env('BROCA_PRIVACY_VERSION', 'v1-placeholder'),
     'medical_disclaimer_version' => env('BROCA_MEDICAL_DISCLAIMER_VERSION', 'v1-placeholder'),
 
+    /*
+    | Auth policy (register / login / password reset) — see docs/RUNBOOK.md.
+    */
+
+    // Floor for both registration and password reset. The full rule (case +
+    // digit requirements, generated error copy) lives in
+    // App\Support\PasswordPolicy and is also bound as Password::defaults().
+    'password_min' => max(8, (int) env('BROCA_PASSWORD_MIN', 8)),
+
+    // HaveIBeenPwned breach check on new passwords. It calls
+    // api.pwnedpasswords.com at validation time, so on a restricted or slow
+    // host that call can hold a signup for seconds or fail the request
+    // outright — it therefore stays opt-in. Enable only on hosts with proven
+    // outbound connectivity to that API.
+    'password_leak_check' => (bool) env('BROCA_PASSWORD_LEAK_CHECK', false),
+
+    // Mail safety valve (Laravel's Mail::alwaysTo): set a single address in
+    // staging to stop accidental bulk mail while still exercising the real
+    // SMTP path. Never set it in production.
+    'mail_to' => env('BROCA_MAIL_TO'),
+
     // Kill switch for the checkout while payment incidents are being
     // investigated. Plans stay visible; purchase buttons are replaced by a
     // notice (see the plans view).

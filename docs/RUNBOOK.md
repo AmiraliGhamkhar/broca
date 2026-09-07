@@ -14,6 +14,8 @@ APP_FORCE_HTTPS=true                 # global HTTP→HTTPS redirect
 SESSION_SECURE_COOKIE=true           # session cookie only over TLS
 TRUSTED_PROXIES=*                    # ONLY behind Cloudflare/reverse proxy with TLS at the proxy
 BROCA_CHECKOUT_ENABLED=true          # kill switch during payment incidents
+BROCA_PASSWORD_MIN=8                 # shared floor for /register and /reset-password
+BROCA_PASSWORD_LEAK_CHECK=false      # needs outbound api.pwnedpasswords.com — see §11
 
 ZARINPAL_MERCHANT_ID=<real merchant> # requires e-namad (اینماد) verification
 ZARINPAL_SANDBOX=false               # NEVER ship sandbox in production
@@ -101,6 +103,51 @@ Telegram webhook registration, see `docs/CPANEL_DEPLOYMENT.md`.
 
 Rollback: `git checkout <previous-tag> && composer install && php artisan migrate:rollback`
 (migrations are reversible; verify with `php artisan migrate:status`).
+
+### Why `npm run build` wipes `public/build` first
+
+`public/build` is committed (a Node-less cPanel host cannot build), so CI fails a
+pull request when `npm run build` changes it. That gate recently fired on a PR
+that touched no frontend source, and the cause is worth remembering: **Tailwind's
+source detection scans the whole repository, including its own previous compiled
+stylesheet in `public/build`.** A rebuild performed on top of the committed
+artifacts therefore finds utility-shaped text in that file and emits it again —
+the build that bit us re-created a one-word filter utility (present in every
+stylesheet since `main`, which is why every rebuild changed the content hash with
+nobody editing anything), and each later build inherited it.
+
+The fix is in the `build` script: `node -e "require('fs').rmSync('public/build',
+{recursive:true,force:true})" && vite build`. Deleting the directory whose files
+are about to be regenerated cannot lose anything, and it makes the build
+idempotent: from a polluted tree the first run restores exactly the committed
+artifacts, and `git status --porcelain public/build` prints nothing afterwards.
+
+Measured, and **does not** work — do not re-try these:
+
+- `@source not "public/build"` in `resources/css/app.css` (also the `**` glob
+  form): the scanner still reads the old output.
+- `build.emptyOutDir: true`, in the config and as `vite build --emptyOutDir`:
+  the directory is emptied after Tailwind has already scanned it.
+- Running the wipe from `vite.config.js` at import time: also too late, because
+  `@tailwindcss/vite` creates its scanner during config loading, before the body
+  of that file executes. It has to happen in the shell command.
+- Replacing auto-detection with `@import "tailwindcss" source(none)` plus
+  explicit `@source` globs: built fine but dropped 470 real utilities.
+
+One consequence to keep in mind: because every file in the repo is a source, a
+bare utility class name written in a markdown note or a code comment becomes a
+"used" class and lands in the CSS. Describe classes in prose in `docs/` and
+`DECISIONS.md` rather than quoting a selector.
+
+### Test-suite note: rate limiters are cache state, not table state
+
+`tests/TestCase.php` clears the cache store in `setUp()`. Every limiter (named
+limiters, the login counter, the two 2FA budgets) lives in the cache, while
+`RefreshDatabase` only truncates tables — so on a persistent cache store a test
+that posts to `/register` or `/login` a few times is answered with a 429 instead
+of the redirect it asserts, and the failure looks like a bug in the auth code
+rather than in the harness. A test that *wants* throttling builds the state up
+inside its own body.
 
 ## 8. Public runtime verification gates
 
@@ -196,7 +243,13 @@ php artisan view:cache
       (current versions are placeholders — unacceptable for a paid medical
       education product).
 - [ ] ZarinPal production merchant activated (requires اینماد).
-- [ ] Real plan prices set in `/admin/plans` (seeder values are placeholders).
+- [ ] Plan prices confirmed and seeded: رایگان / ۱ ماهه ۲۷۰ تومان / ۳ ماهه
+      ۶۰۰ تومان (client-confirmed 2026-09-07, `DatabaseSeeder::seedPlans()`).
+      `/admin/plans` can edit them later; verify the live `/plans` card amounts
+      and `/plans.md` agree.
+- [ ] §11 auth smoke run completed on the real domain: signup → verification
+      mail → login → logout, plus one full password reset. A signup that cannot
+      be logged into is a launch blocker, not a bug.
 - [ ] A real video asset in `public/videos` wired through the admin
       `manifest_reference` field; placeholder provider replaced before scale.
       (Placeholders are provisioned automatically by `php artisan db:seed` /
@@ -214,3 +267,65 @@ php artisan view:cache
       because the GitHub App lacks the `workflows` permission).
 - [ ] One full sandbox payment → callback → subscription → expiry cycle.
 - [ ] Backup restored successfully at least once.
+
+## 11. Auth & account operations (register / login / reset)
+
+The signup funnel is register → verification mail → login → checkout. Only
+email is verified today (no SMS OTP), so **mail + queue delivery is the one
+dependency that can break every new account.**
+
+### What the code enforces
+
+| Concern | Behaviour |
+|---|---|
+| Credentials | `email` **or** Iranian mobile (`09…`, `+98…`, spaces/dashes/Persian digits accepted) + password |
+| Normalization | email lowercased + trimmed, phone canonicalized — before validation, uniqueness *and* lookup, on both register and login |
+| Password policy | ≥ `BROCA_PASSWORD_MIN` (floor 8), letters + upper + lower + digit; length capped at bcrypt's 72-byte read limit so an over-long password can never be silently truncated |
+| Persian error copy | Every rule that can reject a password has its own message in `RegisterUserRequest::messages()`. The `Password` rule's failures arrive keyed by rule name (`validation.password.mixed`), which `attributes()` cannot translate - add a message there whenever a rule is added, or users get English keys in a Persian form |
+| Breach check | `uncompromised()` only when `BROCA_PASSWORD_LEAK_CHECK=true` — it calls api.pwnedpasswords.com *during* the POST, so leave it off unless that host is reachable |
+| Mass assignment | `is_admin` / `status` are not fillable; payloads trying to set them are ignored |
+| Garbage input | array payloads (`name[]=x`), over-long fields and **invalid UTF-8** all come back as validation errors — the null-returning `/u` regex calls in `PhoneNormalizer` are guarded, so a pasted mojibake byte cannot 500 the register or login form |
+| Suspension | login rejected (extra `status` credential) + live session rows deleted when an admin suspends + `active` middleware on every authenticated route |
+| Password reset | invalidates all of the user's session rows and rotates the remember token |
+| 2FA (admin) | TOTP 30 s with ±1 step drift, 5 tries/min/admin, single-use recovery codes (bcrypt), the pass flag regenerates the session, and an accepted code cannot be replayed inside its window |
+
+### Rate limits (all Persian-facing)
+
+| Limiter | Budget | Key |
+|---|---|---|
+| `registration` | 6/min | IP |
+| `login` | 10/min per IP **+** 5/min per identifier·IP | as stated |
+| `password-reset` | 6/min | email (IP when email is absent or invalid) |
+| `verification-resend` | 3/min | user id |
+| `admin-2fa-verify` | 5/min | admin user id — **shared** by challenge, recover, enable and disable (one attacker with four forms is one attacker). The middleware counts every request to those routes; the sign-in challenge additionally keeps its own counter, keyed differently, only to word the "wait N seconds" message and to be cleared by a successful attempt |
+| `admin-2fa-codes` | 10/min | admin user id; recovery-code regeneration verifies no secret, so it is not part of the guessing budget |
+
+`TRUSTED_PROXIES` is not cosmetic here: without it behind Cloudflare, every
+visitor lands in **one** bucket, and a single user's typo storm locks the
+site's login form for everyone.
+
+### 10-minute verification after deploy
+
+```bash
+# 1. queue is actually draining (queued mail depends on it)
+php artisan tinker --execute 'echo DB::table("jobs")->count();'   # expect 0
+
+# 2. the mail transport is really talking SMTP
+php artisan tinker --execute 'echo config("mail.default");'       # expect smtp
+
+# 3. the app answers over the final HTTPS origin (signed URLs depend on APP_URL)
+curl -sI https://broca.example/login | head -1                    # expect 200
+```
+
+Then, in the browser:
+
+1. `/register` with a real inbox → lands on the verification notice → the mail
+   arrives → the link returns to `/dashboard`.
+2. `/login` with the **phone** typed as `+۹۸ ۹۱۲ …` → works (same canonical
+   form as the stored value).
+3. Sign out → "فراموشی گذرواژه" → reset link → new password → the *old* session
+   must be logged out and only the new password accepted.
+4. Six wrong `/login` tries for one account → the fifth already answers
+   «تعداد تلاش‌ها زیاد است…».
+5. Suspend an account in `/admin/users` → its live tab loses access on the next
+   request, and login with the correct password stays refused.

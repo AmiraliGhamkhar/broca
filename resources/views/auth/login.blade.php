@@ -53,8 +53,13 @@
                 </div>
 
                 @if ($errors->any())
-                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
-                        {{ $errors->first() }}
+                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch space-y-1.5" role="alert">
+                        <ul class="list-disc ps-5 space-y-1.5 marker:text-rausch/70">
+                            @foreach ($errors->all() as $message)
+                                <li>{{ $message }}</li>
+                            @endforeach
+                        </ul>
+                        <a href="{{ route('register') }}" class="inline-block underline decoration-2 underline-offset-4 hover:text-ink">ساخت حساب کاربری رایگان ←</a>
                     </div>
                 @endif
 
@@ -64,8 +69,9 @@
                     <div>
                         <label for="identifier" class="block text-xs font-bold text-ink mb-1.5">ایمیل یا شمارهٔ همراه</label>
                         <input type="text" id="identifier" name="identifier" value="{{ old('identifier') }}" required autofocus autocomplete="username"
-                               placeholder="ایمیل یا شماره موبایل" dir="ltr"
-                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                               inputmode="email" placeholder="doctor@example.com یا 09123456789" dir="ltr" spellcheck="false"
+                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                        <x-forms.error field="identifier" />
                     </div>
 
                     <div>
@@ -73,9 +79,18 @@
                             <label for="password" class="block text-xs font-bold text-ink">گذرواژه</label>
                             <a href="{{ route('password.request') }}" class="text-[11px] font-bold text-rausch hover:underline">فراموشی رمز عبور؟</a>
                         </div>
-                        <input type="password" id="password" name="password" required autocomplete="current-password"
-                               placeholder="••••••••" dir="ltr"
-                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                        <div x-data="{ reveal: false }">
+                            <div class="relative">
+                                <input :type="reveal ? 'text' : 'password'" id="password" name="password" required autocomplete="current-password"
+                                       placeholder="••••••••" dir="ltr"
+                                       class="w-full p-3.5 ps-12 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                                <button type="button" x-on:click="reveal = !reveal" :aria-pressed="reveal" aria-label="نمایش گذرواژه"
+                                        class="absolute inset-y-0 start-0 px-3 text-[11px] font-bold text-muted hover:text-ink transition-colors">
+                                    <span x-text="reveal ? 'پنهان' : 'نمایش'"></span>
+                                </button>
+                            </div>
+                            <x-forms.error field="password" />
+                        </div>
                     </div>
 
                     <div class="flex flex-wrap items-center justify-between gap-3 pt-1">

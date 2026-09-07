@@ -53,7 +53,11 @@
 
                 @if ($errors->any())
                     <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
-                        {{ $errors->first() }}
+                        <ul class="list-disc ps-5 space-y-1.5 marker:text-rausch/70">
+                            @foreach ($errors->all() as $message)
+                                <li>{{ $message }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
 
@@ -64,38 +68,57 @@
                         <label for="name" class="block text-xs font-bold text-ink mb-1">نام و نام خانوادگی</label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required autofocus autocomplete="name"
                                placeholder="مثال: علی احمدی"
-                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-bold bg-white">
+                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-bold bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                        <x-forms.error field="name" />
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="email" class="block text-xs font-bold text-ink mb-1">آدرس ایمیل</label>
                             <input type="email" id="email" name="email" value="{{ old('email') }}" required dir="ltr" autocomplete="email"
-                                   placeholder="doctor@example.com"
-                                   class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                                   spellcheck="false" placeholder="doctor@example.com"
+                                   class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                            <x-forms.error field="email" />
                         </div>
 
                         <div>
                             <label for="phone" class="block text-xs font-bold text-ink mb-1">شمارهٔ همراه</label>
-                            <input type="text" id="phone" name="phone" value="{{ old('phone') }}" required dir="ltr" autocomplete="tel"
-                                   placeholder="09123456789"
-                                   class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                            <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" required dir="ltr" autocomplete="tel"
+                                   inputmode="tel" placeholder="09123456789"
+                                   class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                            <p class="mt-1.5 text-[11px] text-muted leading-6">۱۱ رقم با پیش‌شمارهٔ ۰۹؛ نوشتن با +۹۸، فاصله، خط تیره یا ارقام فارسی هم پذیرفته می‌شود.</p>
+                            <x-forms.error field="phone" />
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
+                        <div x-data="{ reveal: false }">
                             <label for="password" class="block text-xs font-bold text-ink mb-1">گذرواژه</label>
-                            <input type="password" id="password" name="password" required dir="ltr" autocomplete="new-password"
-                                   placeholder="حداقل ۸ کاراکتر"
-                                   class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                            <div class="relative">
+                                <input :type="reveal ? 'text' : 'password'" id="password" name="password" required dir="ltr" autocomplete="new-password"
+                                       placeholder="••••••••"
+                                       class="w-full p-3.5 ps-12 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                                <button type="button" x-on:click="reveal = !reveal" :aria-pressed="reveal" aria-label="نمایش گذرواژه"
+                                        class="absolute inset-y-0 start-0 px-3 text-[11px] font-bold text-muted hover:text-ink transition-colors">
+                                    <span x-text="reveal ? 'پنهان' : 'نمایش'"></span>
+                                </button>
+                            </div>
+                            <p class="mt-1.5 text-[11px] text-muted leading-6">{{ $passwordHint ?? 'حداقل ۸ کاراکتر، شامل یک حرف بزرگ، یک حرف کوچک و یک رقم.' }}</p>
+                            <x-forms.error field="password" />
                         </div>
 
-                        <div>
+                        <div x-data="{ reveal: false }">
                             <label for="password_confirmation" class="block text-xs font-bold text-ink mb-1">تکرار گذرواژه</label>
-                            <input type="password" id="password_confirmation" name="password_confirmation" required dir="ltr" autocomplete="new-password"
-                                   placeholder="تکرار گذرواژه"
-                                   class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                            <div class="relative">
+                                <input :type="reveal ? 'text' : 'password'" id="password_confirmation" name="password_confirmation" required dir="ltr" autocomplete="new-password"
+                                       placeholder="تکرار گذرواژه"
+                                       class="w-full p-3.5 ps-12 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                                <button type="button" x-on:click="reveal = !reveal" :aria-pressed="reveal" aria-label="نمایش تکرار گذرواژه"
+                                        class="absolute inset-y-0 start-0 px-3 text-[11px] font-bold text-muted hover:text-ink transition-colors">
+                                    <span x-text="reveal ? 'پنهان' : 'نمایش'"></span>
+                                </button>
+                            </div>
+                            <x-forms.error field="password_confirmation" />
                         </div>
                     </div>
 
@@ -111,6 +134,7 @@
                                 را با آگاهی می‌پذیرم.
                             </span>
                         </label>
+                        <x-forms.error field="consent" />
                     </div>
 
                     <button type="submit" class="button-primary w-full justify-center">

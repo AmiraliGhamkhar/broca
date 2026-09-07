@@ -51,6 +51,42 @@ class AdminTwoFactorTest extends TestCase
         $this->actingAs($admin)->get('/admin')->assertOk();
     }
 
+    public function test_a_passed_code_cannot_be_replayed_inside_its_window(): void
+    {
+        // A TOTP step is accepted for ~90 s (drift window). Without a replay
+        // guard, anyone who copies the code once — log line, shoulder, screen
+        // share — could re-submit it until the window closed.
+        $admin = $this->enrolledAdmin();
+        $code = Totp::currentCode($admin->totp_secret);
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.verify'), ['code' => $code])
+            ->assertRedirect(route('admin.dashboard'));
+
+        $this->actingAs($admin)->get('/admin')->assertOk();
+
+        // Rotate the pass flag: the same code must no longer be enough.
+        $this->session([\App\Http\Middleware\RequireAdminTwoFactor::SESSION_KEY => null]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.verify'), ['code' => $code])
+            ->assertSessionHasErrors('code');
+
+        $this->actingAs($admin)->get('/admin')
+            ->assertRedirect(route('admin.two-factor.challenge'));
+    }
+
+    public function test_the_challenge_endpoint_needs_a_confirmed_second_factor(): void
+    {
+        // An admin without 2FA must be sent to enrollment, not left with a
+        // verify endpoint that answers "right/wrong" to code guesses.
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.verify'), ['code' => '123456'])
+            ->assertRedirect(route('admin.two-factor.edit'));
+    }
+
     public function test_recovery_code_works_exactly_once(): void
     {
         $admin = $this->enrolledAdmin();

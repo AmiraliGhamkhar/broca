@@ -16,7 +16,7 @@ working-process rules. Newest first.
 | **Free-cap counting now scoped to *published* courses** | Correctness fix, not a product change: the "2 free videos globally" cap consumed quota by items on archived/soft-deleted courses (fail-closed denial of legitimate free views + blocked admin designations). `CourseVisibility::onPublishedCourses()` applies the `Course::published()` scope per item relation; `CourseFreeCapObserver` invalidates the 300 s cap cache when a course's status/publish-date/deletion changes. |
 | **Video media cache: `private, max-age=290` (was `no-store`)** | The signed URL lives exactly 300 s and entitlement is re-checked on every server request, so the browser may keep bytes just under the signature window — range-seeks and replays within the window no longer re-stream. `no-store` gave zero benefit (the cache would never have been shared anyway: `private`) and forced full re-downloads. |
 | **Password reset deletes every stored session of the user** | Reset assumes a compromised account; the database session driver makes this a plain `DELETE ... WHERE user_id = ?` inside the reset transaction. No effect on array/file drivers (dev). |
-| **`Password::uncompromised()` on register + reset** | HaveIBeenPwned range lookup; the framework rule fails open on network errors, so a flaky cPanel connection can never block signups. Test passwords updated because the old fixture (`password123`) is in the breach corpus. |
+| **`Password::uncompromised()` on register + reset** | HaveIBeenPwned range lookup; the framework rule fails open on network errors, so a flaky cPanel connection can never block signups. Test passwords updated because the old fixture (`password123`) is in the breach corpus. **(Superseded by round 8: the rule does not fail open, and the check is now opt-in and off by default.)** |
 | **Collation default `utf8mb4_unicode_ci` → `utf8mb4_0900_ai_ci` (mysql connection only)** | 0900 is the MySQL 8 default (Unicode 9.0, faster than the 4.1.0 legacy). Affects only tables created by fresh migrations; existing deployments keep their collation until intentionally converted (a whole-DB conversion is a downtime operation the client must choose). MariaDB connection keeps `unicode_ci` (no 0900 family there). |
 | **og:image committed as a binary asset (`public/images/og-default.png`)** | Consistent with the existing convention (placeholder media is committed under `public/` and `database/placeholder-media/`); per-page overrides via the `og_image` section. Latin-only artwork deliberately — no Persian text rendering in generated images. |
 | **Motion system: transform/opacity only, 150–320 ms, reduced-motion gated in both CSS and JS** | Matches the existing `DESIGN-airbnb.md` reduced-motion rule; JS scroll-reveal is progressive enhancement (content is visible without JS or with reduced motion). Replaced the width-animating `focus:w-72` search input (layout animation) with border/shadow feedback. No new JS dependencies. |
@@ -55,7 +55,9 @@ working-process rules. Newest first.
 ### Open questions for the client (from brief §12)
 
 1. Hosting target (shared cPanel vs VPS) → final DB engine.
-2. Real Toman prices for 1-month / 3-month plans (seeder uses placeholders).
+2. ~~Real Toman prices for 1-month / 3-month plans (seeder uses
+   placeholders).~~ **Resolved 2026-09-07** — client confirmed the lineup:
+   رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان (see "Round 7").
 3. OTP SMS verification required at launch?
 4. Video hosting/CDN provider preference.
 5. Content volume at launch (sizes the admin workflow).
@@ -145,6 +147,165 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
     existing authorize button already carries loading/error feedback; a
     second indicator would be decorative.
 
+## Round 7 decisions (2026-09-07, pricing lineup + presentation)
+
+1. **The pricing lineup is three cards, and it is now the client's confirmed
+   answer to open question 2:** رایگان (price 0) / اشتراک یک‌ماهه ۲۷۰ تومان
+   (`price_irr` 2700) / اشتراک سه‌ماهه ۶۰۰ تومان (`price_irr` 6000). Prices
+   stay DB content — `plans.price_irr` is Rial, the card renders Toman — so
+   the seeder and `PlanController`'s synthetic free tier are the only sources;
+   nothing is hardcoded in the view.
+2. **Presentation is the CodeFronts "Scale-Up Focused Plan Hover" table
+   (MIT), scoped under `.prc-05` and fully recolored to the Broca palette**
+   — rausch accent for checkmarks, CTA hover and the featured glow;
+   hairline/hairline-soft borders; ink/body/muted type; rausch-tint wash on
+   the featured card; teal for the duration and per-month accents. The stock
+   `#f2f0f7` section background, `Segoe UI` font and `oklch(0.6 0.2 300)`
+   accent were dropped rather than overridden; the CSS reset is limited to
+   descendants so the root keeps Tailwind utilities (`mt-12`).
+3. **Three columns are explicit from `md` up, single column below.** The
+   upstream `repeat(auto-fit, minmax(220px,1fr))` orphaned the third card into
+   a second row around 900px; the grid is also capped (`min(100%, 73.5rem)`)
+   so a trimmed lineup still reads as cards, not full-width panels.
+4. **The free tier is labelled, not zeroed:** the price slot renders «رایگان»
+   in teal instead of `0 تومان`, and the duration pill / per-month line use
+   Persian numerals to match the surrounding copy.
+5. **Multi-month tiers quote an honest per-month equivalent** (600/3 = 200
+   Toman, i.e. ~26٪ below the 1-month tier), computed from the data against
+   the *priciest* per-month paid tier as baseline — a `min()` baseline made the
+   1-month plan its own reference and silently dropped the only informative
+   line. If the lineup ever flattens, the line disappears instead of lying. No
+   invented "تخفیف ویژه" badges. The featured tier
+   remains data-driven (`duration_months === 3`) rather than a new admin flag:
+   with a fixed three-plan lineup an extra column is not worth a migration.
+
+## Round 8 decisions (2026-09-07, register/login to production level)
+
+1. **The password policy is one object, not three copies.** `App\Support\PasswordPolicy`
+   defines it, `/register`, `/reset-password` and the app-wide
+   `Password::defaults()` binding all resolve to it. It also caps length at
+   bcrypt's 72-byte read limit: an un-capped 90-char password is *stored
+   truncated*, which means someone could sign in with its first 72 bytes.
+2. **The HaveIBeenPwned `uncompromised()` check is opt-in
+   (`BROCA_PASSWORD_LEAK_CHECK`, default off).** The old code claimed it
+   "fails open on network errors"; it does not — the HTTP call happens inside
+   validation, so on a restricted or slow host (Iranian shared hosting
+   included) it either stalls the POST or rejects a perfectly good password.
+   Blocking every signup because a third party is unreachable is the worse
+   failure mode. The only cost is one weak-password class we also catch via
+   case/digit requirements.
+3. **Every credential path normalizes identically, before validation.**
+   Register lowercases+trims the email and canonicalizes the phone
+   (`PhoneNormalizer` handles Persian digits, `+98`, separators) — and login
+   now does the *same* to the identifier. Previously login only lowercased
+   emails, so an address autofilled as `Ali@Example.com ` could be stored
+   trimmed and then never found. Normalization before the `unique` rule is
+   what turns duplicates into 422s instead of DB-level 500s; a residual race
+   (two POSTs, one row) is translated in the controller for the same reason.
+4. **Input shapes must not 500 either.** `(string) ['x']` throws in PHP 8, so a
+   `name[]=x` payload used to be a server error at `prepareForValidation()`.
+   Non-strings now normalize to `''` and fail as ordinary `required`/`string`
+   validation errors.
+5. **Throttle answers are named limiters with Persian copy, not positional
+   `throttle:20,1`.** A named limiter can render a custom response; positional
+   ones can only produce the framework's "Too Many Attempts." For a form post,
+   the visitor is bounced back with a readable notice (`session('error')`)
+   instead of a raw 429 page. Budgets: register 6/min/IP, login 10/min/IP
+   (composing with the controller's 5/min per identifier·IP), password reset
+   6/min per address, verification resend 3/min per user, admin 2FA 5/min per
+   admin.
+6. **Login deliberately says one thing for both failure modes.** "Account not
+   found" vs "wrong password" is an enumeration oracle on a public form; the
+   friendlier-but-split wording was considered and rejected. (Registration keeps
+   its `unique` messages — an accepted trade-off every Laravel app makes, and
+   the phone+email pairing is what an attacker would need.)
+7. **Admin 2FA got the two fixes that actually matter:** the 5-attempts/min
+   bound (a 6-digit code over a ~90 s drift window was guessable at
+   10/min/admin) and a replay guard — an accepted code is remembered per
+   session so it cannot be re-submitted while the window is still open. A
+   passing challenge also regenerates the session id, so a pre-2FA session
+   never becomes the admin one.
+8. **Suspension kills sessions immediately instead of at the next request.**
+   `admin/users` update deletes the user's `sessions` rows (best-effort: no-op
+   on a non-database driver, where `EnsureActive` still locks them out),
+   mirroring what password reset already did.
+9. **Email verification stays *not* required for login, but required for
+   money.** Enrolling / watching / quizzing works unverified; checkout and
+   media playback keep `verified`. Gating the whole learner area behind mail
+   that a misconfigured SMTP host may never deliver would turn an infra risk
+   into a total lockout; the notice page says plainly that purchasing unlocks
+   after verification.
+10. **`BROCA_MAIL_TO` (staging-only `Mail::alwaysTo`) was added** so a staging
+    run can exercise real SMTP without mailing students; it is ignored in
+    production by design. Operational detail moved to `docs/RUNBOOK.md` §11.
+11. **`npm run build` now deletes `public/build` before invoking Vite.** CI's
+    "committed assets must match a fresh build" gate failed on a PR that touched
+    no frontend source: Tailwind's source detection scans every file in the repo,
+    *including its own previous compiled stylesheet in `public/build`*, so a
+    rebuild performed on top of the committed artifacts re-emits utility-shaped
+    text found there — a one-word filter utility has been riding along in every
+    build since `main`, which is what kept changing the content hash with nobody
+    editing anything. Measured and rejected: `@source not "public/build"` (ignored
+    by the Vite plugin), `build.emptyOutDir` in config and via `--emptyOutDir`
+    (empties after the scan), wiping from `vite.config.js` at import time (the
+    plugin builds its scanner during config loading, so also too late), and
+    `source(none)` + explicit `@source` globs (dropped 470 real utilities,
+    reverted). Only a pre-build shell wipe runs early enough; from a polluted tree
+    it restores exactly the committed artifacts, so the build is idempotent and
+    the CI gate is meaningful. Side effect of scanning everything: a bare utility
+    name quoted in docs or comments becomes a "used" class, so prose must describe
+    classes instead of writing selectors (this is how the issue was first
+    reproduced, three times, while documenting it).
+12. **The admin 2FA budget is one shared limiter for the four code-checking
+    endpoints, and recovery-code regeneration got its own** (`admin-2fa-verify`
+    5/min and `admin-2fa-codes` 10/min, both keyed by admin user id). Putting a
+    single `admin-2fa` limiter on all five endpoints was the wrong shape: the
+    code-verification limit is anti-guessing, and re-rolling recovery codes
+    verifies nothing, so five typos in a neighbouring form could not block a
+    deliberate action — and the pre-existing 2FA management tests, written
+    against the old per-route `5,1`/`10,1` budgets, failed. The controller's
+    manual `RateLimiter::hit()`/`clear()` now uses the same key the middleware
+    builds, so wrong codes and route hits drain one budget instead of two
+    parallel counters. `tests/TestCase.php` additionally clears the cache store
+    in `setUp()`: limiters are cache state and `RefreshDatabase` truncates only
+    tables, so a shared store turns ordinary auth tests into 429s.
+13. **One counter per request, not two: the 2FA route limiter delegates counting
+    to the controller.** Adding `throttle:admin-2fa-verify` alongside the
+    controller's own `RateLimiter::hit()` on a wrong code made a single failed
+    attempt consume two units of the same 5/min budget, so an admin who typed
+    the code correctly on the sixth try was still refused — and the pre-existing
+    management tests (written for the old per-route `throttle:10,1`/`5,1`)
+    disagreed with the new arithmetic. The limiter now uses
+    `Limit::after(fn ($response) => $request->routeIs('admin.two-factor.recover'))`:
+    routes whose controller records failures itself are *checked* but not
+    auto-incremented, while `/recover` (whose controller has nothing to clear on
+    success) is counted by the middleware as usual. Clearing on a correct code
+    stays in the controller, which is what makes honest typos harmless.
+14. **Rate limiters are cache state, so the test case isolates them: `Cache::clear()`
+    plus a unique `REMOTE_ADDR` per test.** `RefreshDatabase` truncates tables, not
+    the cache, and the registration/login limiters are keyed by IP — every test in
+    the suite shares 127.0.0.1, so one drained bucket turns an unrelated assertion
+    into "Expected [201,301,302,303,307,308] but received 429". The isolation makes
+    the limiters invisible to tests that are not testing them while leaving
+    throttle behaviour fully testable inside a single test (constant address). The
+    2FA limiter now delegates *all* counting to the controllers
+    (`Limit::after(fn () => false)`), which is what makes "five wrong codes are
+    answered, the sixth is refused, a correct sixth after honest typos succeeds"
+    simultaneously true — and the `remember_web_` cookie test asks
+    `Auth::guard()->getRecallerName()` instead of rebuilding the name, because
+    Laravel 13 appends `sha1(SessionGuard::class)` to it.
+15. **The admin 2FA admission test is the route limiter alone** (`5/min` per
+    admin, counted on every request to challenge/recover/enable/disable);
+    `Limit::after()` is *not* used. Two attempts to make the controllers own the
+    bucket instead both failed in CI: sharing one cache key between middleware and
+    controller made a single wrong code cost two units (so a correct sixth code
+    was refused), and delegating with `after()` did not restore the promised
+    arithmetic either. The controller's own counter stays on the sign-in
+    challenge only, keyed separately, where its job is the human message and the
+    clear-on-success — an honest typo storm gets a friendly countdown, while the
+    route limiter is what actually refuses a scripted guesser. Lesson recorded
+    because the code comment is the only place a reader would learn it: do not
+    let two layers decide admission on one budget.
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt

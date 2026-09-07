@@ -55,9 +55,12 @@
                     <div>
                         <label for="email" class="block text-xs font-bold text-ink mb-1.5">آدرس ایمیل ثبت‌شده</label>
                         <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus dir="ltr" autocomplete="email"
-                               placeholder="doctor@example.com"
-                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                               spellcheck="false" placeholder="doctor@example.com"
+                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                        <x-forms.error field="email" />
                     </div>
+
+                    <p class="text-[11px] text-muted leading-6">اگر ایمیل در سامانه ثبت نشده باشد هم همین پیام نمایش داده می‌شود؛ این کار عمداً برای جلوگیری از کشف حساب‌ها است.</p>
 
                     <button type="submit" class="button-primary w-full justify-center">
                         <x-ui.icon name="document" class="size-4" />

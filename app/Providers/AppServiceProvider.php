@@ -18,10 +18,12 @@ use App\Observers\FreeCapObserver;
 use App\Observers\CourseFreeCapObserver;
 use App\Observers\PublicIndexCacheObserver;
 use App\Support\MarkdownTwin;
+use App\Support\PasswordPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -95,14 +97,141 @@ class AppServiceProvider extends ServiceProvider
             $model::observe(PublicIndexCacheObserver::class);
         }
 
+        // One password policy for the whole app: /register, /reset-password and
+        // anything else that sets a password validate through this, so the rule
+        // and the copy shown to users can never drift apart.
+        Password::defaults(fn (): Password => PasswordPolicy::rule());
+
+        // Staging safety valve (Laravel's Mail::alwaysTo): every outbound mail
+        // is retargeted to one inbox so a staging run can exercise real SMTP
+        // without mailing students. Unset in production = no-op.
+        if (($alwaysTo = config('broca.mail_to')) && ! app()->isProduction()) {
+            \Illuminate\Support\Facades\Mail::alwaysTo($alwaysTo);
+        }
+
         RateLimiter::for('video-progress', function (Request $request): Limit {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
         });
 
-        // Registration sends a verification email — throttle to stop
-        // account spam and email bombing through the signup form.
+        /*
+         * Auth limiters. Both are keyed by IP on purpose:
+         *  - registration: stops account spam and verification-mail flooding;
+         *  - login: stops credential *spraying* (one password across many
+         *    accounts), which the controller's identifier|IP counter cannot see.
+         * A NATed university/hospital network shares one address, so the
+         * numbers stay human-generous and the identifier counter in
+         * AuthenticatedSessionController carries the targeted-guessing case.
+         * The Limit response is what a real visitor sees — Persian, and
+         * honestly describes a wait rather than a wrong password.
+         */
         RateLimiter::for('registration', function (Request $request): Limit {
-            return Limit::perMinute(10)->by($request->ip());
+            return Limit::perMinute(6)->response(function () use ($request) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'message' => 'تعداد ثبت‌نام از این شبکه بیش از حد مجاز است. لطفاً یک دقیقه بعد دوباره تلاش کنید.',
+                    ], 429);
+                }
+
+                // Plain form post: bounce the visitor back to the form with a
+                // readable notice instead of a raw 429 page. route() (not
+                // ->back()) — the previous URL *is* this form, and a redirect
+                // to it inside the throttled request would loop.
+                return redirect()->route('register')->with('error',
+                    'تعداد ثبت‌نام از این شبکه بیش از حد مجاز است. لطفاً یک دقیقه بعد دوباره تلاش کنید.');
+            });
+        });
+
+        RateLimiter::for('login', function (Request $request): Limit {
+            return Limit::perMinute(10)->response(function () use ($request) {
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json([
+                        'message' => 'تعداد تلاش‌های ورود از این شبکه بیش از حد مجاز است. لطفاً یک دقیقه بعد دوباره تلاش کنید.',
+                    ], 429);
+                }
+
+                return redirect()->route('login')->withInput($request->only('identifier'))
+                    ->with('error',
+                        'تعداد تلاش‌های ورود از این شبکه بیش از حد مجاز است. لطفاً یک دقیقه بعد دوباره تلاش کنید.');
+            });
+        });
+
+        // Both password-reset steps share one budget: request-a-link and
+        // complete-a-reset are the same abuse surface (each can send mail or
+        // hammer the token table). Keyed by the submitted address when there is
+        // one, falling back to IP so malformed payloads are still bounded.
+        RateLimiter::for('password-reset', function (Request $request): Limit {
+            // is_string guard: a hostile `email[]=x` payload must not turn a
+            // throttled route into a 500 on the (string) cast.
+            $email = $request->input('email');
+            $key = (is_string($email) ? mb_strtolower(trim($email)) : '') ?: ($request->ip() ?? 'guest');
+
+            $limit = Limit::perMinute(6)->by($key);
+
+            return $limit->response(function () use ($request) {
+                $message = 'زیاد تلاش کرده‌اید. لطفاً یک دقیقه صبر کنید و دوباره امتحان کنید.';
+
+                if ($request->expectsJson() || $request->is('api/*')) {
+                    return response()->json(['message' => $message], 429);
+                }
+
+                return back()->withInput($request->only('email'))->with('error', $message);
+            });
+        });
+
+        // "Resend verification link" is per user, not per IP: a campus NAT
+        // must not let one student's impatience mute everyone else's resend
+        // button. Capped at 3/min so the queue can't be used to mail-bomb one
+        // inbox. The 429 body explains the wait in Persian instead of
+        // "Too Many Attempts".
+        RateLimiter::for('verification-resend', function (Request $request): Limit {
+            return Limit::perMinute(3)
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function () use ($request) {
+                    $message = 'برای ارسال دوباره لینک تأیید کمی صبر کنید (هر دقیقه حداکثر ۳ بار).';
+
+                    if ($request->expectsJson() || $request->is('api/*')) {
+                        return response()->json(['message' => $message], 429);
+                    }
+
+                    return back()->with('error', $message);
+                });
+        });
+
+        // A 6-digit TOTP code is 10^6 possibilities, and this app accepts it
+        // across a 90-second drift window — an unbounded endpoint is therefore
+        // realistically guessable. 5 tries/minute per admin, keyed by user id
+        // (not IP: admins share offices and NAT), turns that into ~10^4
+        // windows, i.e. not an attack anyone can actually run. The four
+        // code-consuming endpoints share this one budget on purpose: splitting
+        // it would multiply an attacker's guesses by four.
+        RateLimiter::for('admin-2fa-verify', function (Request $request): Limit {
+            return Limit::perMinute(5)
+                ->by('2fa-verify:'.($request->user()?->id ?? $request->ip()))
+                // No `after()` override here. Every request to these four routes
+                // *is* a guess, so the middleware counting each one is the whole
+                // point of the limiter; the controller's own counter (keyed
+                // differently, on purpose) exists to word the message and to
+                // reset on success, not to decide admission. Sharing one key
+                // between the two would make a failed attempt cost two units and
+                // refuse an admin who types the correct code on the sixth try.
+                ->response(function () use ($request) {
+                    $message = 'تعداد تلاش‌ها برای تأیید کد دو مرحله‌ای زیاد است. لطفاً یک دقیقه بعد دوباره امتحان کنید.';
+
+                    if ($request->expectsJson() || $request->is('api/*')) {
+                        return response()->json(['message' => $message], 429);
+                    }
+
+                    return back()->with('error', $message);
+                });
+        });
+
+        // Regenerating recovery codes verifies no secret, so it is not part of
+        // the guessing surface — giving it its own (looser) budget keeps the
+        // deliberate act of re-rolling codes from being blocked by five typos
+        // in the neighbouring forms.
+        RateLimiter::for('admin-2fa-codes', function (Request $request): Limit {
+            return Limit::perMinute(10)
+                ->by('2fa-codes:'.($request->user()?->id ?? $request->ip()));
         });
 
         // Checkout hits ZarinPal and can create an invoice row per call.

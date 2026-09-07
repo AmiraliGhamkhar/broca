@@ -105,14 +105,15 @@ Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     // Outer per-IP bound (Round-6 audit A-1): the controller's own limiter is
     // keyed identifier|IP, so sweeping many identifiers from one IP never
-    // trips it. 20/min/IP is far above any human's typo rate and far below a
-    // spraying tool's capacity; it composes with the per-identifier limiter.
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:20,1');
+    // trips it. The named limiter is far above any human's typo rate and far
+    // below a spraying tool's capacity, and it carries a Persian 429 message
+    // instead of the framework's English one.
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->middleware('throttle:6,1')->name('password.email');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->middleware('throttle:password-reset')->name('password.email');
     Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
-    Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:6,1')->name('password.update');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('throttle:password-reset')->name('password.update');
 });
 
 /*
@@ -125,15 +126,18 @@ Route::middleware(['auth', 'active'])->group(function (): void {
 
     Route::get('/email/verify', fn () => view('auth.verify-email'))->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $alreadyVerified = $request->user()->hasVerifiedEmail();
         $request->fulfill();
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard')->with('status', $alreadyVerified
+            ? 'این حساب پیش‌تر تأیید شده بود.'
+            : 'ایمیل شما تأیید شد؛ اکنون می‌توانید از همهٔ امکانات حساب استفاده کنید.');
     })->middleware('signed')->name('verification.verify');
     Route::post('/email/verification-notification', function (Request $request) {
         $request->user()->sendEmailVerificationNotification();
 
         return back()->with('status', 'لینک تأیید دوباره ارسال شد.');
-    })->middleware('throttle:6,1')->name('verification.send');
+    })->middleware('throttle:verification-resend')->name('verification.send');
 
     Route::middleware('verified')->group(function (): void {
         // Throttled: each call may create an invoice and always performs an
@@ -176,8 +180,8 @@ Route::get('/video-playback/{video}', [VideoController::class, 'media'])
 Route::middleware(['auth', 'active', 'verified', 'admin'])->group(function (): void {
     // NOT audited on purpose: challenge/verify/recover carry one-time codes.
     Route::get('/admin/two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('admin.two-factor.challenge');
-    Route::post('/admin/two-factor/challenge', [TwoFactorController::class, 'verify'])->middleware('throttle:10,1')->name('admin.two-factor.verify');
-    Route::post('/admin/two-factor/recover', [TwoFactorController::class, 'recover'])->middleware('throttle:5,1')->name('admin.two-factor.recover');
+    Route::post('/admin/two-factor/challenge', [TwoFactorController::class, 'verify'])->middleware('throttle:admin-2fa-verify')->name('admin.two-factor.verify');
+    Route::post('/admin/two-factor/recover', [TwoFactorController::class, 'recover'])->middleware('throttle:admin-2fa-verify')->name('admin.two-factor.recover');
 });
 
 /*
@@ -190,9 +194,9 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admi
     Route::post('/two-factor/start', [TwoFactorController::class, 'start'])->name('admin.two-factor.start');
     // TOTP code verification must be rate-limited exactly like the login
     // challenge — a 6-digit code is brute-forceable without a bound.
-    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->middleware('throttle:10,1')->name('admin.two-factor.enable');
-    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])->middleware('throttle:10,1')->name('admin.two-factor.disable');
-    Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->middleware('throttle:10,1')->name('admin.two-factor.recovery-codes');
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->middleware('throttle:admin-2fa-verify')->name('admin.two-factor.enable');
+    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])->middleware('throttle:admin-2fa-verify')->name('admin.two-factor.disable');
+    Route::post('/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->middleware('throttle:admin-2fa-codes')->name('admin.two-factor.recovery-codes');
 });
 
 Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {
