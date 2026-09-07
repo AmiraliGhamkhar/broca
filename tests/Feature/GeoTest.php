@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Subject;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class GeoTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_robots_txt_covers_retrieval_agents_and_declares_content_signal(): void
     {

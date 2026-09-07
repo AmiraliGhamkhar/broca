@@ -1,0 +1,26 @@
+version: 2
+
+updates:
+  # composer.lock is the deploy artifact on cPanel; CI gates it with
+  # `composer audit`. Keep it current so upgrades are routine, not emergencies.
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      php-dev-dependencies:
+        dependency-type: development
+
+  # public/build is committed, so build-chain advisories ship to production.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      js-dev-dependencies:
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

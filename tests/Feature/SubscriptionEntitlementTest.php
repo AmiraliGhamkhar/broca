@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Subscription;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -13,7 +13,7 @@ use Tests\TestCase;
  */
 class SubscriptionEntitlementTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_subscription_with_null_ends_at_is_active_forever(): void
     {

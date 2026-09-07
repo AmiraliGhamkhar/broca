@@ -152,3 +152,40 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
 - `llms.txt` is kept (built, tested, near-zero cost) but its value is
   unproven: no major vendor has committed to reading it (2026 studies).
   The robots named-group fix is the actual control for AI crawler access.
+
+## 2026-09-07 — Audit fix round + Telegram bot becomes a full admin surface
+
+1. **The bot is now feature-complete against the panel**: subject CRUD +
+   visibility, user management (suspend/activate, promote/demote, enroll/
+   unenroll), brand logo/hero management, stats, activity log. All copy is
+   Persian. Danger actions go through confirm cards; every destructive or
+   financial-adjacent invariant is enforced in the same transaction shape as
+   the panel (`lockForUpdate`).
+2. **Bot self-lockout guard is *stronger* than the panel's, by necessity**:
+   the panel refuses self-suspension/self-demotion; the bot cannot identify
+   "self" because `telegram_admins` carries no site `user_id`. The bot
+   therefore refuses to suspend or demote the account that is the LAST
+   ACTIVE admin (no other `is_admin=true AND status='active'` row may exist
+   besides the target). This is deliberately stricter: it also blocks
+   suspending the last active admin via a second admin's bot session — the
+   panel would allow that, and it is the one path that locks every human
+   out of `/admin`.
+3. **`BrandAssets::store()` refuses SVG/HTML/PHP extensions** (defense in
+   depth): the bot extractor already rejects SVG, but the support class is
+   the last line for any future caller. An SVG logo is a same-origin
+   scriptable stored-XSS vector; raster formats are sufficient.
+4. **Videos uploaded through the bot live on the private disk**; the
+   docroot never holds paywalled media (the web server would statically
+   serve it with zero auth). `manifest_reference` keeps the bare filename;
+   the media endpoint resolves it inside the private videos directory.
+5. **Remote (URL) media imports are capped at 200 MB** (declared
+   `Content-Length` and observed size) and `playback_url` must match
+   `BROCA_EXTERNAL_VIDEO_ORIGINS` at save time — an empty allowlist fails
+   closed with instructions instead of silently unplayable content.
+6. **Webhook fails closed**: an enabled bot with an empty
+   `TELEGRAM_WEBHOOK_SECRET` 403s every update, and registering a webhook
+   without a secret is refused (the previous behavior accepted unsigned
+   updates from anyone).
+7. **Stale bot buttons never 500**: every `findOrFail` path answers with a
+   Persian "not found" card — a webhook 500 would make Telegram retry the
+   update forever.

@@ -129,7 +129,7 @@
                                     @method('patch')
                                     @if ($course->status === 'draft')
                                         <input type="hidden" name="status" value="in_review">
-                                        <button type="submit" class="font-bold text-rausch underline">ارسال به بازبینی</button>
+                                        <button type="submit" class="font-bold text-rausch-text underline">ارسال به بازبینی</button>
                                     @elseif ($course->status === 'in_review')
                                         <input type="hidden" name="status" value="published">
                                         <button type="submit" class="font-bold text-teal underline">تأیید و انتشار</button>
@@ -146,7 +146,7 @@
                                 <form method="post" action="{{ route('admin.courses.destroy', $course) }}" onsubmit="return confirm('آیا از حذف این دوره اطمینان دارید؟');">
                                     @csrf
                                     @method('delete')
-                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch-text transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </td>

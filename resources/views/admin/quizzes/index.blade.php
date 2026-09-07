@@ -48,7 +48,7 @@
                     <article class="editorial-card {{ ($selectedQuiz && $selectedQuiz->id === $quiz->id) ? 'ring-2 ring-rausch/25 border-rausch/20' : '' }}">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <p class="text-[11px] font-bold text-rausch">{{ $quiz->course->title ?? '—' }}</p>
+                                <p class="text-[11px] font-bold text-rausch-text">{{ $quiz->course->title ?? '—' }}</p>
                                 <h3 class="mt-2 text-sm font-black text-ink">{{ $quiz->title }}</h3>
                                 <p class="mt-2 text-[11px] leading-6 text-muted">حد قبولی {{ $quiz->pass_threshold_percent ?: 70 }}٪ · {{ $quiz->questions_count }} سؤال</p>
                             </div>
@@ -56,13 +56,13 @@
                         </div>
 
                         <div class="flex items-center justify-between gap-3 mt-5 pt-5 border-t border-hairline-soft text-xs">
-                            <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="font-bold text-rausch underline">مشاهده سؤال‌ها</a>
+                            <a href="{{ route('admin.quizzes.index', ['quiz_id' => $quiz->id]) }}" class="font-bold text-rausch-text underline">مشاهده سؤال‌ها</a>
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('admin.quizzes.edit', $quiz) }}" class="button-soft">ویرایش</a>
                                 <form method="post" action="{{ route('admin.quizzes.destroy', $quiz) }}" onsubmit="return confirm('حذف آزمون؟');">
                                     @csrf
                                     @method('delete')
-                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch-text transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </div>
@@ -83,7 +83,7 @@
                 <div class="form-panel p-7 sm:p-8">
                     <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-hairline-soft">
                         <div>
-                            <p class="text-xs font-bold text-rausch">{{ $selectedQuiz->course->title ?? '' }}</p>
+                            <p class="text-xs font-bold text-rausch-text">{{ $selectedQuiz->course->title ?? '' }}</p>
                             <h2 class="text-xl font-black text-ink mt-2">سؤالات آزمون: {{ $selectedQuiz->title }}</h2>
                         </div>
                         <a href="{{ route('admin.quizzes.questions.create', ['quiz_id' => $selectedQuiz->id]) }}" class="button-primary">
@@ -97,7 +97,7 @@
                             <article class="rounded-3xl border border-hairline-soft bg-surface-soft p-5">
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="flex-1 space-y-3">
-                                        <p class="text-sm font-black leading-7 text-ink"><span class="text-rausch">{{ $idx + 1 }}.</span> {{ $question->prompt }}</p>
+                                        <p class="text-sm font-black leading-7 text-ink"><span class="text-rausch-text">{{ $idx + 1 }}.</span> {{ $question->prompt }}</p>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             @foreach ($question->options as $opt)
                                                 <div class="rounded-2xl px-3 py-3 text-xs font-bold {{ $opt->is_correct ? 'border border-teal/25 bg-teal/10 text-teal' : 'border border-hairline-soft bg-white text-muted' }}">
@@ -127,7 +127,7 @@
                                             <form method="post" action="{{ route('admin.quizzes.questions.destroy', $question) }}" onsubmit="return confirm('حذف این سؤال؟');">
                                                 @csrf
                                                 @method('delete')
-                                                <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                                <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch-text transition hover:bg-rausch-tint">حذف</button>
                                             </form>
                                         </div>
                                     </div>

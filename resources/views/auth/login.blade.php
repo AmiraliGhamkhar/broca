@@ -53,7 +53,7 @@
                 </div>
 
                 @if ($errors->any())
-                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
+                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch-text" role="alert">
                         {{ $errors->first() }}
                     </div>
                 @endif
@@ -71,7 +71,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5 gap-3">
                             <label for="password" class="block text-xs font-bold text-ink">گذرواژه</label>
-                            <a href="{{ route('password.request') }}" class="text-[11px] font-bold text-rausch hover:underline">فراموشی رمز عبور؟</a>
+                            <a href="{{ route('password.request') }}" class="text-[11px] font-bold text-rausch-text hover:underline">فراموشی رمز عبور؟</a>
                         </div>
                         <input type="password" id="password" name="password" required autocomplete="current-password"
                                placeholder="••••••••" dir="ltr"
@@ -94,7 +94,7 @@
 
                 <div class="mt-8 pt-6 border-t border-hairline-soft text-center text-xs">
                     <span class="text-muted">هنوز حساب کاربری ندارید؟</span>
-                    <a href="{{ route('register') }}" class="text-rausch font-bold underline mr-1 hover:text-ink">ثبت‌نام رایگان در بروکا</a>
+                    <a href="{{ route('register') }}" class="text-rausch-text font-bold underline mr-1 hover:text-ink">ثبت‌نام رایگان در بروکا</a>
                 </div>
             </div>
         </div>

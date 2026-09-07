@@ -6,12 +6,12 @@ use App\Models\Course;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoProgress;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 class VideoProgressTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     private User $user;
 

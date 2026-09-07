@@ -19,7 +19,7 @@
             </div>
 
             @if ($errors->any())
-                <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
+                <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch-text" role="alert">
                     {{ $errors->first() }}
                 </div>
             @endif
@@ -40,7 +40,7 @@
                 <div class="rounded-3xl border border-hairline-soft bg-surface-soft p-5 sm:p-6">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <h2 class="text-sm font-extrabold text-ink">گزینه‌های پاسخ</h2>
-                        <span class="text-[11px] font-bold text-rausch">یک گزینه صحیح الزامی است</span>
+                        <span class="text-[11px] font-bold text-rausch-text">یک گزینه صحیح الزامی است</span>
                     </div>
 
                     @php

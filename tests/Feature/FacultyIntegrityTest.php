@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Contributor;
 use App\Models\Course;
 use App\Models\Subject;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -17,7 +17,7 @@ use Tests\TestCase;
  */
 class FacultyIntegrityTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_landing_page_shows_no_faculty_when_none_are_published(): void
     {

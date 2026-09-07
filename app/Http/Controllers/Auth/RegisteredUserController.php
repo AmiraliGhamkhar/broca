@@ -7,9 +7,11 @@ use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
 use App\Support\PhoneNormalizer;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -24,12 +26,21 @@ class RegisteredUserController extends Controller
         $validated = $request->validated();
 
         $user = DB::transaction(function () use ($validated, $request): User {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => mb_strtolower($validated['email']),
-                'phone' => PhoneNormalizer::normalize($validated['phone']),
-                'password' => Hash::make($validated['password']),
-            ]);
+            try {
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => mb_strtolower($validated['email']),
+                    'phone' => PhoneNormalizer::normalize($validated['phone']),
+                    'password' => Hash::make($validated['password']),
+                ]);
+            } catch (UniqueConstraintViolationException) {
+                // Lost a registration race: validation's unique check passed
+                // for both requests, the DB constraint stopped the second
+                // insert. Surface the friendly duplicate message, not a 500.
+                throw ValidationException::withMessages([
+                    'email' => 'این ایمیل یا شمارهٔ همراه قبلاً ثبت شده است.',
+                ]);
+            }
 
             $user->consents()->create([
                 'terms_version' => config('broca.terms_version'),

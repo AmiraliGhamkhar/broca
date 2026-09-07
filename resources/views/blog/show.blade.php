@@ -13,7 +13,7 @@
 @section('content')
 <article class="section-shell section-stack">
     <div class="reading-shell">
-        <a href="{{ route('blog.index') }}" class="text-xs font-bold text-rausch hover:underline">← بازگشت به وبلاگ</a>
+        <a href="{{ route('blog.index') }}" class="text-xs font-bold text-rausch-text hover:underline">← بازگشت به وبلاگ</a>
 
         <header class="mt-6 space-y-5">
             <div class="flex flex-wrap items-center gap-2 text-xs">

@@ -202,6 +202,7 @@ class User extends Authenticatable implements MustVerifyEmail
             // Encrypted at rest: the TOTP seed is a bearer secret.
             'totp_secret' => 'encrypted',
             'recovery_codes' => 'array',
+            'totp_last_step' => 'integer',
         ];
     }
 }

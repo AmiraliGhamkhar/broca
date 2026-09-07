@@ -5,13 +5,14 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class PlaybackTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     private User $user;
 
@@ -23,7 +24,10 @@ class PlaybackTest extends TestCase
     {
         parent::setUp();
 
-        $dir = public_path('videos');
+        // Playback assets live on the PRIVATE disk, outside the public
+        // docroot — a docroot copy would bypass the signed-URL + entitlement
+        // chain (audit 2026-09-07).
+        $dir = Storage::disk('local')->path('videos');
         if (! is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
@@ -106,9 +110,21 @@ class PlaybackTest extends TestCase
     {
         $this->artisan('broca:provision-media')->assertExitCode(0);
 
-        $this->assertFileExists(public_path('videos/sample-video.mp4'));
+        $this->assertFileExists(Storage::disk('local')->path('videos/sample-video.mp4'));
         $this->assertFileExists(storage_path('app/private/notes/electrophysiology-summary.pdf'));
         $this->assertFileExists(storage_path('app/private/notes/neuroanatomy-broca-atlas.pdf'));
         $this->assertFileExists(storage_path('app/private/notes/thorax-clinical-guide.pdf'));
+    }
+
+    public function test_playback_assets_never_live_in_the_public_docroot(): void
+    {
+        // Regression (audit 2026-09-07): provisioning and bot uploads must
+        // keep video bytes on the private disk. A file in public/videos is
+        // served statically by Apache/LiteSpeed with zero auth — a paywall
+        // bypass — so this must never be the storage location again.
+        $this->artisan('broca:provision-media')->assertExitCode(0);
+
+        $this->assertFileDoesNotExist(public_path('videos/sample-video.mp4'));
+        $this->assertFileExists(Storage::disk('local')->path('videos/sample-video.mp4'));
     }
 }

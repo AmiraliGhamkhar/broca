@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Support\MarkdownTwin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -26,6 +27,18 @@ class PublicIndexCacheObserver
         'seo.llms.txt',
     ];
 
+    public static function flush(): void
+    {
+        foreach (self::KEYS as $key) {
+            Cache::forget($key);
+        }
+
+        // The Markdown twins cache under generation-suffixed keys (exact-key
+        // stores can't do prefix flushes), so invalidation bumps the
+        // generation counter instead — every twin re-renders on next request.
+        MarkdownTwin::bumpGeneration();
+    }
+
     public function saved(Model $model): void
     {
         // Only a change that alters what is publicly listed matters.
@@ -44,12 +57,5 @@ class PublicIndexCacheObserver
     public function restored(Model $model): void
     {
         self::flush();
-    }
-
-    public static function flush(): void
-    {
-        foreach (self::KEYS as $key) {
-            Cache::forget($key);
-        }
     }
 }

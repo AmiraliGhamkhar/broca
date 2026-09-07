@@ -10,6 +10,7 @@ use App\Models\VideoProgress;
 use App\Policies\ContentPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -81,8 +82,13 @@ class VideoController extends Controller
             abort(404);
         }
 
-        $videosDir = realpath(public_path('videos'));
-        $path = realpath(public_path('videos').DIRECTORY_SEPARATOR.$reference);
+        // Bytes live on the PRIVATE disk (storage/app/private/videos),
+        // outside the public docroot — a docroot copy is statically served
+        // with zero auth and bypasses this whole signed+entitlement chain
+        // (audit 2026-09-07).
+        $videosRoot = Storage::disk('local')->path('videos');
+        $videosDir = realpath($videosRoot);
+        $path = realpath($videosRoot.DIRECTORY_SEPARATOR.$reference);
 
         // realpath() resolves symlinks and '..' — the resolved file must
         // still live inside the videos directory.

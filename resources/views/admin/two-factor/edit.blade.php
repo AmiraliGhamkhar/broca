@@ -14,13 +14,13 @@
                 <h2 class="text-2xl font-bold text-ink">امنیت احراز هویت دو مرحله‌ای (TOTP 2FA)</h2>
                 <p class="text-xs text-muted mt-1">حفاظت از پنل مدیریت با نرم‌افزارهای احرازگر استاندارد (Google Authenticator، Microsoft Authenticator و...)</p>
             </div>
-            <span class="rounded-full px-3 py-1 text-xs font-bold {{ $user->hasConfirmedTwoFactor() ? 'bg-teal/15 text-teal' : 'bg-rausch/15 text-rausch' }}">
+            <span class="rounded-full px-3 py-1 text-xs font-bold {{ $user->hasConfirmedTwoFactor() ? 'bg-teal/15 text-teal' : 'bg-rausch/15 text-rausch-text' }}">
                 {{ $user->hasConfirmedTwoFactor() ? 'ورود دومرحله‌ای فعال است ✓' : 'غیرفعال' }}
             </span>
         </div>
 
         @if ($errors->any())
-            <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
+            <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch-text" role="alert">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -92,7 +92,7 @@
                 </div>
 
                 <div class="p-6 rounded-2xl bg-white border border-hairline-soft space-y-4">
-                    <h3 class="text-sm font-bold text-rausch">غیرفعال‌سازی ورود دومرحله‌ای</h3>
+                    <h3 class="text-sm font-bold text-rausch-text">غیرفعال‌سازی ورود دومرحله‌ای</h3>
                     <p class="text-xs text-muted leading-5">
                         برای غیرفعال‌سازی، کد ۶ رقمی فعلی اپلیکیشن احرازگر را وارد کنید. کلید و کدهای بازیابی پاک می‌شوند.
                     </p>

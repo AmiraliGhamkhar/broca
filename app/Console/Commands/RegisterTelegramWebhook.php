@@ -21,9 +21,19 @@ class RegisterTelegramWebhook extends Command
             return self::FAILURE;
         }
 
+        // The webhook route fails closed without a secret (403 for every
+        // unsigned update), so registering without one would brick the bot.
+        // Refuse here with the fix in the message instead.
+        $secret = (string) config('services.telegram.webhook_secret');
+        if ($secret === '') {
+            $this->error('TELEGRAM_WEBHOOK_SECRET is empty. Set a random secret in .env first — the webhook route rejects unsigned updates.');
+
+            return self::FAILURE;
+        }
+
         $response = $telegram->setWebhook(
             $url,
-            (string) config('services.telegram.webhook_secret') ?: null,
+            $secret,
             (bool) $this->option('drop-pending-updates'),
         );
 

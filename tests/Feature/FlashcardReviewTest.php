@@ -7,12 +7,12 @@ use App\Models\FlashcardDeck;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserFlashcardSchedule;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 class FlashcardReviewTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_reviewing_a_card_creates_schedule_and_log(): void
     {

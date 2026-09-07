@@ -65,7 +65,7 @@
                     <div class="flex items-center gap-3">
                         <span class="icon-frame"><x-ui.icon name="play" class="size-5" /></span>
                         <div>
-                            <span class="text-[11px] font-bold text-rausch">ادامهٔ تماشا</span>
+                            <span class="text-[11px] font-bold text-rausch-text">ادامهٔ تماشا</span>
                             <h2 class="mt-1 text-sm font-extrabold text-ink">{{ $latest->video->title }}</h2>
                             <p class="text-xs text-muted mt-1">{{ $latest->video->course->title ?? '' }}</p>
                         </div>
@@ -141,7 +141,7 @@
                                 <li class="list-row-card bg-surface-soft border-transparent p-2.5">
                                     <a href="{{ route('videos.show', [$course, $v]) }}" class="flex items-center justify-between gap-3 font-bold text-ink">
                                         <span class="truncate">{{ $v->title }}</span>
-                                        <span class="text-[11px] text-rausch shrink-0">{{ $v->is_free_available ? 'رایگان' : 'ویژه' }}</span>
+                                        <span class="text-[11px] text-rausch-text shrink-0">{{ $v->is_free_available ? "رایگان" : "ویژه" }}</span>
                                     </a>
                                 </li>
                             @empty
@@ -181,7 +181,7 @@
                                 <li class="list-row-card bg-surface-soft border-transparent p-2.5">
                                     <a href="{{ route('decks.study', [$course, $d]) }}" class="flex items-center justify-between gap-3 font-bold text-ink">
                                         <span class="truncate">{{ $d->title }}</span>
-                                        <span class="text-[11px] text-rausch shrink-0">{{ $d->cards_count }} کارت</span>
+                                        <span class="text-[11px] text-rausch-text shrink-0">{{ $d->cards_count }} کارت</span>
                                     </a>
                                 </li>
                             @empty
@@ -241,7 +241,7 @@
                     @if ($card && $card->deck && $card->deck->course)
                         <div class="list-row-card p-5 flex flex-wrap items-center justify-between gap-4">
                             <div class="space-y-1 max-w-xl">
-                                <span class="text-[11px] font-bold text-rausch">{{ $card->deck->course->title }} · {{ $card->deck->title }}</span>
+                                <span class="text-[11px] font-bold text-rausch-text">{{ $card->deck->course->title }} · {{ $card->deck->title }}</span>
                                 <h3 class="text-sm font-extrabold text-ink">{{ $card->front }}</h3>
                                 @if ($card->hint)
                                     <p class="text-xs text-muted">راهنما: {{ $card->hint }}</p>
@@ -278,8 +278,8 @@
                         </div>
                         <div class="flex items-center gap-4">
                             <div class="text-left">
-                                <span class="text-base font-black {{ $attempt->passed ? 'text-teal' : 'text-rausch' }}">{{ $attempt->score_percent }}٪</span>
-                                <span class="text-[11px] block font-bold {{ $attempt->passed ? 'text-teal' : 'text-rausch' }}">{{ $attempt->passed ? 'قبول شده' : 'نیازمند تمرین' }} ({{ $attempt->correct_count }} از {{ $attempt->question_count }})</span>
+                                <span class="text-base font-black {{ $attempt->passed ? "text-teal" : "text-rausch-text" }}">{{ $attempt->score_percent }}٪</span>
+                                <span class="text-[11px] block font-bold {{ $attempt->passed ? "text-teal" : "text-rausch-text" }}">{{ $attempt->passed ? 'قبول شده' : 'نیازمند تمرین' }} ({{ $attempt->correct_count }} از {{ $attempt->question_count }})</span>
                             </div>
                             <a href="{{ route('quizzes.attempts.show', [$attempt->quiz, $attempt]) }}" class="button-secondary">کارنامه تشریحی</a>
                         </div>
@@ -301,7 +301,7 @@
                 <h2 class="text-xl font-black text-ink">دوره‌های پیشنهادی برای ادامه مسیر</h2>
                 <p class="text-xs text-muted mt-1">با یک تصمیم ساده، مسیر یادگیری بعدی خود را شروع کنید.</p>
             </div>
-            <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch underline">مشاهده کاتالوگ کامل ←</a>
+            <a href="{{ route('catalog') }}" class="text-xs font-bold text-rausch-text underline">مشاهده کاتالوگ کامل ←</a>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

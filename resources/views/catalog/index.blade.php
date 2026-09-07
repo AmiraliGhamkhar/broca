@@ -106,7 +106,7 @@
             همه مباحث
         </a>
         @foreach ($subjects as $subject)
-            @php($subjectBrowseUrl = request()->filled('q') ? route('catalog', array_filter(['subject' => $subject->slug, 'q' => request('q')])) : route('subjects.show', $subject))
+            <?php $subjectBrowseUrl = request()->filled('q') ? route('catalog', array_filter(['subject' => $subject->slug, 'q' => request('q')])) : route('subjects.show', $subject); ?>
             <a href="{{ $subjectBrowseUrl }}"
                class="{{ request('subject') === $subject->slug ? 'inline-flex items-center gap-2 rounded-full border border-ink bg-ink px-3 py-1.5 text-[11px] font-bold whitespace-nowrap text-white' : 'badge-outline whitespace-nowrap' }}">
                 {{ $subject->name }}

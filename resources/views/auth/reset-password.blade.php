@@ -45,7 +45,7 @@
                 </div>
 
                 @if ($errors->any())
-                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
+                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch-text" role="alert">
                         {{ $errors->first() }}
                     </div>
                 @endif

@@ -6,8 +6,12 @@
 
 @push('head')
     {{-- The hero photograph is the LCP element on mobile; preloading it
-         saves the CSS → image discovery round trip. --}}
-    <link rel="preload" as="image" href="/images/hero/hero.jpg" imagesrcset="/images/hero/hero.webp" imagesizes="100vw" fetchpriority="high">
+         saves the CSS → image discovery round trip. The WebP candidate is
+         only advertised while a current twin exists (BrandAssets removes a
+         stale one on upload), and both URLs follow operator uploads via
+         /set_hero. --}}
+    <?php $heroPreloadJpg = \App\Support\BrandAssets::heroJpgUrl(); $heroPreloadWebp = \App\Support\BrandAssets::heroWebpUrl(); ?>
+    <link rel="preload" as="image" href="{{ $heroPreloadJpg }}" @if ($heroPreloadWebp !== null) imagesrcset="{{ $heroPreloadWebp }} 1x" @endif imagesizes="100vw" fetchpriority="high">
 @endpush
 
 @section('content')
@@ -109,7 +113,7 @@
 
                 <div class="pt-4 border-t border-hairline-soft flex items-center justify-between gap-4">
                     <span class="text-xs font-bold text-muted">{{ $item['meta'] }}</span>
-                    <a href="{{ $item['link'] }}" class="text-xs font-bold text-rausch hover:underline">ورود به مجموعه ←</a>
+                    <a href="{{ $item['link'] }}" class="text-xs font-bold text-rausch-text hover:underline">ورود به مجموعه ←</a>
                 </div>
             </article>
         @endforeach
@@ -160,7 +164,7 @@
                         </span>
                         <div>
                             <h3 class="text-base font-extrabold text-ink">{{ $person->name }}</h3>
-                            <p class="mt-1 text-xs font-bold text-rausch">{{ $person->credentials }}</p>
+                            <p class="mt-1 text-xs font-bold text-rausch-text">{{ $person->credentials }}</p>
                             @if ($person->specialty)
                                 <p class="mt-1 text-xs text-muted-soft">{{ $person->specialty }}</p>
                             @endif
