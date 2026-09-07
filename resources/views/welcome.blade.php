@@ -251,7 +251,6 @@
 
 <section class="section-shell section-stack section-stack-no-top">
     <div class="editorial-card is-dark text-center space-y-5">
-        <span class="badge-on-dark">شروع آگاهانه یادگیری</span>
         <h2 class="text-2xl sm:text-4xl font-black text-white max-w-3xl mx-auto leading-tight">همین حالا حساب رایگان بسازید و کیفیت تجربه یادگیری بروکا را از نزدیک ارزیابی کنید</h2>
         <p class="max-w-2xl mx-auto text-sm leading-8 text-white/70">نمونه‌درس‌ها، بخشی از جزوات، فلش‌کارت‌های منتخب و محتوای وبلاگ برای آشنایی اولیه در دسترس‌اند تا تصمیم خرید بر پایه تجربه واقعی گرفته شود.</p>
         <div class="flex flex-wrap justify-center gap-3 pt-2">

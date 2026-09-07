@@ -148,9 +148,6 @@
                                     <a href="{{ route('courses.show', $course) }}" class="hover:text-rausch transition-colors">{{ $course->title }}</a>
                                 </h2>
                             </div>
-                            @if ($course->published_at)
-                                <span class="text-[11px] font-bold text-muted whitespace-nowrap" dir="ltr">{{ $course->published_at->timezone(config('broca.display_timezone'))->format('Y/m/d') }}</span>
-                            @endif
                         </div>
 
                         <p class="text-sm leading-7 text-muted">{{ $course->excerpt ?: $course->description }}</p>

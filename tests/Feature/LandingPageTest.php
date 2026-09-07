@@ -18,11 +18,9 @@ class LandingPageTest extends TestCase
         $response->assertSee('lang="fa"', false);
         // The 2026-09 hero redesign replaced the placeholder heart poster and
         // sample-video block with an editorial photograph (client decision);
-        // assert the real headline and the photo caption that replaced the
-        // dark profile card.
+        // assert the real headline and the hero photo.
         $response->assertSee('یادگیری عمیق علوم پزشکی', false);
         $response->assertSee('/images/hero/hero.webp', false);
-        $response->assertSee('از مفهوم تا تثبیت', false);
     }
 
     public function test_vazirmatn_font_is_self_hosted(): void

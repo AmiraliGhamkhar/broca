@@ -129,6 +129,18 @@ h1, h2, h3, h4, .font-display {
     letter-spacing: 0.01em;
 }
 
+/* -- H1 entrance: blur-to-sharp focus on every heading. Replaces the
+      removed dia-text-reveal JS sweep. The global prefers-reduced-motion
+      rule neutralises it (animation-duration ~0) automatically. -- */
+h1 {
+    animation: fh-textFocus 1s cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
+}
+
+@keyframes fh-textFocus {
+    from { filter: blur(10px); opacity: 0; }
+    to   { filter: blur(0);    opacity: 1; }
+}
+
 ::selection {
     background: var(--color-rausch);
     color: #ffffff;
@@ -786,7 +798,10 @@ a.rounded-xl:active {
     font-weight: 800;
 }
 
-.trust-list-item span {
+/* Scope to the text column: a bare descendant selector here also matched
+   the .icon-frame span and flattened its flex centering, leaving the svg
+   pinned to the frame's top-left corner. */
+.trust-list-item > div span {
     display: block;
     margin-top: 0.15rem;
     color: var(--color-muted);
@@ -808,7 +823,7 @@ a.rounded-xl:active {
     color: #ffffff;
 }
 
-.trust-list-item.is-dark span {
+.trust-list-item.is-dark > div span {
     color: rgb(255 255 255 / 0.7);
 }
 
@@ -1131,4 +1146,292 @@ button.is-loading {
     transition:
         opacity var(--motion-base) ease,
         transform var(--motion-base) ease;
+}
+
+/* =========================================================================
+   Pricing table (prc-05)
+   =========================================================================
+   Adapted from CodeFronts "Scale-Up Focused Plan Hover" (MIT) and recolored
+   to the Broca palette: Rausch accent, hairline borders, ink text, canvas
+   background inherited from the page (no forced section background).
+   Scoped under .prc-05 so nothing collides with existing styles. The
+   hover/focus interaction is unchanged: the active card lifts and scales
+   while a grid-level :has() rule eases siblings back and dims them.
+   ========================================================================= */
+
+/* Box-sizing on the root too, but margin/padding reset only on descendants:
+   the root carries Tailwind spacing utilities (mt-12) that a bare
+   `.prc-05 { margin: 0 }` would override at equal specificity. */
+.prc-05,
+.prc-05 *,
+.prc-05 *::before,
+.prc-05 *::after {
+    box-sizing: border-box;
+}
+
+.prc-05 *,
+.prc-05 *::before,
+.prc-05 *::after {
+    margin: 0;
+    padding: 0;
+}
+
+.prc-05 {
+    --accent: var(--color-rausch);
+    --accent-deep: var(--color-rausch-active);
+    width: 100%;
+}
+
+.prc-05__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 22px;
+    align-items: stretch;
+}
+
+.prc-05__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid var(--color-hairline-soft);
+    border-radius: 1.25rem;
+    background: #ffffff;
+    padding: 1.75rem;
+    transition:
+        transform 320ms cubic-bezier(0.3, 1.2, 0.3, 1),
+        filter 320ms ease,
+        border-color 160ms ease;
+    will-change: transform;
+}
+
+/* Pre-rendered accent shadow, faded in on hover — nothing repaints per frame. */
+.prc-05__card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 30px 60px -22px rgb(255 56 92 / 0.35);
+    opacity: 0;
+    transition: opacity 320ms ease;
+    pointer-events: none;
+}
+
+.prc-05__card:hover,
+.prc-05__card:focus-within {
+    transform: translateY(-10px) scale(1.04);
+    z-index: 1;
+}
+
+.prc-05__card:hover::after,
+.prc-05__card:focus-within::after {
+    opacity: 1;
+}
+
+.prc-05__grid:has(.prc-05__card:hover) .prc-05__card:not(:hover),
+.prc-05__grid:has(.prc-05__card:focus-within) .prc-05__card:not(:focus-within) {
+    transform: scale(0.96);
+    filter: saturate(0.6) opacity(0.75);
+}
+
+/* Featured (three-month) tier */
+.prc-05__card.is-featured {
+    border-color: rgb(255 56 92 / 0.35);
+}
+
+.prc-05__ribbon {
+    position: absolute;
+    top: -0.75rem;
+    inset-inline-start: 1.5rem;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #ffffff;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.5;
+    box-shadow: var(--shadow-float);
+}
+
+.prc-05__name {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--color-ink);
+}
+
+.prc-05__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.prc-05__duration {
+    flex-shrink: 0;
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.prc-05__duration.is-paid {
+    background: rgb(15 118 110 / 0.08);
+    color: var(--color-teal);
+}
+
+.prc-05__duration.is-free {
+    background: var(--color-surface-soft);
+    color: var(--color-ink);
+}
+
+.prc-05__description {
+    margin-bottom: 0.9rem;
+    color: var(--color-muted);
+    font-size: 0.76rem;
+    line-height: 1.9;
+}
+
+.prc-05__price {
+    color: var(--color-ink);
+    font-size: clamp(2.1rem, 4vw, 2.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.prc-05__currency {
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.prc-05__per {
+    margin-bottom: 1rem;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+}
+
+.prc-05__card ul {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 9px;
+    margin-bottom: 1.25rem;
+    color: var(--color-body);
+    font-size: 0.82rem;
+    line-height: 1.8;
+    list-style: none;
+}
+
+.prc-05__card li::before {
+    content: "✓";
+    color: var(--accent);
+    font-weight: 700;
+    margin-inline-end: 9px; /* direction-safe: sits between ✓ and text in RTL too */
+}
+
+.prc-05__card li strong {
+    display: block;
+    color: var(--color-ink);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.prc-05__card li > span {
+    display: block;
+    margin-top: 0.15rem;
+    color: var(--color-muted);
+    font-size: 0.72rem;
+    line-height: 1.8;
+}
+
+.prc-05__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-hairline-soft);
+}
+
+.prc-05__cta {
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    background: var(--color-ink);
+    color: #ffffff;
+    padding: 0.8rem;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.82rem;
+    transition: background-color 250ms ease;
+}
+
+.prc-05__card:hover .prc-05__cta,
+.prc-05__cta:focus-visible {
+    background: var(--accent);
+}
+
+.prc-05__cta:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.prc-05__cta.is-secondary {
+    background: var(--color-surface-soft);
+    color: var(--color-ink);
+}
+
+.prc-05__card.is-featured .prc-05__cta {
+    background: var(--accent);
+}
+
+.prc-05__card.is-featured .prc-05__cta:hover,
+.prc-05__card.is-featured .prc-05__cta:focus-visible {
+    background: var(--accent-deep);
+}
+
+.prc-05__notice {
+    border-radius: 0.75rem;
+    padding: 0.85rem;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.8;
+}
+
+.prc-05__notice.is-info {
+    border: 1px solid rgb(15 118 110 / 0.3);
+    background: rgb(15 118 110 / 0.05);
+    color: var(--color-teal);
+}
+
+.prc-05__notice.is-warn {
+    border: 1px solid rgb(255 56 92 / 0.3);
+    background: var(--color-rausch-tint);
+    color: var(--color-rausch);
+}
+
+.prc-05__fineprint {
+    color: var(--color-muted);
+    font-size: 0.68rem;
+    line-height: 1.8;
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .prc-05__card:hover,
+    .prc-05__card:focus-within {
+        transform: none;
+    }
+
+    .prc-05__grid:has(.prc-05__card:hover) .prc-05__card:not(:hover),
+    .prc-05__grid:has(.prc-05__card:focus-within) .prc-05__card:not(:focus-within) {
+        transform: none;
+        filter: none;
+    }
 }

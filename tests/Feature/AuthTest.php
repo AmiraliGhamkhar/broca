@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Notifications\Facades\Notification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 

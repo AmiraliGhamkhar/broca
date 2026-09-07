@@ -439,7 +439,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'اشتراک یک‌ماهه طلایی',
                 'description' => 'دسترسی نامحدود به تمام ویدیوهای بالینی، جزوات اختصاصی، آزمون‌ها و سیستم هوشمند SRS برای ۳۰ روز.',
                 'duration_months' => 1,
-                'price_irr' => 5000000, // 500,000 Toman
+                'price_irr' => 2700, // 270 Toman
                 'sort_order' => 2,
             ],
             [
@@ -447,7 +447,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'اشتراک سه‌ماهه جامع',
                 'description' => 'دسترسی کامل به کل آرشیو دوره‌ها، آزمون‌های جامع و دسته‌های فلش‌کارت برای ۹۰ روز با تخفیف ویژه.',
                 'duration_months' => 3,
-                'price_irr' => 12000000, // 1,200,000 Toman
+                'price_irr' => 6000, // 600 Toman
                 'sort_order' => 3,
             ],
         ];

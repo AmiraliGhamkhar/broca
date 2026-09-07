@@ -60,13 +60,6 @@
                              fetchpriority="high" decoding="async"
                              class="block w-full aspect-[4/3] sm:aspect-[4/5] object-cover saturate-[.85] contrast-[.98]">
                     </picture>
-                    <figcaption class="absolute inset-x-0 bottom-0 flex items-center justify-end gap-3 bg-white/85 px-5 py-3 backdrop-blur-sm border-t border-hairline-soft">
-                        <span class="sr-only">از مفهوم تا تثبیت؛ یادگیری ساخت‌یافتهٔ علوم پزشکی</span>
-                        <span class="badge-outline shrink-0">
-                            <x-ui.icon name="spark" class="size-3.5" />
-                            <span class="sr-only">بازبینی علمی</span>
-                        </span>
-                    </figcaption>
                 </figure>
             </div>
         </div>

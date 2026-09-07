@@ -17,7 +17,7 @@ class PlanFactory extends Factory
             'name' => fake()->randomElement(['یک‌ماهه', 'سه‌ماهه']),
             'description' => 'دسترسی کامل به همهٔ دوره‌ها',
             'duration_months' => fake()->randomElement([1, 3]),
-            'price_irr' => fake()->randomElement([500000, 1200000]),
+            'price_irr' => fake()->randomElement([2700, 6000]),
             'is_active' => true,
             'sort_order' => 0,
         ];
@@ -39,7 +39,7 @@ class PlanFactory extends Factory
             'code' => 'monthly-'.fake()->unique()->numberBetween(1000, 9999),
             'name' => 'یک‌ماهه',
             'duration_months' => 1,
-            'price_irr' => 500000,
+            'price_irr' => 2700,
         ]);
     }
 }
