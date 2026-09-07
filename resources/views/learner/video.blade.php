@@ -17,7 +17,7 @@
         <div class="space-y-8">
             <div class="section-intro max-w-4xl">
                 <span class="sr-only">ویدیوی آموزشی خصوصی</span>
-                <p class="mt-4 text-sm font-bold text-rausch">{{ $course->subject?->name }} · {{ $course->title }}</p>
+                <p class="mt-4 text-sm font-bold text-rausch-text">{{ $course->subject?->name }} · {{ $course->title }}</p>
                 <h1 class="section-title mt-4">{{ $video->title }}</h1>
                 @if ($video->description)
                     <p class="section-copy mt-5">{{ $video->description }}</p>
@@ -74,7 +74,7 @@
                                 مشاهده جزئیات دوره
                             </a>
                         @endif
-                        <p x-show="error" x-cloak class="mt-5 text-sm font-bold text-rausch" role="alert" x-text="error"></p>
+                        <p x-show="error" x-cloak class="mt-5 text-sm font-bold text-rausch-text" role="alert" x-text="error"></p>
                     </div>
                 </template>
             </div>

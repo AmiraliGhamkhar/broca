@@ -93,13 +93,13 @@
             <div class="editorial-card">
                 <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
                     <h3 class="text-base font-extrabold text-ink">آخرین دوره‌های ثبت یا به‌روزرسانی‌شده</h3>
-                    <a href="{{ route('admin.courses.index') }}" class="text-xs font-bold text-rausch hover:underline">مشاهده همه دوره‌ها ←</a>
+                    <a href="{{ route('admin.courses.index') }}" class="text-xs font-bold text-rausch-text hover:underline">مشاهده همه دوره‌ها ←</a>
                 </div>
                 <div class="mt-4 divide-y divide-broca-sand">
                     @forelse ($recentCourses as $course)
                         <div class="py-4 flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <span class="text-xs font-bold text-rausch">{{ $course->subject->name ?? 'عمومی' }}</span>
+                                <span class="text-xs font-bold text-rausch-text">{{ $course->subject->name ?? 'عمومی' }}</span>
                                 <h4 class="text-sm font-extrabold text-ink mt-0.5">{{ $course->title }}</h4>
                                 <p class="text-xs text-muted mt-1">نویسنده: {{ $course->author->name ?? '—' }}</p>
                             </div>
@@ -119,7 +119,7 @@
             <div class="editorial-card">
                 <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
                     <h3 class="text-base font-extrabold text-ink">آخرین لاگ‌های امنیتی و عملیاتی</h3>
-                    <a href="{{ route('admin.activity.index') }}" class="text-xs font-bold text-rausch hover:underline">تمام لاگ‌ها ←</a>
+                    <a href="{{ route('admin.activity.index') }}" class="text-xs font-bold text-rausch-text hover:underline">تمام لاگ‌ها ←</a>
                 </div>
                 <div class="mt-4 overflow-x-auto">
                     <table class="w-full text-xs">
@@ -154,7 +154,7 @@
             <div class="editorial-card">
                 <div class="flex items-center justify-between pb-4 border-b border-hairline-soft">
                     <h3 class="text-base font-extrabold text-ink">آخرین اشتراک‌های فعال</h3>
-                    <a href="{{ route('admin.plans.index') }}" class="text-xs font-bold text-rausch hover:underline">مدیریت پلن‌ها ←</a>
+                    <a href="{{ route('admin.plans.index') }}" class="text-xs font-bold text-rausch-text hover:underline">مدیریت پلن‌ها ←</a>
                 </div>
                 <div class="mt-4 divide-y divide-broca-sand">
                     @forelse ($recentSubscriptions as $sub)
@@ -190,7 +190,7 @@
                     </div>
                     <div class="flex justify-between items-center py-1.5 gap-3">
                         <span class="text-muted">امنیت دومرحله‌ای</span>
-                        <span class="{{ auth()->user()->hasConfirmedTwoFactor() ? 'text-teal' : 'text-rausch' }}">{{ auth()->user()->hasConfirmedTwoFactor() ? 'فعال' : 'نیازمند پیکربندی' }}</span>
+                        <span class="{{ auth()->user()->hasConfirmedTwoFactor() ? "text-teal" : "text-rausch-text" }}">{{ auth()->user()->hasConfirmedTwoFactor() ? 'فعال' : 'نیازمند پیکربندی' }}</span>
                     </div>
                 </div>
             </div>

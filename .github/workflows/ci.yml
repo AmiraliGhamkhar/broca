@@ -26,7 +26,7 @@ jobs:
           --health-retries=5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -57,8 +57,16 @@ jobs:
       # on cPanel — a known-vulnerable lock must fail CI before it can be
       # committed, not after it ships. `composer audit` exits non-zero on any
       # advisory matching the locked packages.
-      - name: Audit locked dependencies against security advisories
+      - name: Audit locked PHP dependencies against security advisories
         run: composer audit --no-interaction
+
+      # public/build is a committed deploy artifact (Node-less cPanel deploys),
+      # so known-vulnerable build-time packages ship to production exactly like
+      # the PHP lock does. Non-blocking on first introduction: triage the
+      # current report, then flip continue-on-error to false so advisories fail CI.
+      - name: Audit npm dependencies (production + build chain)
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
       - name: Prepare environment
         run: |

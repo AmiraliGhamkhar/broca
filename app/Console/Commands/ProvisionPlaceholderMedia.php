@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\File;
  * Copies the committed placeholder media (database/placeholder-media) into
  * the runtime locations the app streams from:
  *
- *   - public/videos/{manifest_reference}   → signed playback chain
+ *   - storage/app/private/videos/*.mp4     → signed playback chain (the
+ *     bytes live OUTSIDE the public docroot — web-served copies would be a
+ *     paywall bypass, audit 2026-09-07)
  *   - storage/app/private/notes/*.pdf      → 'local' disk note downloads
  *
  * Both destinations are gitignored, so a fresh clone needs this command
@@ -28,7 +30,7 @@ class ProvisionPlaceholderMedia extends Command
         $sourceVideos = database_path('placeholder-media/videos');
         $sourceNotes = database_path('placeholder-media/notes');
 
-        $destVideos = public_path('videos');
+        $destVideos = storage_path('app/private/videos');
         $destNotes = storage_path('app/private/notes');
 
         if (! is_dir($sourceVideos) || ! is_dir($sourceNotes)) {

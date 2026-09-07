@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\AdminActivityLog;
 use App\Models\User;
 use App\Support\Totp;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -15,7 +15,7 @@ use Tests\TestCase;
  */
 class AdminTwoFactorManagementTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_enable_is_rate_limited_after_ten_attempts(): void
     {

@@ -6,6 +6,7 @@ use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Subject;
 use App\Services\SiteMarkdown;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Maps the public HTML routes to their Markdown twins (llmstxt.org
@@ -16,9 +17,18 @@ use App\Services\SiteMarkdown;
  *    text/markdown) and the .md route handlers build the document.
  *  - the layouts.app view composer — renders <link rel="alternate"> and the
  *    hidden agent hint; that only needs the URL, which never touches the DB.
+ *
+ * Rendering is CACHED (audit 2026-09-07): twins run 4–8 uncached queries per
+ * hit against exactly the crawler population robots.txt invites, while their
+ * HTML siblings (sitemap.xml, llms.txt) are cached. Invalidations go through
+ * PublicIndexCacheObserver, which bumps the generation counter below — so a
+ * publish makes new content discoverable immediately, without per-URL key
+ * bookkeeping.
  */
 class MarkdownTwin
 {
+    public const VERSION_KEY = 'seo.md.generation';
+
     /** @return list<string> route names that have a Markdown twin */
     public static function twinRoutes(): array
     {
@@ -63,13 +73,51 @@ class MarkdownTwin
     }
 
     /**
-     * The Markdown document for the given route, or null when the route has
-     * no twin or its content is no longer public (unpublished/removed).
-     * Touches the DB — call it only when a client actually asks for Markdown.
+     * Current cache generation. Bumped by PublicIndexCacheObserver::flush()
+     * so every cached twin invalidates at once when published content
+     * changes. Driver-agnostic (no wildcard flush needed).
+     */
+    public static function generation(): int
+    {
+        return (int) Cache::get(self::VERSION_KEY, 1);
+    }
+
+    public static function bumpGeneration(): void
+    {
+        Cache::forever(self::VERSION_KEY, self::generation() + 1);
+    }
+
+    /**
+     * The cached Markdown document for the given route, or null when the
+     * route has no twin or its content is no longer public.
      *
-     * @param array<string, mixed> $params
+     * @param  array<string, mixed>  $params
      */
     public static function markdownForRoute(string $routeName, array $params): ?string
+    {
+        $key = self::cacheKey($routeName, $params);
+        $cached = Cache::get($key);
+
+        if (is_string($cached) || $cached === '') {
+            return $cached === '' ? null : $cached;
+        }
+
+        $markdown = self::renderMarkdown($routeName, $params);
+
+        // Cache both hits and confirmed misses ('' encodes "no twin /
+        // unpublished") so crawler 404s don't re-query the DB either.
+        Cache::put($key, $markdown === null ? '' : $markdown, 3600);
+
+        return $markdown;
+    }
+
+    /**
+     * The uncached renderer. Kept separate so the cache layer is the only
+     * public entry point for twins.
+     *
+     * @param  array<string, mixed>  $params
+     */
+    public static function renderMarkdown(string $routeName, array $params): ?string
     {
         return match ($routeName) {
             'home' => SiteMarkdown::home(),
@@ -82,6 +130,22 @@ class MarkdownTwin
             'legal.show' => SiteMarkdown::legal((string) ($params['page'] ?? '')),
             default => null,
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private static function cacheKey(string $routeName, array $params): string
+    {
+        $normalized = [];
+
+        foreach ($params as $key => $value) {
+            $normalized[$key] = $value instanceof \Illuminate\Database\Eloquent\Model
+                ? $value->getMorphClass().':'.$value->getKey()
+                : (string) $value;
+        }
+
+        return 'seo.md.'.self::generation().'.'.md5($routeName.'|'.serialize($normalized));
     }
 
     private static function markdownBlog(string $slug): ?string

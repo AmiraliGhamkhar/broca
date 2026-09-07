@@ -45,7 +45,7 @@
                 </div>
 
                 @if ($errors->any())
-                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
+                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch-text" role="alert">
                         {{ $errors->first() }}
                     </div>
                 @endif
@@ -67,7 +67,7 @@
 
                 <div class="mt-8 pt-6 border-t border-hairline-soft text-center text-xs">
                     <span class="text-muted">رمز عبور را به خاطر آوردید؟</span>
-                    <a href="{{ route('login') }}" class="text-rausch font-bold underline mr-1 hover:text-ink">ورود به حساب</a>
+                    <a href="{{ route('login') }}" class="text-rausch-text font-bold underline mr-1 hover:text-ink">ورود به حساب</a>
                 </div>
             </div>
         </div>

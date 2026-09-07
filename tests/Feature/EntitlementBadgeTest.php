@@ -6,7 +6,7 @@ use App\Models\Course;
 use App\Models\Note;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -17,7 +17,7 @@ use Tests\TestCase;
  */
 class EntitlementBadgeTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     protected function setUp(): void
     {

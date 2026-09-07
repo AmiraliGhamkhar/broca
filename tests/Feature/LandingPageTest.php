@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 class LandingPageTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_home_page_renders_successfully(): void
     {

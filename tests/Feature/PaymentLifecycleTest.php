@@ -7,7 +7,7 @@ use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\Fixtures\FakePaymentGateway;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class PaymentLifecycleTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_expire_subscriptions_command_expires_only_past_ends_at(): void
     {

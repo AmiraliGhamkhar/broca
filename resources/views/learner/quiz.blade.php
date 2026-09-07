@@ -18,7 +18,7 @@
         <div class="space-y-8">
             <div class="section-intro max-w-4xl">
                 <span class="sr-only">آزمون مرور</span>
-                <p class="mt-4 text-sm font-bold text-rausch">{{ $quiz->course->subject?->name }} · {{ $quiz->course->title }}</p>
+                <p class="mt-4 text-sm font-bold text-rausch-text">{{ $quiz->course->subject?->name }} · {{ $quiz->course->title }}</p>
                 <h1 class="section-title mt-4">{{ $quiz->title }}</h1>
                 @if ($quiz->description)
                     <p class="section-copy mt-5">{{ $quiz->description }}</p>

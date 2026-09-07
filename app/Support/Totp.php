@@ -53,24 +53,35 @@ class Totp
         return self::codeAt($secret, self::timeStep());
     }
 
-    public static function verify(string $secret, string $code, int $window = self::DRIFT_WINDOW): bool
+    /**
+     * Verify and report WHICH time-step matched, so callers can persist it
+     * and reject replays of an already-consumed step (TOTP replay guard).
+     * Returns the matched step (current ± window) or null when no code in
+     * the window matches.
+     */
+    public static function verifyStep(string $secret, string $code, int $window = self::DRIFT_WINDOW): ?int
     {
         $secret = strtoupper(trim($secret));
         $code = preg_replace('/\D/', '', $code) ?? '';
 
         if ($secret === '' || strlen($code) !== self::CODE_LENGTH) {
-            return false;
+            return null;
         }
 
         $step = self::timeStep();
 
         for ($i = -$window; $i <= $window; $i++) {
             if (hash_equals(self::codeAt($secret, $step + $i), $code)) {
-                return true;
+                return $step + $i;
             }
         }
 
-        return false;
+        return null;
+    }
+
+    public static function verify(string $secret, string $code, int $window = self::DRIFT_WINDOW): bool
+    {
+        return self::verifyStep($secret, $code, $window) !== null;
     }
 
     private static function timeStep(): int

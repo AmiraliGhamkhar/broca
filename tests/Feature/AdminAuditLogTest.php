@@ -6,12 +6,12 @@ use App\Models\AdminActivityLog;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 class AdminAuditLogTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_state_changing_admin_requests_are_logged(): void
     {

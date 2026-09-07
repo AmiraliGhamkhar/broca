@@ -77,7 +77,7 @@
                                 <form method="post" action="{{ route('admin.subjects.destroy', $subj) }}" onsubmit="return confirm('آیا از حذف این مبحث اطمینان دارید؟');">
                                     @csrf
                                     @method('delete')
-                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch-text transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </td>

@@ -35,7 +35,7 @@
 
             <button type="submit" class="rounded-xl bg-surface-soft px-4 py-2.5 text-xs font-bold text-ink hover:bg-ink hover:text-white">فیلتر</button>
             @if (request()->hasAny(['q', 'status', 'role']))
-                <a href="{{ route('admin.users.index') }}" class="text-xs text-rausch font-bold underline">پاک کردن</a>
+                <a href="{{ route('admin.users.index') }}" class="text-xs text-rausch-text font-bold underline">پاک کردن</a>
             @endif
         </form>
     </div>
@@ -88,7 +88,7 @@
                                 <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold {{ $user->is_admin ? 'bg-rausch text-white' : 'bg-surface-strong text-ink' }}">
                                     {{ $user->is_admin ? 'مدیر ارشد' : 'دانشجو' }}
                                 </span>
-                                <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold {{ $user->status === 'active' ? 'bg-teal/10 text-teal' : 'bg-rausch/20 text-rausch' }}">
+                                <span class="rounded-full px-2.5 py-0.5 text-[11px] font-bold {{ $user->status === 'active' ? 'bg-teal/10 text-teal' : 'bg-rausch/20 text-rausch-text' }}">
                                     {{ $user->status === 'active' ? 'فعال' : 'تعلیق' }}
                                 </span>
                             </div>

@@ -3,12 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\BlogPost;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 class BlogTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_published_article_renders(): void
     {

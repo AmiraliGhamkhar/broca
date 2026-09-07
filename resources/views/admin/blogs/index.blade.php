@@ -139,7 +139,7 @@
                                 <form method="post" action="{{ route('admin.blogs.destroy', $post) }}" onsubmit="return confirm('آیا از حذف این مقاله مطمئن هستید؟');">
                                     @csrf
                                     @method('delete')
-                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch-text transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </td>

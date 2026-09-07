@@ -4,12 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Plan;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 class PlanAdminTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_admin_can_update_plan_price_and_activation(): void
     {

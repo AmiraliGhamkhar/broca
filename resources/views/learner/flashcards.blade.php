@@ -49,7 +49,7 @@
                         </div>
                         <div class="meta-card is-soft">
                             <p class="text-[11px] font-bold text-muted">مرور امروز</p>
-                            <p class="mt-1 text-lg font-black {{ ($dueCounts[$deck->id] ?? 0) > 0 ? 'text-rausch' : 'text-teal' }}">{{ number_format($dueCounts[$deck->id] ?? 0) }}</p>
+                            <p class="mt-1 text-lg font-black {{ ($dueCounts[$deck->id] ?? 0) > 0 ? 'text-rausch-text' : 'text-teal' }}">{{ number_format($dueCounts[$deck->id] ?? 0) }}</p>
                         </div>
                     </div>
 

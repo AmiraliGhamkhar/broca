@@ -8,7 +8,7 @@ use App\Models\QuizOption;
 use App\Models\QuizQuestion;
 use App\Models\Subscription;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -18,7 +18,7 @@ use Tests\TestCase;
  */
 class QuizTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     private User $user;
 
@@ -95,6 +95,43 @@ class QuizTest extends TestCase
         $attempt = QuizAttempt::latest('id')->first();
         $this->assertSame(100, $attempt->score_percent);
         $this->assertTrue($attempt->passed);
+    }
+
+    public function test_submissions_are_capped_at_thirty_attempts_per_quiz_per_day(): void
+    {
+        $answers = collect($this->correctOptions)->map(fn (QuizOption $option) => $option->id)->all();
+
+        // Seed 30 attempts inside the rolling 24h window (the counter the
+        // controller enforces is quiz_attempts rows — the route throttle is
+        // a separate, coarser defense).
+        foreach (range(1, 30) as $i) {
+            QuizAttempt::create([
+                'user_id' => $this->user->id,
+                'quiz_id' => $this->quiz->id,
+                'score_percent' => 100,
+                'correct_count' => 3,
+                'question_count' => 3,
+                'passed' => true,
+                'started_at' => now()->subMinutes($i),
+                'submitted_at' => now()->subMinutes($i),
+            ]);
+        }
+
+        $this->actingAs($this->user)
+            ->post(route('quizzes.attempts.store', $this->quiz), ['answers' => $answers])
+            ->assertStatus(429);
+
+        $this->assertSame(30, QuizAttempt::query()->where('user_id', $this->user->id)->where('quiz_id', $this->quiz->id)->count());
+
+        // An attempt 25h ago ages out of the window — the cap must not be
+        // a lifetime quota.
+        QuizAttempt::query()->update(['submitted_at' => now()->subHours(25), 'started_at' => now()->subHours(25)]);
+
+        $this->actingAs($this->user)
+            ->post(route('quizzes.attempts.store', $this->quiz), ['answers' => $answers])
+            ->assertRedirect();
+
+        $this->assertSame(31, QuizAttempt::query()->where('user_id', $this->user->id)->where('quiz_id', $this->quiz->id)->count());
     }
 
     public function test_submitting_an_unknown_question_id_is_rejected(): void

@@ -80,20 +80,23 @@ class PaymentController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        return $this->handleGatewayCallback($request, okStatus: 'OK');
+        return $this->handleGatewayCallback($request, okStatuses: ['OK']);
     }
 
     /**
      * Zibal callback (secondary gateway). Zibal sends `trackId` + `success`
-     * (1/2 = paid) instead of ZarinPal's `Authority` + `Status=OK`; after the
-     * parameter mapping the flow is byte-for-byte the same money path.
+     * where BOTH 1 (paid) and 2 ("already verified") mean money was captured
+     * — a `success=2` callback must reach server verification like `1`,
+     * otherwise a duplicate notification arriving before local resolution
+     * marks a PAID invoice as failed (audit 2026-09-07). After the parameter
+     * mapping the flow is byte-for-byte the same money path.
      */
     public function zibalCallback(Request $request): RedirectResponse
     {
-        return $this->handleGatewayCallback($request, okStatus: '1');
+        return $this->handleGatewayCallback($request, okStatuses: ['1', '2']);
     }
 
-    private function handleGatewayCallback(Request $request, string $okStatus): RedirectResponse
+    private function handleGatewayCallback(Request $request, array $okStatuses): RedirectResponse
     {
         $authority = (string) ($request->query('Authority') ?? $request->query('trackId') ?? '');
 
@@ -117,13 +120,13 @@ class PaymentController extends Controller
         $transaction = $this->recordTransaction($invoice, $request);
 
         // Server-side verification, bound to the invoice's amount+authority.
-        // A cancelled callback (Status !== OK / success !== 1) skips the
+        // A cancelled callback (Status !== OK / success ∉ {1,2}) skips the
         // network call. The returned Receipt is persisted into the ledger
         // row before finalization so the forensic record carries the
         // gateway's reference id (Round-6 audit I-2).
         $receipt = null;
 
-        if ((string) $request->query('Status', $request->query('success', '')) === $okStatus) {
+        if (in_array((string) $request->query('Status', $request->query('success', '')), $okStatuses, true)) {
             $receipt = $this->gateway->verifyPayment($invoice);
         }
 

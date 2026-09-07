@@ -63,17 +63,34 @@ class BackupDatabase extends Command
 
         // MYSQL_PWD keeps the password out of the process argument list.
         // --single-transaction: consistent InnoDB snapshot without table locks.
+        //
+        // Volatile/auth-material tables are EXCLUDED: the sessions table's
+        // row keys ARE the session-cookie values of every live session
+        // (admin sessions included — they carry the 2FA-passed stamp), and
+        // cache/jobs are ephemeral. This dump travels to a Telegram chat via
+        // the bot's backup command; it must never carry live session ids
+        // (audit 2026-09-07).
+        $database = (string) $config['database'];
+        $excluded = ['sessions', 'cache', 'cache_locks', 'jobs', 'job_batches', 'failed_jobs'];
+
+        $command = [
+            'mysqldump',
+            '--host='.($config['host'] ?? '127.0.0.1'),
+            '--port='.(string) ($config['port'] ?? 3306),
+            '--user='.$username,
+            '--single-transaction',
+            '--routines',
+            '--triggers',
+        ];
+
+        foreach ($excluded as $table) {
+            $command[] = '--ignore-table='.$database.'.'.$table;
+        }
+
+        $command[] = $database;
+
         $dump = new Process(
-            [
-                'mysqldump',
-                '--host='.($config['host'] ?? '127.0.0.1'),
-                '--port='.(string) ($config['port'] ?? 3306),
-                '--user='.$username,
-                '--single-transaction',
-                '--routines',
-                '--triggers',
-                $config['database'],
-            ],
+            $command,
             null,
             ['MYSQL_PWD' => $password],
             null,

@@ -52,7 +52,7 @@
                 </div>
 
                 @if ($errors->any())
-                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
+                    <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch-text" role="alert">
                         {{ $errors->first() }}
                     </div>
                 @endif
@@ -104,10 +104,10 @@
                             <input type="checkbox" name="consent" value="1" required class="rounded border-ink/20 size-4 text-rausch mt-0.5 shrink-0">
                             <span>
                                 با ساخت حساب،
-                                <a href="{{ route('legal.show', 'terms') }}" target="_blank" class="text-rausch underline font-bold">شرایط استفاده</a>،
-                                <a href="{{ route('legal.show', 'privacy') }}" target="_blank" class="text-rausch underline font-bold">حریم خصوصی</a>
+                                <a href="{{ route('legal.show', 'terms') }}" target="_blank" class="text-rausch-text underline font-bold">شرایط استفاده</a>،
+                                <a href="{{ route('legal.show', 'privacy') }}" target="_blank" class="text-rausch-text underline font-bold">حریم خصوصی</a>
                                 و
-                                <a href="{{ route('legal.show', 'medical-disclaimer') }}" target="_blank" class="text-rausch underline font-bold">بیانیه مسئولیت پزشکی</a>
+                                <a href="{{ route('legal.show', 'medical-disclaimer') }}" target="_blank" class="text-rausch-text underline font-bold">بیانیه مسئولیت پزشکی</a>
                                 را با آگاهی می‌پذیرم.
                             </span>
                         </label>
@@ -121,7 +121,7 @@
 
                 <div class="mt-8 pt-6 border-t border-hairline-soft text-center text-xs">
                     <span class="text-muted">قبلاً ثبت‌نام کرده‌اید؟</span>
-                    <a href="{{ route('login') }}" class="text-rausch font-bold underline mr-1 hover:text-ink">ورود به حساب کاربری</a>
+                    <a href="{{ route('login') }}" class="text-rausch-text font-bold underline mr-1 hover:text-ink">ورود به حساب کاربری</a>
                 </div>
             </div>
         </div>

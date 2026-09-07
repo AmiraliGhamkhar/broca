@@ -158,7 +158,7 @@
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
                                 <span class="{{ $video->is_free_available ? 'badge-success' : 'badge-neutral' }}">{{ $video->is_free_available ? 'رایگان' : 'ویژه' }}</span>
-                                <span class="text-rausch">←</span>
+                                <span class="text-rausch-text">←</span>
                             </div>
                         </a>
                     </li>
@@ -190,7 +190,7 @@
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
                                 <span class="{{ $note->is_free_available ? 'badge-success' : 'badge-neutral' }}">{{ $note->is_free_available ? 'رایگان' : 'ویژه' }}</span>
-                                <span class="text-rausch">دانلود ←</span>
+                                <span class="text-rausch-text">دانلود ←</span>
                             </div>
                         </a>
                     </li>

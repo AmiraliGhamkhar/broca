@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Course;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -12,7 +12,7 @@ use Tests\TestCase;
  */
 class SecurityHeadersTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_csp_restricts_sources_to_self_plus_inline_necessities(): void
     {

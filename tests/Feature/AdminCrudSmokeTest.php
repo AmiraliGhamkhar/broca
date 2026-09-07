@@ -10,7 +10,7 @@ use App\Models\Quiz;
 use App\Models\Subject;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WasmSafeRefreshDatabase;
 use Tests\TestCase;
 
 /**
@@ -19,7 +19,7 @@ use Tests\TestCase;
  */
 class AdminCrudSmokeTest extends TestCase
 {
-    use RefreshDatabase;
+    use WasmSafeRefreshDatabase;
 
     public function test_admin_index_pages_render_with_seeded_data(): void
     {
