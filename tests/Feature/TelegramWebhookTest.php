@@ -162,6 +162,44 @@ class TelegramWebhookTest extends TestCase
         ];
     }
 
+    public function test_admin_can_create_a_subject_with_a_fully_persian_rtl_form(): void
+    {
+        $this->postJson(route('telegram.webhook'), $this->callbackUpdate('new:subject'), $this->headers())->assertOk();
+        $this->postJson(route('telegram.webhook'), $this->message(implode("\n", [
+            'نام: فیزیولوژی فارسی',
+            'توضیحات: درس‌نامه‌ای برای آزمون',
+            'ترتیب: ۳',
+            'نمایان: بله',
+        ])), $this->headers())->assertOk();
+
+        $this->assertDatabaseHas('subjects', [
+            'name' => 'فیزیولوژی فارسی',
+            'sort_order' => 3,
+            'is_visible' => true,
+        ]);
+    }
+
+    public function test_admin_can_change_hero_alt_text_from_telegram(): void
+    {
+        $this->postJson(route('telegram.webhook'), $this->callbackUpdate('appearance:alt'), $this->headers())->assertOk();
+        $this->postJson(route('telegram.webhook'), $this->message('ماکت آموزشی قلب در کلاس پزشکی'), $this->headers())->assertOk();
+
+        $this->assertDatabaseHas('site_settings', [
+            'id' => 1,
+            'hero_image_alt' => 'ماکت آموزشی قلب در کلاس پزشکی',
+        ]);
+    }
+
+    public function test_admin_can_suspend_a_user_after_confirmation(): void
+    {
+        $user = \App\Models\User::factory()->create();
+
+        $this->postJson(route('telegram.webhook'), $this->callbackUpdate('confirmuser:'.$user->id.':status:suspended'), $this->headers())->assertOk();
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'status' => 'suspended']);
+        $this->assertDatabaseHas('admin_activity_logs', ['route_name' => 'telegram.webhook']);
+    }
+
     public function test_backup_command_queues_the_job_instead_of_running_it_inline(): void
     {
         // Round-6 audit I-4: the dump + gzip + upload can outlive Telegram's

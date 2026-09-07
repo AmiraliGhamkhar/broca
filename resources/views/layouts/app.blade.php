@@ -82,6 +82,7 @@
     </script>
 </head>
 <body class="bg-canvas text-ink font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileNav: false }">
+    @php($siteAppearance = \App\Models\SiteSetting::current())
 
     @if (! empty($markdownAlternate ?? null))
         <div class="sr-only" aria-hidden="true">نسخهٔ مارک‌داون این صفحه در آدرس {{ $markdownAlternate }} در دسترس است، بهینه‌شده برای ابزارهای هوش مصنوعی و LLM.</div>
@@ -96,7 +97,11 @@
                 <!-- Brand Logo -->
                 <div class="flex items-center gap-8">
                     <a href="{{ url('/') }}" class="flex items-center gap-3 group focus:outline-none">
-                        <span class="brand-mark">ب</span>
+                        @if ($siteAppearance->logoUrl())
+                            <img src="{{ $siteAppearance->logoUrl() }}" alt="لوگوی {{ __('app.name') }}" width="48" height="48" class="size-12 rounded-xl object-contain">
+                        @else
+                            <span class="brand-mark">ب</span>
+                        @endif
                         <div>
                             <span class="font-display text-2xl leading-none text-ink block group-hover:text-rausch transition-colors">
                                 {{ __('app.name') }}
@@ -337,7 +342,11 @@
                 <!-- Col 1: Brand & Bio -->
                 <div class="lg:col-span-2 space-y-4">
                     <div class="flex items-center gap-3">
-                        <span class="brand-mark">ب</span>
+                        @if ($siteAppearance->logoUrl())
+                            <img src="{{ $siteAppearance->logoUrl() }}" alt="" width="48" height="48" class="size-12 rounded-xl object-contain">
+                        @else
+                            <span class="brand-mark">ب</span>
+                        @endif
                         <div>
                             <span class="font-display text-xl text-ink">{{ __('app.name') }}</span>
                             <span class="text-[11px] text-muted block">آموزش عمیق علوم پزشکی برای دانشجویان</span>

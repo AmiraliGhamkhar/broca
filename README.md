@@ -57,13 +57,14 @@ This repo now includes a webhook-driven **Telegram admin bot** for Persian opera
 ### What it can do
 
 - Manage **subscription plans**
-- Create, edit, review, publish, archive, and delete **blog posts**
-- Create, edit, review, publish, archive, and delete **courses**
-- Upload or update **videos**
-- Upload or update **notes/booklets**
-- Create, edit, review, publish, archive, and delete **flashcard decks/cards**
-- Create, edit, review, publish, archive, and delete **quizzes/questions**
-- Change **course/blog cover images**
+- Create, edit, show/hide, and safely delete **subjects**
+- Create, edit, review, publish, archive, and delete **blog posts and courses**
+- Upload, replace, publish, designate as free, or remove **videos and notes/booklets**
+- Create, edit, review, publish, archive, and delete **flashcard decks/cards and quizzes/questions**
+- Upload, replace, or remove **course/blog cover images**
+- Upload, replace, or reset the website **logo and landing-page hero image**, including its accessible alt text
+- Search and manage **users**, account status, and administrator roles with confirmation and a last-admin safeguard
+- Show **dashboard totals and recent admin activity**
 - Trigger a **database backup** and send the dump file back in Telegram
 
 The UX is primarily an **inline-button wizard**: admins navigate, pick items, confirm deletes, and approve publication with inline buttons; they only type when actual field values/content are needed.
@@ -106,7 +107,7 @@ Fallback slash commands still exist for direct access:
 
 - `/plans`, `/plan_new`, `/plan_edit {id}`
 - `/blogs`, `/blog_new`, `/blog_edit {id}`
-- `/subjects`, `/courses`, `/course_new`, `/course_edit {id}`
+- `/subjects`, `/subject_new`, `/subject_edit {id}`, `/courses`, `/course_new`, `/course_edit {id}`
 - `/videos`, `/video_new`, `/video_edit {id}`
 - `/notes`, `/note_new`, `/note_edit {id}`
 - `/decks`, `/deck_new`, `/deck_edit {id}`
@@ -114,9 +115,10 @@ Fallback slash commands still exist for direct access:
 - `/quizzes`, `/quiz_new`, `/quiz_edit {id}`
 - `/question_new {quiz_id}`, `/question_edit {id}`
 - `/set_course_cover {id}`, `/set_blog_cover {id}`
-- `/backup_db`, `/cancel`
+- `/users`, `/user_find {name|email|phone|id}`, `/user_manage {id}`
+- `/appearance`, `/dashboard`, `/activity`, `/backup_db`, `/cancel`
 
-The bot sends a form template; fill it in and send it back. For video/note uploads, you can either attach the file directly or use `source_mode: url` with a file URL. Direct publish from the form is blocked for medical content; move items through the review/publish buttons instead.
+The bot sends a fully Persian RTL form template; fill it in and send it back. English field names remain accepted for backward compatibility. For video/note uploads, attach the file directly or choose the Persian URL/reference mode shown in the form. Direct publish from the form is blocked for medical content; move items through the review/publish buttons instead.
 
 ## Docs
 

@@ -1,3 +1,4 @@
+@php($heroAppearance = \App\Models\SiteSetting::current())
 <section class="hero-shell border-b border-hairline-soft">
     <div class="section-shell relative z-10">
         <div class="grid grid-cols-1 gap-10 py-16 lg:grid-cols-12 lg:items-center lg:py-20">
@@ -53,9 +54,11 @@
                      updating the alt text to match the new photograph. --}}
                 <figure class="relative m-0 overflow-hidden rounded-xl border border-hairline-soft bg-white shadow-float">
                     <picture>
-                        <source type="image/webp" srcset="/images/hero/hero.webp">
-                        <img src="/images/hero/hero.jpg"
-                             alt="ماکت آموزشی قلب روی پایهٔ سفید، در نور موزه‌ای"
+                        @if (! $heroAppearance->hero_image_path)
+                            <source type="image/webp" srcset="/images/hero/hero.webp">
+                        @endif
+                        <img src="{{ $heroAppearance->hero_image_path ?: '/images/hero/hero.jpg' }}"
+                             alt="{{ $heroAppearance->hero_image_alt }}"
                              width="1200" height="1600"
                              fetchpriority="high" decoding="async"
                              class="block w-full aspect-[4/3] sm:aspect-[4/5] object-cover saturate-[.85] contrast-[.98]">

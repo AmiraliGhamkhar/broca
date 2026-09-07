@@ -11,10 +11,12 @@ class TelegramApiClient
 {
     public function sendMessage(int $chatId, string $text, array $options = []): array
     {
+        // Plain text is intentional: titles, names and validation errors come
+        // from administrators and may contain <, > or &. HTML parse mode would
+        // reject such messages or interpret user content as markup.
         return $this->request('sendMessage', array_merge([
             'chat_id' => $chatId,
             'text' => $text,
-            'parse_mode' => 'HTML',
         ], $options));
     }
 

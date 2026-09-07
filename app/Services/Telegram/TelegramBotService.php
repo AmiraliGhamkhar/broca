@@ -12,6 +12,9 @@ use App\Models\Quiz;
 use App\Models\QuizOption;
 use App\Models\QuizQuestion;
 use App\Models\Subject;
+use App\Models\SiteSetting;
+use App\Models\User;
+use App\Models\AdminActivityLog;
 use App\Models\TelegramAdmin;
 use App\Models\TelegramChatSession;
 use App\Models\Video;
@@ -156,6 +159,9 @@ class TelegramBotService
                 'courses' => $this->sendCoursesHelp($chatId),
                 'media' => $this->sendMediaHelp($chatId),
                 'study' => $this->sendStudyHelp($chatId),
+                'admin' => $this->sendAdministrationHelp($chatId),
+                'appearance' => $this->sendAppearanceHelp($chatId),
+                'dashboard' => $this->sendDashboard($chatId),
                 default => $this->sendWelcome($chatId),
             };
 
@@ -174,6 +180,8 @@ class TelegramBotService
                 'quizzes' => $this->listQuizzes($chatId),
                 'cards' => $this->listCards($chatId, (int) $b),
                 'questions' => $this->listQuestions($chatId, (int) $b),
+                'users' => $this->listUsers($chatId),
+                'activity' => $this->listActivity($chatId),
                 default => $this->sendWelcome($chatId),
             };
 
@@ -197,6 +205,7 @@ class TelegramBotService
                 'quiz' => $this->startQuizWorkflow($chatId, $telegramUserId, null),
                 'card' => $this->startCardWorkflow($chatId, $telegramUserId, ['deck_id' => (int) $b]),
                 'question' => $this->startQuestionWorkflow($chatId, $telegramUserId, ['quiz_id' => (int) $b]),
+                'subject' => $this->startSubjectWorkflow($chatId, $telegramUserId, null),
                 default => $this->sendWelcome($chatId),
             };
 
@@ -214,6 +223,7 @@ class TelegramBotService
                 'quiz' => $this->startQuizWorkflow($chatId, $telegramUserId, (int) $b),
                 'card' => $this->startCardEditWorkflow($chatId, $telegramUserId, (int) $b),
                 'question' => $this->startQuestionEditWorkflow($chatId, $telegramUserId, (int) $b),
+                'subject' => $this->startSubjectWorkflow($chatId, $telegramUserId, (int) $b),
                 default => $this->sendWelcome($chatId),
             };
 
@@ -226,6 +236,55 @@ class TelegramBotService
                 'blog' => $this->startCoverWorkflow($chatId, $telegramUserId, 'blog.cover', (int) $b),
                 default => $this->sendWelcome($chatId),
             };
+
+            return;
+        }
+
+        if ($verb === 'coverremove') {
+            $this->confirmCoverRemoval($chatId, (string) $a, (int) $b);
+
+            return;
+        }
+
+        if ($verb === 'confirmcoverremove') {
+            $this->removeCover($chatId, (string) $a, (int) $b);
+
+            return;
+        }
+
+        if ($verb === 'appearance') {
+            match ($a) {
+                'logo' => $this->startAppearanceImageWorkflow($chatId, $telegramUserId, 'appearance.logo'),
+                'hero' => $this->startAppearanceImageWorkflow($chatId, $telegramUserId, 'appearance.hero'),
+                'alt' => $this->startAppearanceAltWorkflow($chatId, $telegramUserId),
+                'remove_logo' => $this->confirmAppearanceRemoval($chatId, 'logo'),
+                'remove_hero' => $this->confirmAppearanceRemoval($chatId, 'hero'),
+                default => $this->sendAppearanceHelp($chatId),
+            };
+
+            return;
+        }
+
+        if ($verb === 'confirmappearance') {
+            $this->removeAppearanceImage($chatId, (string) $a);
+
+            return;
+        }
+
+        if ($verb === 'useraction') {
+            $this->confirmUserAction($chatId, (int) $a, (string) $b, (string) $c);
+
+            return;
+        }
+
+        if ($verb === 'confirmuser') {
+            $this->applyUserAction($chatId, (int) $a, (string) $b, (string) $c);
+
+            return;
+        }
+
+        if ($verb === 'free') {
+            $this->toggleFreeDesignation($chatId, (string) $a, (int) $b, (string) $c === '1');
 
             return;
         }
@@ -291,6 +350,8 @@ class TelegramBotService
             'blog_new' => $this->startBlogWorkflow($chatId, $telegramUserId, null),
             'blog_edit' => $this->startBlogWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه مطلب وبلاگ را وارد کنید.')),
             'subjects' => $this->listSubjects($chatId),
+            'subject_new' => $this->startSubjectWorkflow($chatId, $telegramUserId, null),
+            'subject_edit' => $this->startSubjectWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه درس‌نامه را وارد کنید.')),
             'courses' => $this->listCourses($chatId),
             'course_new' => $this->startCourseWorkflow($chatId, $telegramUserId, null),
             'course_edit' => $this->startCourseWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه دوره را وارد کنید.')),
@@ -312,6 +373,12 @@ class TelegramBotService
             'question_edit' => $this->startQuestionEditWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه سؤال را وارد کنید.')),
             'set_course_cover' => $this->startCoverWorkflow($chatId, $telegramUserId, 'course.cover', $this->requiredId($argument, 'شناسه دوره را وارد کنید.')),
             'set_blog_cover' => $this->startCoverWorkflow($chatId, $telegramUserId, 'blog.cover', $this->requiredId($argument, 'شناسه مطلب وبلاگ را وارد کنید.')),
+            'users' => $this->listUsers($chatId),
+            'user_find' => $this->findUsers($chatId, $argument),
+            'user_manage' => $this->openUserById($chatId, $this->requiredId($argument, 'شناسه کاربر را وارد کنید.')),
+            'activity' => $this->listActivity($chatId),
+            'appearance' => $this->sendAppearanceHelp($chatId),
+            'dashboard' => $this->sendDashboard($chatId),
             'backup_db' => $this->backupDatabase($chatId),
             default => $this->sendUnknownCommand($chatId),
         };
@@ -326,6 +393,8 @@ class TelegramBotService
             'بلاگ' => $this->sendBlogsHelp($chatId),
             'ویدیو و جزوه' => $this->sendMediaHelp($chatId),
             'آزمون و فلش‌کارت' => $this->sendStudyHelp($chatId),
+            'مدیریت کاربران' => $this->listUsers($chatId),
+            'ظاهر سایت' => $this->sendAppearanceHelp($chatId),
             'بکاپ دیتابیس' => $this->backupDatabase($chatId),
             default => false,
         };
@@ -347,6 +416,9 @@ class TelegramBotService
             'question.form' => $this->submitQuestionForm($session, (string) ($message['text'] ?? '')),
             'course.cover' => $this->submitCourseCover($session, $message),
             'blog.cover' => $this->submitBlogCover($session, $message),
+            'subject.form' => $this->submitSubjectForm($session, (string) ($message['text'] ?? '')),
+            'appearance.logo', 'appearance.hero' => $this->submitAppearanceImage($session, $message),
+            'appearance.alt' => $this->submitAppearanceAlt($session, (string) ($message['text'] ?? '')),
             default => throw new RuntimeException('گردش‌کار شناخته نشد. /cancel را بزنید و دوباره شروع کنید.'),
         };
     }
@@ -394,7 +466,7 @@ class TelegramBotService
         $this->api->sendMessage($chatId, 'مدیریت دوره‌ها و شاخه‌های آموزشی.', [
             'reply_markup' => $this->inlineKeyboard([
                 [$this->button('📚 لیست سابجکت‌ها', 'list:subjects'), $this->button('🎓 لیست دوره‌ها', 'list:courses')],
-                [$this->button('➕ دوره جدید', 'new:course')],
+                [$this->button('➕ درس‌نامه جدید', 'new:subject'), $this->button('➕ دوره جدید', 'new:course')],
                 [$this->button('↩️ بازگشت', 'menu:main')],
             ]),
         ]);
@@ -422,6 +494,61 @@ class TelegramBotService
                 [$this->button('🗂 لیست دِک‌ها', 'list:decks'), $this->button('🧪 لیست آزمون‌ها', 'list:quizzes')],
                 [$this->button('➕ دِک جدید', 'new:deck'), $this->button('➕ آزمون جدید', 'new:quiz')],
                 [$this->button('↩️ بازگشت', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function sendAdministrationHelp(int $chatId): bool
+    {
+        $this->api->sendMessage($chatId, "👥 مدیریت کاربران و گزارش‌های عملیاتی\nوضعیت حساب، نقش مدیر و آخرین فعالیت‌ها را از این بخش کنترل کنید.", [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('👥 کاربران', 'list:users'), $this->button('📊 آمار سایت', 'menu:dashboard')],
+                [$this->button('🧾 آخرین فعالیت‌ها', 'list:activity')],
+                [$this->button('↩️ بازگشت', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function sendAppearanceHelp(int $chatId): bool
+    {
+        $settings = SiteSetting::current();
+        $this->api->sendMessage($chatId, implode("\n", [
+            '🎨 مدیریت ظاهر سایت',
+            'لوگو: '.($settings->logo_image_path ? 'سفارشی' : 'نشان پیش‌فرض بروکا'),
+            'تصویر اصلی: '.($settings->hero_image_path ? 'سفارشی' : 'تصویر پیش‌فرض'),
+            'متن جایگزین: '.$settings->hero_image_alt,
+            '',
+            'برای جایگزینی، دکمه مربوط را بزنید و تصویر را ارسال کنید.',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('🖼 تغییر لوگو', 'appearance:logo'), $this->button('🌄 تغییر تصویر اصلی', 'appearance:hero')],
+                [$this->button('✍️ ویرایش توضیح تصویر', 'appearance:alt')],
+                [$this->button('🗑 حذف لوگوی سفارشی', 'appearance:remove_logo'), $this->button('🗑 حذف تصویر سفارشی', 'appearance:remove_hero')],
+                [$this->button('↩️ بازگشت', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function sendDashboard(int $chatId): bool
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            '📊 خلاصه وضعیت بروکا',
+            'کاربران: '.number_format(User::query()->count()),
+            'کاربران فعال: '.number_format(User::query()->where('status', 'active')->count()),
+            'دوره‌ها: '.number_format(Course::query()->count()),
+            'دوره‌های منتشرشده: '.number_format(Course::query()->published()->count()),
+            'ویدیوها: '.number_format(Video::query()->count()),
+            'مقاله‌ها: '.number_format(BlogPost::query()->count()),
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('👥 مدیریت کاربران', 'list:users'), $this->button('🧾 فعالیت‌ها', 'list:activity')],
+                [$this->button('↩️ مدیریت سایت', 'menu:admin')],
             ]),
         ]);
 
@@ -493,16 +620,99 @@ class TelegramBotService
 
     private function listSubjects(int $chatId): bool
     {
-        $subjects = Subject::query()->orderBy('sort_order')->orderBy('name')->get();
-        $lines = ['📚 سابجکت‌ها:'];
+        $subjects = Subject::query()->withCount('courses')->orderBy('sort_order')->orderBy('name')->get();
+        $lines = ['📚 درس‌نامه‌ها:'];
+        $buttons = [
+            [$this->button('➕ درس‌نامه جدید', 'new:subject'), $this->button('↩️ منوی دوره‌ها', 'menu:courses')],
+        ];
 
         foreach ($subjects as $subject) {
-            $lines[] = sprintf('#%d | %s', $subject->id, $subject->name);
+            $lines[] = sprintf('#%d | %s | %d دوره | %s', $subject->id, $subject->name, $subject->courses_count, $subject->is_visible ? 'نمایان' : 'پنهان');
+            $buttons[] = [$this->button('🛠 درس‌نامه #'.$subject->id.' — '.$this->truncate($subject->name, 28), 'manage:subject:'.$subject->id)];
+        }
+
+        if ($subjects->isEmpty()) {
+            $lines[] = 'هنوز درس‌نامه‌ای ثبت نشده است.';
+        }
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard($buttons),
+        ]);
+
+        return true;
+    }
+
+    private function listUsers(int $chatId): bool
+    {
+        $users = User::query()->latest('id')->limit(15)->get();
+        $lines = ['👥 آخرین کاربران:', 'برای جستجو بفرستید: /user_find نام، ایمیل یا موبایل'];
+        $buttons = [[$this->button('📊 آمار سایت', 'menu:dashboard'), $this->button('↩️ مدیریت سایت', 'menu:admin')]];
+
+        foreach ($users as $user) {
+            $lines[] = sprintf('#%d | %s | %s | %s', $user->id, $user->name, $user->status === 'active' ? 'فعال' : 'تعلیق', $user->is_admin ? 'مدیر' : 'فراگیر');
+            $buttons[] = [$this->button('🛠 کاربر #'.$user->id.' — '.$this->truncate($user->name, 26), 'manage:user:'.$user->id)];
+        }
+
+        if ($users->isEmpty()) {
+            $lines[] = 'هنوز کاربری ثبت نشده است.';
+        }
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), ['reply_markup' => $this->inlineKeyboard($buttons)]);
+
+        return true;
+    }
+
+    private function findUsers(int $chatId, string $term): bool
+    {
+        $term = trim($term);
+        if ($term === '') {
+            throw new RuntimeException('پس از دستور، نام، ایمیل، موبایل یا شناسه کاربر را وارد کنید. نمونه: /user_find علی');
+        }
+        $escaped = '%'.addcslashes($term, '\\%_').'%';
+        $users = User::query()->where(function ($query) use ($term, $escaped): void {
+            $query->where('name', 'like', $escaped)
+                ->orWhere('email', 'like', $escaped)
+                ->orWhere('phone', 'like', $escaped);
+            if (ctype_digit($term)) {
+                $query->orWhereKey((int) $term);
+            }
+        })->latest('id')->limit(15)->get();
+
+        $lines = ['🔎 نتیجه جستجوی کاربران برای «'.$term.'»:'];
+        $buttons = [[$this->button('↩️ همه کاربران', 'list:users')]];
+        foreach ($users as $user) {
+            $lines[] = sprintf('#%d | %s | %s', $user->id, $user->name, $user->email);
+            $buttons[] = [$this->button('🛠 مدیریت #'.$user->id.' — '.$this->truncate($user->name, 25), 'manage:user:'.$user->id)];
+        }
+        if ($users->isEmpty()) {
+            $lines[] = 'کاربری پیدا نشد.';
+        }
+        $this->api->sendMessage($chatId, implode("\n", $lines), ['reply_markup' => $this->inlineKeyboard($buttons)]);
+
+        return true;
+    }
+
+    private function openUserById(int $chatId, int $id): bool
+    {
+        $this->showUserManageMenu($chatId, User::query()->findOrFail($id));
+
+        return true;
+    }
+
+    private function listActivity(int $chatId): bool
+    {
+        $logs = AdminActivityLog::query()->latest('id')->limit(12)->get();
+        $lines = ['🧾 آخرین فعالیت‌های مدیریتی:'];
+        foreach ($logs as $log) {
+            $lines[] = sprintf('%s | %s | %s', $log->created_at?->format('Y-m-d H:i') ?? '—', $log->actor_name_snapshot ?: 'مدیر تلگرام', $this->truncate($log->action, 55));
+        }
+        if ($logs->isEmpty()) {
+            $lines[] = 'هنوز فعالیتی ثبت نشده است.';
         }
 
         $this->api->sendMessage($chatId, implode("\n", $lines), [
             'reply_markup' => $this->inlineKeyboard([
-                [$this->button('🎓 لیست دوره‌ها', 'list:courses'), $this->button('↩️ منوی دوره‌ها', 'menu:courses')],
+                [$this->button('🔄 تازه‌سازی', 'list:activity'), $this->button('↩️ مدیریت سایت', 'menu:admin')],
             ]),
         ]);
 
@@ -679,6 +889,38 @@ class TelegramBotService
         return true;
     }
 
+    private function startSubjectWorkflow(int $chatId, int $telegramUserId, ?int $id): bool
+    {
+        $subject = $id ? Subject::query()->findOrFail($id) : null;
+        $this->storeSession($chatId, $telegramUserId, 'subject.form', ['id' => $subject?->id]);
+        $this->api->sendMessage($chatId, $this->subjectTemplate($subject), [
+            'reply_markup' => $this->workflowMarkup('list:subjects'),
+        ]);
+
+        return true;
+    }
+
+    private function startAppearanceImageWorkflow(int $chatId, int $telegramUserId, string $workflow): bool
+    {
+        $this->storeSession($chatId, $telegramUserId, $workflow);
+        $label = $workflow === 'appearance.logo' ? 'لوگوی جدید' : 'تصویر اصلی جدید';
+        $this->api->sendMessage($chatId, "🖼 {$label} را به‌صورت عکس یا فایل تصویری ارسال کنید.\nفرمت‌های مجاز: JPG، PNG و WebP. برای لغو /cancel را بفرستید.", [
+            'reply_markup' => $this->workflowMarkup('menu:appearance'),
+        ]);
+
+        return true;
+    }
+
+    private function startAppearanceAltWorkflow(int $chatId, int $telegramUserId): bool
+    {
+        $this->storeSession($chatId, $telegramUserId, 'appearance.alt');
+        $this->api->sendMessage($chatId, "توصیف کوتاه و دقیق تصویر اصلی را به فارسی ارسال کنید.\nنمونه: ماکت آموزشی قلب روی پایه سفید", [
+            'reply_markup' => $this->workflowMarkup('menu:appearance'),
+        ]);
+
+        return true;
+    }
+
     private function startPlanWorkflow(int $chatId, int $telegramUserId, ?int $id): bool
     {
         $plan = $id ? Plan::query()->findOrFail($id) : null;
@@ -849,6 +1091,7 @@ class TelegramBotService
             Plan::create($validated);
         }
 
+        $this->auditTelegram($session, 'ذخیره پلن');
         $this->finish($session, '✅ پلن با موفقیت ذخیره شد.');
     }
 
@@ -906,6 +1149,7 @@ class TelegramBotService
             BlogPost::create($validated);
         }
 
+        $this->auditTelegram($session, 'ذخیره مقاله');
         $this->finish($session, '✅ مطلب وبلاگ ذخیره شد.');
     }
 
@@ -961,6 +1205,7 @@ class TelegramBotService
             $course->save();
         }
 
+        $this->auditTelegram($session, 'ذخیره دوره');
         $this->finish($session, '✅ دوره ذخیره شد.');
     }
 
@@ -1062,6 +1307,7 @@ class TelegramBotService
         $video->save();
         $this->syncFreeDesignation($video, $validated['is_free_designated']);
 
+        $this->auditTelegram($session, 'ذخیره ویدیو');
         $this->finish($session, '✅ ویدیو ذخیره شد.');
     }
 
@@ -1157,6 +1403,7 @@ class TelegramBotService
         $note->save();
         $this->syncFreeDesignation($note, $validated['is_free_designated']);
 
+        $this->auditTelegram($session, 'ذخیره جزوه');
         $this->finish($session, '✅ جزوه ذخیره شد.');
     }
 
@@ -1211,6 +1458,7 @@ class TelegramBotService
             $deck->save();
         }
 
+        $this->auditTelegram($session, 'ذخیره دِک فلش‌کارت');
         $this->finish($session, '✅ دِک فلش‌کارت ذخیره شد.');
     }
 
@@ -1255,6 +1503,7 @@ class TelegramBotService
         }
 
         $this->syncFreeDesignation($card, $validated['is_free_designated']);
+        $this->auditTelegram($session, 'ذخیره فلش‌کارت');
         $this->finish($session, '✅ فلش‌کارت ذخیره شد.');
     }
 
@@ -1311,6 +1560,7 @@ class TelegramBotService
             $quiz->save();
         }
 
+        $this->auditTelegram($session, 'ذخیره آزمون');
         $this->finish($session, '✅ آزمون ذخیره شد.');
     }
 
@@ -1392,24 +1642,84 @@ class TelegramBotService
         });
 
         $this->syncFreeDesignation($question, $validated['is_free_designated']);
+        $this->auditTelegram($session, 'ذخیره سؤال آزمون');
         $this->finish($session, '✅ سؤال آزمون ذخیره شد.');
+    }
+
+    private function submitSubjectForm(TelegramChatSession $session, string $text): void
+    {
+        $data = StructuredMessageParser::parse($text);
+        $subject = isset($session->context['id']) ? Subject::query()->findOrFail((int) $session->context['id']) : new Subject();
+        $validated = Validator::make([
+            'name' => $data['name'] ?? null,
+            'description' => $data['description'] ?? null,
+            'sort_order' => $this->nullableInt($data['sort_order'] ?? 0),
+            'is_visible' => $data['is_visible'] ?? 'بله',
+        ], [
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'is_visible' => ['nullable'],
+        ])->validate();
+
+        $subject->name = $validated['name'];
+        $subject->description = $this->nullableString($validated['description'] ?? null);
+        $subject->sort_order = $this->nullableInt($validated['sort_order'] ?? null) ?? 0;
+        $subject->is_visible = $this->nullableBool($validated['is_visible'] ?? null) ?? true;
+        if (! $subject->exists || $subject->isDirty('name')) {
+            $subject->slug = Slug::unique($subject->name, fn (string $slug): bool => Subject::withTrashed()->where('slug', $slug)->when($subject->exists, fn ($query) => $query->whereKeyNot($subject->id))->exists());
+        }
+        $subject->save();
+        $this->auditTelegram($session, ($subject->wasRecentlyCreated ? 'ایجاد' : 'ویرایش').' درس‌نامه #'.$subject->id);
+        $this->finish($session, '✅ درس‌نامه با موفقیت ذخیره شد.');
+    }
+
+    private function submitAppearanceImage(TelegramChatSession $session, array $message): void
+    {
+        $settings = SiteSetting::current();
+        $isLogo = $session->workflow === 'appearance.logo';
+        $field = $isLogo ? 'logo_image_path' : 'hero_image_path';
+        $directory = $isLogo ? 'site-assets/logo' : 'site-assets/hero';
+        $newPath = $this->storeTelegramImage($message, $directory, $isLogo ? 'logo' : 'hero');
+        $this->deletePublicUrl($settings->{$field});
+        $settings->{$field} = $newPath;
+        $settings->save();
+        $this->auditTelegram($session, $isLogo ? 'تغییر لوگوی سایت' : 'تغییر تصویر اصلی سایت');
+        $this->finish($session, $isLogo ? '✅ لوگوی سایت تغییر کرد.' : '✅ تصویر اصلی صفحه نخست تغییر کرد.');
+    }
+
+    private function submitAppearanceAlt(TelegramChatSession $session, string $text): void
+    {
+        $text = trim($text);
+        if ($text === '' || mb_strlen($text) > 255) {
+            throw ValidationException::withMessages(['description' => 'توضیح تصویر باید بین ۱ تا ۲۵۵ نویسه باشد.']);
+        }
+        SiteSetting::current()->update(['hero_image_alt' => $text]);
+        $this->auditTelegram($session, 'ویرایش توضیح تصویر اصلی سایت');
+        $this->finish($session, '✅ توضیح تصویر اصلی به‌روزرسانی شد.');
     }
 
     private function submitCourseCover(TelegramChatSession $session, array $message): void
     {
         $course = Course::query()->findOrFail((int) ($session->context['id'] ?? 0));
-        $course->cover_image_path = $this->storeTelegramImage($message, 'course-covers', $course->slug ?: 'course');
+        $newPath = $this->storeTelegramImage($message, 'course-covers', $course->slug ?: 'course');
+        $this->deletePublicUrl($course->cover_image_path);
+        $course->cover_image_path = $newPath;
         $course->save();
 
+        $this->auditTelegram($session, 'تغییر تصویر دوره');
         $this->finish($session, '✅ تصویر دوره به‌روزرسانی شد.');
     }
 
     private function submitBlogCover(TelegramChatSession $session, array $message): void
     {
         $post = BlogPost::query()->findOrFail((int) ($session->context['id'] ?? 0));
-        $post->cover_image_path = $this->storeTelegramImage($message, 'blog-covers', $post->slug ?: 'blog');
+        $newPath = $this->storeTelegramImage($message, 'blog-covers', $post->slug ?: 'blog');
+        $this->deletePublicUrl($post->cover_image_path);
+        $post->cover_image_path = $newPath;
         $post->save();
 
+        $this->auditTelegram($session, 'تغییر تصویر مقاله');
         $this->finish($session, '✅ تصویر مطلب وبلاگ به‌روزرسانی شد.');
     }
 
@@ -1538,8 +1848,43 @@ class TelegramBotService
             'quiz' => $this->showQuizManageMenu($chatId, Quiz::query()->findOrFail($id)),
             'card' => $this->showCardManageMenu($chatId, Flashcard::query()->findOrFail($id)),
             'question' => $this->showQuestionManageMenu($chatId, QuizQuestion::query()->findOrFail($id)),
+            'subject' => $this->showSubjectManageMenu($chatId, Subject::query()->findOrFail($id)),
+            'user' => $this->showUserManageMenu($chatId, User::query()->findOrFail($id)),
             default => $this->sendWelcome($chatId),
         };
+    }
+
+    private function showSubjectManageMenu(int $chatId, Subject $subject): void
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            '📚 مدیریت درس‌نامه #'.$subject->id,
+            $subject->name,
+            'وضعیت نمایش: '.($subject->is_visible ? 'نمایان' : 'پنهان'),
+            'تعداد دوره‌ها: '.$subject->courses()->count(),
+        ]), ['reply_markup' => $this->inlineKeyboard([
+            [$this->button('✏️ ویرایش', 'edit:subject:'.$subject->id), $this->button('🗑 حذف', 'delete:subject:'.$subject->id)],
+            [$this->button('↩️ لیست درس‌نامه‌ها', 'list:subjects')],
+        ])]);
+    }
+
+    private function showUserManageMenu(int $chatId, User $user): void
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            '👤 مدیریت کاربر #'.$user->id,
+            'نام: '.$user->name,
+            'ایمیل: '.$user->email,
+            'موبایل: '.($user->phone ?: '—'),
+            'وضعیت: '.($user->status === 'active' ? 'فعال' : 'تعلیق‌شده'),
+            'نقش: '.($user->is_admin ? 'مدیر' : 'فراگیر'),
+            'تأیید ایمیل: '.($user->email_verified_at ? 'بله' : 'خیر'),
+            'ثبت‌نام در دوره‌ها: '.$user->enrollments()->count(),
+            'اشتراک‌ها: '.$user->subscriptions()->count(),
+            'تلاش‌های آزمون: '.$user->quizAttempts()->count(),
+        ]), ['reply_markup' => $this->inlineKeyboard([
+            [$this->button($user->status === 'active' ? '⛔️ تعلیق حساب' : '✅ فعال‌سازی حساب', 'useraction:'.$user->id.':status:'.($user->status === 'active' ? 'suspended' : 'active'))],
+            [$this->button($user->is_admin ? '👤 سلب نقش مدیر' : '🛡 اعطای نقش مدیر', 'useraction:'.$user->id.':admin:'.($user->is_admin ? '0' : '1'))],
+            [$this->button('↩️ لیست کاربران', 'list:users')],
+        ])]);
     }
 
     private function showPlanManageMenu(int $chatId, Plan $plan): void
@@ -1569,7 +1914,8 @@ class TelegramBotService
         ]);
 
         $rows = [
-            [$this->button('✏️ ویرایش', 'edit:blog:'.$post->id), $this->button('🖼 تصویر شاخص', 'cover:blog:'.$post->id)],
+            [$this->button('✏️ ویرایش', 'edit:blog:'.$post->id), $this->button('🖼 تغییر تصویر', 'cover:blog:'.$post->id)],
+            [$this->button('🧹 حذف تصویر شاخص', 'coverremove:blog:'.$post->id)],
             [$this->button('🗑 حذف', 'delete:blog:'.$post->id), $this->linkButton('🌐 مشاهده', route('blog.show', $post->slug))],
         ];
 
@@ -1594,7 +1940,8 @@ class TelegramBotService
         ]);
 
         $rows = [
-            [$this->button('✏️ ویرایش', 'edit:course:'.$course->id), $this->button('🖼 کاور', 'cover:course:'.$course->id)],
+            [$this->button('✏️ ویرایش', 'edit:course:'.$course->id), $this->button('🖼 تغییر کاور', 'cover:course:'.$course->id)],
+            [$this->button('🧹 حذف کاور', 'coverremove:course:'.$course->id)],
             [$this->button('🗑 حذف', 'delete:course:'.$course->id), $this->linkButton('🌐 مشاهده', route('courses.show', $course))],
         ];
 
@@ -1620,6 +1967,7 @@ class TelegramBotService
 
         $rows = [
             [$this->button('✏️ ویرایش', 'edit:video:'.$video->id), $this->button('🗑 حذف', 'delete:video:'.$video->id)],
+            [$this->button($video->is_free_designated ? '🔒 حذف از رایگان‌ها' : '🎁 انتخاب به‌عنوان رایگان', 'free:video:'.$video->id.':'.($video->is_free_designated ? '0' : '1'))],
         ];
 
         foreach ($this->transitionRows('video', $video->id, $video->status) as $row) {
@@ -1644,6 +1992,7 @@ class TelegramBotService
 
         $rows = [
             [$this->button('✏️ ویرایش', 'edit:note:'.$note->id), $this->button('🗑 حذف', 'delete:note:'.$note->id)],
+            [$this->button($note->is_free_designated ? '🔒 حذف از رایگان‌ها' : '🎁 انتخاب به‌عنوان رایگان', 'free:note:'.$note->id.':'.($note->is_free_designated ? '0' : '1'))],
         ];
 
         foreach ($this->transitionRows('note', $note->id, $note->status) as $row) {
@@ -1717,6 +2066,7 @@ class TelegramBotService
 
         $rows = [
             [$this->button('✏️ ویرایش', 'edit:card:'.$card->id), $this->button('🗑 حذف', 'delete:card:'.$card->id)],
+            [$this->button($card->is_free_designated ? '🔒 حذف از رایگان‌ها' : '🎁 انتخاب به‌عنوان رایگان', 'free:card:'.$card->id.':'.($card->is_free_designated ? '0' : '1'))],
         ];
 
         foreach ($this->transitionRows('card', $card->id, $card->status) as $row) {
@@ -1740,6 +2090,7 @@ class TelegramBotService
 
         $rows = [
             [$this->button('✏️ ویرایش', 'edit:question:'.$question->id), $this->button('🗑 حذف', 'delete:question:'.$question->id)],
+            [$this->button($question->is_free_designated ? '🔒 حذف از رایگان‌ها' : '🎁 انتخاب به‌عنوان رایگان', 'free:question:'.$question->id.':'.($question->is_free_designated ? '0' : '1'))],
         ];
 
         foreach ($this->transitionRows('question', $question->id, $question->status) as $row) {
@@ -1764,6 +2115,140 @@ class TelegramBotService
         return $rows;
     }
 
+    private function confirmCoverRemoval(int $chatId, string $entity, int $id): void
+    {
+        if (! in_array($entity, ['course', 'blog'], true)) {
+            throw new RuntimeException('نوع تصویر شاخص نامعتبر است.');
+        }
+        $this->api->sendMessage($chatId, 'آیا از حذف تصویر شاخص مطمئن هستید؟', [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ بله، تصویر حذف شود', 'confirmcoverremove:'.$entity.':'.$id)],
+                [$this->button('↩️ انصراف', 'manage:'.$entity.':'.$id)],
+            ]),
+        ]);
+    }
+
+    private function removeCover(int $chatId, string $entity, int $id): void
+    {
+        $model = match ($entity) {
+            'course' => Course::query()->findOrFail($id),
+            'blog' => BlogPost::query()->findOrFail($id),
+            default => throw new RuntimeException('نوع تصویر شاخص نامعتبر است.'),
+        };
+        $this->deletePublicUrl($model->cover_image_path);
+        $model->cover_image_path = null;
+        $model->save();
+        $this->auditTelegramByChat($chatId, 'حذف تصویر شاخص '.$this->entityLabel($entity).' #'.$id);
+        $this->showManageMenu($chatId, $entity, $id);
+    }
+
+    private function confirmAppearanceRemoval(int $chatId, string $type): void
+    {
+        $label = $type === 'logo' ? 'لوگوی سفارشی' : 'تصویر اصلی سفارشی';
+        $this->api->sendMessage($chatId, "آیا از حذف {$label} و بازگشت به حالت پیش‌فرض مطمئن هستید؟", [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ بله، حذف شود', 'confirmappearance:'.$type)],
+                [$this->button('↩️ انصراف', 'menu:appearance')],
+            ]),
+        ]);
+    }
+
+    private function removeAppearanceImage(int $chatId, string $type): void
+    {
+        if (! in_array($type, ['logo', 'hero'], true)) {
+            throw new RuntimeException('نوع تصویر نامعتبر است.');
+        }
+        $settings = SiteSetting::current();
+        $field = $type === 'logo' ? 'logo_image_path' : 'hero_image_path';
+        $this->deletePublicUrl($settings->{$field});
+        $settings->{$field} = null;
+        $settings->save();
+        $this->auditTelegramByChat($chatId, $type === 'logo' ? 'حذف لوگوی سفارشی سایت' : 'حذف تصویر اصلی سفارشی سایت');
+        $this->sendAppearanceHelp($chatId);
+    }
+
+    private function confirmUserAction(int $chatId, int $userId, string $field, string $value): void
+    {
+        $user = User::query()->findOrFail($userId);
+        $label = match ([$field, $value]) {
+            ['status', 'active'] => 'فعال‌سازی حساب',
+            ['status', 'suspended'] => 'تعلیق حساب',
+            ['admin', '1'] => 'اعطای نقش مدیر',
+            ['admin', '0'] => 'سلب نقش مدیر',
+            default => throw new RuntimeException('عملیات کاربر نامعتبر است.'),
+        };
+        $this->api->sendMessage($chatId, "آیا «{$label}» برای کاربر {$user->name} را تأیید می‌کنید؟", [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ تأیید نهایی', "confirmuser:{$userId}:{$field}:{$value}")],
+                [$this->button('↩️ انصراف', 'manage:user:'.$userId)],
+            ]),
+        ]);
+    }
+
+    private function applyUserAction(int $chatId, int $userId, string $field, string $value): void
+    {
+        $user = User::query()->findOrFail($userId);
+        if ($field === 'status' && in_array($value, ['active', 'suspended'], true)) {
+            $user->forceFill(['status' => $value])->save();
+        } elseif ($field === 'admin' && in_array($value, ['0', '1'], true)) {
+            if ($user->is_admin && $value === '0' && User::query()->where('is_admin', true)->count() <= 1) {
+                throw new RuntimeException('حداقل یک مدیر باید در سیستم باقی بماند.');
+            }
+            $user->forceFill(['is_admin' => $value === '1'])->save();
+        } else {
+            throw new RuntimeException('عملیات کاربر نامعتبر است.');
+        }
+
+        $this->auditTelegramByChat($chatId, 'ویرایش کاربر #'.$user->id.' از تلگرام');
+        $this->showUserManageMenu($chatId, $user->fresh());
+    }
+
+    private function toggleFreeDesignation(int $chatId, string $entity, int $id, bool $designated): void
+    {
+        $item = match ($entity) {
+            'video' => Video::query()->findOrFail($id),
+            'note' => Note::query()->findOrFail($id),
+            'card' => Flashcard::query()->findOrFail($id),
+            'question' => QuizQuestion::query()->findOrFail($id),
+            default => throw new RuntimeException('نوع محتوای رایگان نامعتبر است.'),
+        };
+        $this->freeItems->set($item, $designated);
+        $this->auditTelegramByChat($chatId, ($designated ? 'انتخاب' : 'حذف').' محتوای رایگان '.$entity.' #'.$id);
+        $this->showManageMenu($chatId, $entity, $id);
+    }
+
+    private function deletePublicUrl(?string $url): void
+    {
+        if ($url && str_contains($url, '/storage/')) {
+            Storage::disk('public')->delete((string) str($url)->after('/storage/'));
+        }
+    }
+
+    private function auditTelegram(TelegramChatSession $session, string $action): void
+    {
+        $this->auditTelegramByChat((int) $session->telegram_chat_id, $action, (int) $session->telegram_user_id);
+    }
+
+    private function auditTelegramByChat(int $chatId, string $action, ?int $telegramUserId = null): void
+    {
+        try {
+            $telegramUserId ??= (int) (TelegramChatSession::query()->where('telegram_chat_id', $chatId)->value('telegram_user_id') ?? 0);
+            $admin = TelegramAdmin::query()->where('telegram_user_id', $telegramUserId)->first();
+            AdminActivityLog::create([
+                'actor_name_snapshot' => trim(($admin?->first_name ?? 'مدیر تلگرام').' '.($admin?->last_name ?? '')),
+                'actor_email_snapshot' => $admin?->username ? '@'.$admin->username : null,
+                'action' => mb_substr('تلگرام: '.$action, 0, 255),
+                'route_name' => 'telegram.webhook',
+                'method' => 'BOT',
+                'url' => 'telegram/webhook',
+                'payload' => ['telegram_user_id' => $telegramUserId ?: null, 'chat_id' => $chatId],
+                'status_code' => 200,
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
     private function confirmDelete(int $chatId, string $entity, int $id): void
     {
         $this->api->sendMessage($chatId, 'آیا از حذف «'.$this->entityLabel($entity).'» مطمئن هستید؟ این عملیات ممکن است غیرقابل بازگشت باشد.', [
@@ -1779,8 +2264,12 @@ class TelegramBotService
         $model = $this->managedModel($entity, $id);
         $backCallback = $this->postDeleteCallback($entity, $model);
 
+        if ($entity === 'subject' && $model->courses()->exists()) {
+            throw new RuntimeException('این درس‌نامه دارای دوره است؛ ابتدا دوره‌ها را منتقل یا حذف کنید.');
+        }
+
         try {
-            $model->delete();
+            $entity === 'blog' ? $model->forceDelete() : $model->delete();
         } catch (Throwable $exception) {
             $this->api->sendMessage($chatId, '❌ حذف انجام نشد: '.$this->truncate($exception->getMessage(), 260), [
                 'reply_markup' => $this->inlineKeyboard([
@@ -1791,6 +2280,7 @@ class TelegramBotService
             return;
         }
 
+        $this->auditTelegramByChat($chatId, 'حذف '.$this->entityLabel($entity).' #'.$id);
         $this->api->sendMessage($chatId, '✅ '.$this->entityLabel($entity).' حذف شد.', [
             'reply_markup' => $this->inlineKeyboard([
                 [$this->button('↩️ بازگشت به لیست', $backCallback)],
@@ -1833,6 +2323,7 @@ class TelegramBotService
         }
         $model->save();
 
+        $this->auditTelegramByChat($chatId, 'تغییر وضعیت '.$this->entityLabel($entity).' #'.$id.' به '.$this->statusLabel($target));
         $this->api->sendMessage($chatId, '✅ وضعیت '.$this->entityLabel($entity).' به «'.$this->statusLabel($target).'» تغییر کرد.', [
             'reply_markup' => $this->inlineKeyboard([
                 [$this->button('↩️ بازگشت به مدیریت آیتم', 'manage:'.$entity.':'.$id)],
@@ -1896,6 +2387,7 @@ class TelegramBotService
             'card' => Flashcard::query()->findOrFail($id),
             'quiz' => Quiz::query()->findOrFail($id),
             'question' => QuizQuestion::query()->findOrFail($id),
+            'subject' => Subject::query()->findOrFail($id),
             default => throw new RuntimeException('آیتم موردنظر پیدا نشد.'),
         };
     }
@@ -1912,6 +2404,7 @@ class TelegramBotService
             'quiz' => 'list:quizzes',
             'card' => 'list:decks',
             'question' => 'list:quizzes',
+            'subject' => 'list:subjects',
             default => 'menu:main',
         };
     }
@@ -1937,6 +2430,7 @@ class TelegramBotService
             'card' => 'فلش‌کارت',
             'quiz' => 'آزمون',
             'question' => 'سؤال',
+            'subject' => 'درس‌نامه',
             default => 'آیتم',
         };
     }
@@ -1968,7 +2462,8 @@ class TelegramBotService
         return $this->inlineKeyboard([
             [$this->button('💳 پلن‌ها', 'menu:plans'), $this->button('📝 وبلاگ', 'menu:blogs')],
             [$this->button('🎓 دوره‌ها', 'menu:courses'), $this->button('🎥 رسانه', 'menu:media')],
-            [$this->button('🧪 آزمون و فلش‌کارت', 'menu:study')],
+            [$this->button('🧪 آزمون و فلش‌کارت', 'menu:study'), $this->button('🎨 ظاهر سایت', 'menu:appearance')],
+            [$this->button('👥 کاربران و گزارش‌ها', 'menu:admin')],
             [$this->button('🗄 بکاپ دیتابیس', 'backup:run')],
         ]);
     }
@@ -2038,7 +2533,14 @@ class TelegramBotService
             return null;
         }
 
-        return (int) $value;
+        $normalized = strtr(trim((string) $value), [
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+        ]);
+
+        return (int) $normalized;
     }
 
     private function nullableBool(mixed $value): ?bool
@@ -2356,26 +2858,62 @@ class TelegramBotService
 
         $this->api->downloadTelegramFile($filePath, $tmp);
 
-        $filename = Slug::unique($name.'-cover-'.now()->format('YmdHis'), fn (string $candidate): bool => Storage::disk('public')->exists(trim($directory, '/').'/'.$candidate.'.'.$extension)).'.'.$extension;
+        if (filesize($tmp) > 10 * 1024 * 1024) {
+            @unlink($tmp);
+            throw new RuntimeException('حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.');
+        }
+
+        $image = @getimagesize($tmp);
+        $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $mime = is_array($image) ? (string) ($image['mime'] ?? '') : '';
+        if (! isset($allowedMimes[$mime])) {
+            @unlink($tmp);
+            throw new RuntimeException('فایل ارسالی تصویر معتبر JPG، PNG یا WebP نیست.');
+        }
+        $extension = $allowedMimes[$mime];
+
+        $filename = Slug::unique($name.'-'.now()->format('YmdHis'), fn (string $candidate): bool => Storage::disk('public')->exists(trim($directory, '/').'/'.$candidate.'.'.$extension)).'.'.$extension;
         $storagePath = trim($directory, '/').'/'.$filename;
-        Storage::disk('public')->put($storagePath, fopen($tmp, 'r'));
+        $stream = fopen($tmp, 'r');
+        $stored = $stream !== false && Storage::disk('public')->put($storagePath, $stream);
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
         @unlink($tmp);
+        if (! $stored) {
+            throw new RuntimeException('ذخیره تصویر ناموفق بود؛ دوباره تلاش کنید.');
+        }
 
         return Storage::disk('public')->url($storagePath);
+    }
+
+    private function subjectTemplate(?Subject $subject): string
+    {
+        return implode("\n", [
+            $subject ? '✏️ ویرایش درس‌نامه #'.$subject->id : '➕ ایجاد درس‌نامه جدید',
+            'فرم زیر را کپی کنید، مقدارها را تغییر دهید و همان‌جا بفرستید:',
+            '',
+            'نام: '.$this->display($subject?->name),
+            'توضیحات: '.$this->display($subject?->description),
+            'ترتیب: '.$this->display($subject?->sort_order ?? 0),
+            'نمایان: '.$this->boolText($subject?->is_visible ?? true),
+            '',
+            'راهنما: برای نمایش «بله» و برای پنهان‌کردن «خیر» بنویسید.',
+        ]);
     }
 
     private function planTemplate(?Plan $plan): string
     {
         return implode("\n", [
             'ارسال/ویرایش پلن:',
-            'id: '.$this->display($plan?->id),
-            'code: '.$this->display($plan?->code),
-            'name: '.$this->display($plan?->name),
-            'description: '.$this->display($plan?->description),
-            'price_irr: '.$this->display($plan?->price_irr),
-            'duration_months: '.$this->display($plan?->duration_months),
-            'is_active: '.$this->boolText($plan?->is_active),
-            'sort_order: '.$this->display($plan?->sort_order),
+            'شناسه: '.$this->display($plan?->id),
+            'کد: '.$this->display($plan?->code),
+            'نام: '.$this->display($plan?->name),
+            'توضیحات: '.$this->display($plan?->description),
+            'قیمت_ریال: '.$this->display($plan?->price_irr),
+            'مدت_ماه: '.$this->display($plan?->duration_months),
+            'فعال: '.$this->boolText($plan?->is_active),
+            'ترتیب: '.$this->display($plan?->sort_order),
         ]);
     }
 
@@ -2383,20 +2921,20 @@ class TelegramBotService
     {
         return implode("\n", [
             'ارسال/ویرایش مطلب وبلاگ:',
-            'id: '.$this->display($post?->id),
-            'title: '.$this->display($post?->title),
-            'category: '.$this->display($post?->category),
-            'author_name: '.$this->display($post?->author_name),
-            'reviewer_name: '.$this->display($post?->reviewer_name),
-            'excerpt: '.$this->display($post?->excerpt),
-            'status: '.$this->display($post?->status),
-            'published_at: '.$this->dateText($post?->published_at),
-            'meta_title: '.$this->display($post?->meta_title),
-            'meta_description: '.$this->display($post?->meta_description),
-            'cover_image_path: '.$this->display($post?->cover_image_path),
-            '[content]',
+            'شناسه: '.$this->display($post?->id),
+            'عنوان: '.$this->display($post?->title),
+            'دسته‌بندی: '.$this->display($post?->category),
+            'نام_نویسنده: '.$this->display($post?->author_name),
+            'نام_بازبین: '.$this->display($post?->reviewer_name),
+            'خلاصه: '.$this->display($post?->excerpt),
+            'وضعیت: '.$this->statusLabel($post?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($post?->published_at),
+            'عنوان_سئو: '.$this->display($post?->meta_title),
+            'توضیح_سئو: '.$this->display($post?->meta_description),
+            'تصویر_شاخص: '.$this->display($post?->cover_image_path),
+            '[محتوا]',
             $this->display($post?->content),
-            '[/content]',
+            '[/محتوا]',
         ]);
     }
 
@@ -2404,20 +2942,20 @@ class TelegramBotService
     {
         return implode("\n", [
             'ارسال/ویرایش دوره:',
-            'id: '.$this->display($course?->id),
-            'subject_id: '.$this->display($course?->subject_id),
-            'title: '.$this->display($course?->title),
-            'excerpt: '.$this->display($course?->excerpt),
-            'level: '.$this->display($course?->level),
-            'author_id: '.$this->display($course?->author_id),
-            'reviewer_id: '.$this->display($course?->reviewer_id),
-            'sort_order: '.$this->display($course?->sort_order),
-            'status: '.$this->display($course?->status),
-            'published_at: '.$this->dateText($course?->published_at),
-            'cover_image_path: '.$this->display($course?->cover_image_path),
-            '[description]',
+            'شناسه: '.$this->display($course?->id),
+            'شناسه_درس‌نامه: '.$this->display($course?->subject_id),
+            'عنوان: '.$this->display($course?->title),
+            'خلاصه: '.$this->display($course?->excerpt),
+            'سطح: '.$this->display($course?->level),
+            'شناسه_نویسنده: '.$this->display($course?->author_id),
+            'شناسه_بازبین: '.$this->display($course?->reviewer_id),
+            'ترتیب: '.$this->display($course?->sort_order),
+            'وضعیت: '.$this->statusLabel($course?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($course?->published_at),
+            'تصویر_شاخص: '.$this->display($course?->cover_image_path),
+            '[توضیحات]',
             $this->display($course?->description),
-            '[/description]',
+            '[/توضیحات]',
         ]);
     }
 
@@ -2425,20 +2963,20 @@ class TelegramBotService
     {
         return implode("\n", [
             'ارسال/ویرایش ویدیو:',
-            'id: '.$this->display($video?->id),
-            'course_id: '.$this->display($video?->course_id),
-            'title: '.$this->display($video?->title),
-            'description: '.$this->display($video?->description),
-            'duration_seconds: '.$this->display($video?->duration_seconds),
-            'completion_threshold_percent: '.$this->display($video?->completion_threshold_percent),
-            'author_id: '.$this->display($video?->author_id),
-            'reviewer_id: '.$this->display($video?->reviewer_id),
-            'sort_order: '.$this->display($video?->sort_order),
-            'status: '.$this->display($video?->status),
-            'published_at: '.$this->dateText($video?->published_at),
-            'is_free_designated: '.$this->boolText($video?->is_free_designated),
-            'source_mode: '.($video ? 'keep' : 'upload'),
-            'playback_url: '.$this->display($video?->playback_asset_id),
+            'شناسه: '.$this->display($video?->id),
+            'شناسه_دوره: '.$this->display($video?->course_id),
+            'عنوان: '.$this->display($video?->title),
+            'توضیحات: '.$this->display($video?->description),
+            'مدت_ثانیه: '.$this->display($video?->duration_seconds),
+            'آستانه_تکمیل: '.$this->display($video?->completion_threshold_percent),
+            'شناسه_نویسنده: '.$this->display($video?->author_id),
+            'شناسه_بازبین: '.$this->display($video?->reviewer_id),
+            'ترتیب: '.$this->display($video?->sort_order),
+            'وضعیت: '.$this->statusLabel($video?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($video?->published_at),
+            'رایگان: '.$this->boolText($video?->is_free_designated),
+            'نوع_منبع: '.($video ? 'نگه‌داری' : 'بارگذاری'),
+            'نشانی_پخش: '.$this->display($video?->playback_asset_id),
         ]);
     }
 
@@ -2446,18 +2984,18 @@ class TelegramBotService
     {
         return implode("\n", [
             'ارسال/ویرایش جزوه:',
-            'id: '.$this->display($note?->id),
-            'course_id: '.$this->display($note?->course_id),
-            'title: '.$this->display($note?->title),
-            'description: '.$this->display($note?->description),
-            'author_id: '.$this->display($note?->author_id),
-            'reviewer_id: '.$this->display($note?->reviewer_id),
-            'sort_order: '.$this->display($note?->sort_order),
-            'status: '.$this->display($note?->status),
-            'published_at: '.$this->dateText($note?->published_at),
-            'is_free_designated: '.$this->boolText($note?->is_free_designated),
-            'source_mode: '.($note ? 'keep' : 'upload'),
-            'file_url: ',
+            'شناسه: '.$this->display($note?->id),
+            'شناسه_دوره: '.$this->display($note?->course_id),
+            'عنوان: '.$this->display($note?->title),
+            'توضیحات: '.$this->display($note?->description),
+            'شناسه_نویسنده: '.$this->display($note?->author_id),
+            'شناسه_بازبین: '.$this->display($note?->reviewer_id),
+            'ترتیب: '.$this->display($note?->sort_order),
+            'وضعیت: '.$this->statusLabel($note?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($note?->published_at),
+            'رایگان: '.$this->boolText($note?->is_free_designated),
+            'نوع_منبع: '.($note ? 'نگه‌داری' : 'بارگذاری'),
+            'نشانی_فایل: ',
         ]);
     }
 
@@ -2465,15 +3003,15 @@ class TelegramBotService
     {
         return implode("\n", [
             'ارسال/ویرایش دِک فلش‌کارت:',
-            'id: '.$this->display($deck?->id),
-            'course_id: '.$this->display($deck?->course_id),
-            'title: '.$this->display($deck?->title),
-            'description: '.$this->display($deck?->description),
-            'author_id: '.$this->display($deck?->author_id),
-            'reviewer_id: '.$this->display($deck?->reviewer_id),
-            'sort_order: '.$this->display($deck?->sort_order),
-            'status: '.$this->display($deck?->status),
-            'published_at: '.$this->dateText($deck?->published_at),
+            'شناسه: '.$this->display($deck?->id),
+            'شناسه_دوره: '.$this->display($deck?->course_id),
+            'عنوان: '.$this->display($deck?->title),
+            'توضیحات: '.$this->display($deck?->description),
+            'شناسه_نویسنده: '.$this->display($deck?->author_id),
+            'شناسه_بازبین: '.$this->display($deck?->reviewer_id),
+            'ترتیب: '.$this->display($deck?->sort_order),
+            'وضعیت: '.$this->statusLabel($deck?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($deck?->published_at),
         ]);
     }
 
@@ -2481,19 +3019,19 @@ class TelegramBotService
     {
         return implode("\n", [
             'ارسال/ویرایش فلش‌کارت:',
-            'id: '.$this->display($card?->id),
-            'flashcard_deck_id: '.$this->display($card?->flashcard_deck_id ?: $deckId),
-            'hint: '.$this->display($card?->hint),
-            'sort_order: '.$this->display($card?->sort_order),
-            'status: '.$this->display($card?->status),
-            'published_at: '.$this->dateText($card?->published_at),
-            'is_free_designated: '.$this->boolText($card?->is_free_designated),
-            '[front]',
+            'شناسه: '.$this->display($card?->id),
+            'شناسه_دک: '.$this->display($card?->flashcard_deck_id ?: $deckId),
+            'راهنما: '.$this->display($card?->hint),
+            'ترتیب: '.$this->display($card?->sort_order),
+            'وضعیت: '.$this->statusLabel($card?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($card?->published_at),
+            'رایگان: '.$this->boolText($card?->is_free_designated),
+            '[متن_رو]',
             $this->display($card?->front),
-            '[/front]',
-            '[back]',
+            '[/متن_رو]',
+            '[متن_پشت]',
             $this->display($card?->back),
-            '[/back]',
+            '[/متن_پشت]',
         ]);
     }
 
@@ -2501,16 +3039,16 @@ class TelegramBotService
     {
         return implode("\n", [
             'ارسال/ویرایش آزمون:',
-            'id: '.$this->display($quiz?->id),
-            'course_id: '.$this->display($quiz?->course_id),
-            'title: '.$this->display($quiz?->title),
-            'description: '.$this->display($quiz?->description),
-            'pass_threshold_percent: '.$this->display($quiz?->pass_threshold_percent),
-            'author_id: '.$this->display($quiz?->author_id),
-            'reviewer_id: '.$this->display($quiz?->reviewer_id),
-            'sort_order: '.$this->display($quiz?->sort_order),
-            'status: '.$this->display($quiz?->status),
-            'published_at: '.$this->dateText($quiz?->published_at),
+            'شناسه: '.$this->display($quiz?->id),
+            'شناسه_دوره: '.$this->display($quiz?->course_id),
+            'عنوان: '.$this->display($quiz?->title),
+            'توضیحات: '.$this->display($quiz?->description),
+            'حدنصاب: '.$this->display($quiz?->pass_threshold_percent),
+            'شناسه_نویسنده: '.$this->display($quiz?->author_id),
+            'شناسه_بازبین: '.$this->display($quiz?->reviewer_id),
+            'ترتیب: '.$this->display($quiz?->sort_order),
+            'وضعیت: '.$this->statusLabel($quiz?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($quiz?->published_at),
         ]);
     }
 
@@ -2526,29 +3064,29 @@ class TelegramBotService
 
         return implode("\n", [
             'ارسال/ویرایش سؤال آزمون:',
-            'id: '.$this->display($question?->id),
-            'quiz_id: '.$this->display($question?->quiz_id ?: $quizId),
-            'source_citation: '.$this->display($question?->source_citation),
-            'author_id: '.$this->display($question?->author_id),
-            'reviewer_id: '.$this->display($question?->reviewer_id),
-            'sort_order: '.$this->display($question?->sort_order),
-            'status: '.$this->display($question?->status),
-            'published_at: '.$this->dateText($question?->published_at),
-            'is_free_designated: '.$this->boolText($question?->is_free_designated),
-            'correct_index: '.$correctIndex,
-            'options: '.$options,
-            '[prompt]',
+            'شناسه: '.$this->display($question?->id),
+            'شناسه_آزمون: '.$this->display($question?->quiz_id ?: $quizId),
+            'منبع: '.$this->display($question?->source_citation),
+            'شناسه_نویسنده: '.$this->display($question?->author_id),
+            'شناسه_بازبین: '.$this->display($question?->reviewer_id),
+            'ترتیب: '.$this->display($question?->sort_order),
+            'وضعیت: '.$this->statusLabel($question?->status ?? 'draft'),
+            'تاریخ_انتشار: '.$this->dateText($question?->published_at),
+            'رایگان: '.$this->boolText($question?->is_free_designated),
+            'گزینه_درست: '.$correctIndex,
+            'گزینه‌ها: '.$options,
+            '[صورت_سؤال]',
             $this->display($question?->prompt),
-            '[/prompt]',
-            '[explanation]',
+            '[/صورت_سؤال]',
+            '[پاسخ_تشریحی]',
             $this->display($question?->explanation),
-            '[/explanation]',
+            '[/پاسخ_تشریحی]',
         ]);
     }
 
     private function boolText(?bool $value): string
     {
-        return $value ? 'yes' : 'no';
+        return $value ? 'بله' : 'خیر';
     }
 
     private function dateText(?Carbon $value): string

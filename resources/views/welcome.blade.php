@@ -7,7 +7,8 @@
 @push('head')
     {{-- The hero photograph is the LCP element on mobile; preloading it
          saves the CSS → image discovery round trip. --}}
-    <link rel="preload" as="image" href="/images/hero/hero.jpg" imagesrcset="/images/hero/hero.webp" imagesizes="100vw" fetchpriority="high">
+    @php($heroPreload = \App\Models\SiteSetting::current())
+    <link rel="preload" as="image" href="{{ $heroPreload->hero_image_path ?: '/images/hero/hero.jpg' }}" @if (! $heroPreload->hero_image_path) imagesrcset="/images/hero/hero.webp" @endif imagesizes="100vw" fetchpriority="high">
 @endpush
 
 @section('content')
