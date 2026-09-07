@@ -167,11 +167,12 @@ class AuthHardeningTest extends TestCase
         // on the field the user actually edits - which is what the view renders.
         // Asserted as "each rule said its piece", not as a count: a count would
         // break the day a rule is added, and that is a change to welcome, not to
-        // police. (For `short` the real list is four: length, letters, case mix,
-        // mismatch - I had guessed three, and CI corrected me.)
+        // police. The policy for `short` is length + case mix + digit + mismatch -
+        // letters are present, so that rule is (correctly) silent; I guessed the
+        // other two combinations and CI corrected me both times.
         $messages = implode(' ', session('errors')->get('password'));
 
-        foreach (['حداقل', 'حروف بزرگ و کوچک', 'حداقل یک حرف', 'تکرار گذرواژه'] as $needle) {
+        foreach (['حداقل ۸ کاراکتر', 'حروف بزرگ و کوچک', 'دست‌کم یک رقم', 'تکرار گذرواژه'] as $needle) {
             $this->assertStringContainsString($needle, $messages, "missing the {$needle} complaint");
         }
 
