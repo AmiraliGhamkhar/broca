@@ -21,6 +21,17 @@ class AuthHardeningTest extends TestCase
 
     private const STRONG_PASSWORD = 'Xk9vP2mQ7zR4tW8n';
 
+    /** @return array<string, string> a complete, valid reset payload */
+    private function resetPayload(string $token): array
+    {
+        return [
+            'token' => $token,
+            'email' => 'remember@example.com',
+            'password' => 'EvenStronger4You',
+            'password_confirmation' => 'EvenStronger4You',
+        ];
+    }
+
     /** @return array<string, mixed> */
     private function registration(array $overrides = []): array
     {
@@ -280,20 +291,36 @@ class AuthHardeningTest extends TestCase
             'remember=1 must persist a remember token'
         );
 
-        // Rotating that token is what bounds a stolen cookie, and the app does it
-        // on password reset: the recaller the browser still holds becomes dead.
         $user = User::where('email', 'remember@example.com')->firstOrFail();
         $token = \Illuminate\Support\Facades\Password::broker()->createToken($user);
-        $this->post('/reset-password', [
-            'token' => $token,
-            'email' => 'remember@example.com',
-            'password' => 'EvenStronger4You',
-            'password_confirmation' => 'EvenStronger4You',
-        ])->assertRedirect(route('login'));
+
+        // A reset lives in the *guest* group, so a browser that is still signed
+        // in (as this one is, after the login above) must not be able to consume
+        // a token. Checked before the logout on purpose: "an open session rides
+        // someone else's reset link" is the version of this that would matter in
+        // a bug report, and it is the failure CI just pointed at.
+        $this->post('/reset-password', $this->resetPayload($token))->assertRedirect(route('dashboard'));
+        $this->assertFalse(
+            \Illuminate\Support\Facades\Hash::check('EvenStronger4You', (string) User::find($user->id)->password),
+            'a signed-in session must not be able to complete a password reset'
+        );
+
+        $this->post('/logout')->assertRedirect();
+        $this->assertGuest();
+
+        // Now it lands - and rotating the remember token is what bounds a stolen
+        // cookie: the recaller this browser still holds becomes dead.
+        $this->post('/reset-password', $this->resetPayload($token))
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status');
 
         $this->assertFalse(
             (bool) User::where('email', 'remember@example.com')->value('remember_token'),
             'a password reset must invalidate the outstanding remember token'
+        );
+        $this->assertTrue(
+            \Illuminate\Support\Facades\Hash::check('EvenStronger4You', (string) User::find($user->id)->password),
+            'the reset itself must land'
         );
     }
 
