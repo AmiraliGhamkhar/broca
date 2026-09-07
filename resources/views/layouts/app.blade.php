@@ -82,20 +82,6 @@
     </script>
 </head>
 <body class="bg-canvas text-ink font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileNav: false }">
-    @php
-        $siteAppearance = \App\Models\SiteSetting::current();
-        $footerSubjects = \Illuminate\Support\Facades\Cache::remember(
-            'footer_subjects',
-            300,
-            fn () => \App\Models\Subject::query()
-                ->where('is_visible', true)
-                ->orderBy('sort_order')
-                ->limit(4)
-                ->get(['slug', 'name'])
-                ->map(fn ($subject) => ['slug' => $subject->slug, 'name' => $subject->name])
-                ->all()
-        );
-    @endphp
 
     @if (! empty($markdownAlternate ?? null))
         <div class="sr-only" aria-hidden="true">نسخهٔ مارک‌داون این صفحه در آدرس {{ $markdownAlternate }} در دسترس است، بهینه‌شده برای ابزارهای هوش مصنوعی و LLM.</div>

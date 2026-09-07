@@ -54,14 +54,30 @@ class AppServiceProvider extends ServiceProvider
         // construction — no DB work on the hot path.
         \Illuminate\Support\Facades\View::composer('layouts.app', function (\Illuminate\View\View $view): void {
             $request = request();
-            $view->with(
-                'markdownAlternate',
-                MarkdownTwin::alternateUrlForRoute(
+            $view->with([
+                'markdownAlternate' => MarkdownTwin::alternateUrlForRoute(
                     (string) ($request->route()?->getName() ?? ''),
                     $request->route()?->parameters() ?? []
-                )
-            );
+                ),
+                'siteAppearance' => \App\Models\SiteSetting::current(),
+                'footerSubjects' => \Illuminate\Support\Facades\Cache::remember(
+                    'footer_subjects',
+                    300,
+                    fn () => Subject::query()
+                        ->where('is_visible', true)
+                        ->orderBy('sort_order')
+                        ->limit(4)
+                        ->get(['slug', 'name'])
+                        ->map(fn ($subject) => ['slug' => $subject->slug, 'name' => $subject->name])
+                        ->all()
+                ),
+            ]);
         });
+
+        \Illuminate\Support\Facades\View::composer(
+            ['welcome', 'components.landing-hero'],
+            fn (\Illuminate\View\View $view) => $view->with('siteAppearance', \App\Models\SiteSetting::current())
+        );
 
         Video::observe(FreeCapObserver::class);
         Note::observe(FreeCapObserver::class);
