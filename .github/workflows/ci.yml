@@ -103,10 +103,10 @@ jobs:
             # raw file cannot match. Strip the escapes first, then take context
             # around each FAILED marker - that is the text that decides whether
             # a red run is application code or a wrong expectation.
-            tr -d '\033' < /tmp/test-output.log | sed -e 's/\[[0-9;]*m//g' > /tmp/test-output.txt
+            perl -pe 's/\e\[[0-9;]*m//g' /tmp/test-output.log > /tmp/test-output.txt
             {
               echo "FAILED TESTS SUMMARY:"
-              grep -A 12 -E "^[0-9]+\) Tests" /tmp/test-output.txt | head -180
+              grep -B 1 -A 6 -E "FAILED |Failed asserting|Expected response status|SQLSTATE|Exception:" /tmp/test-output.txt | sed -e 's/^ *//' | grep -v "^[[:space:]]*$" | head -200
             } | while IFS= read -r line; do
               line="${line//'%'/'%25'}"
               echo "::error::${line}"
@@ -137,11 +137,10 @@ jobs:
             echo '### Failed tests (suite output, escapes stripped)'
             echo ''
             echo '```text'
-            if grep -qE "^[0-9]+\) Tests" /tmp/test-output.txt; then
-              grep -B 2 -A 14 -E "^[0-9]+\) Tests" /tmp/test-output.txt | head -400
-            else
-              tail -300 /tmp/test-output.txt
-            fi
+              grep -B 1 -A 8 -E "FAILED |Failed asserting|Expected response status|SQLSTATE|Exception:" /tmp/test-output.txt | sed -e 's/^ *//' | head -400
+              echo ''
+              echo '--- last 60 lines of the suite output ---'
+              tail -60 /tmp/test-output.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
