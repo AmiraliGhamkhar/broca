@@ -160,7 +160,14 @@ class AuthHardeningTest extends TestCase
         $this->post('/register', $this->registration([
             'password' => 'short',
             'password_confirmation' => 'different',
-        ]))->assertSessionHasErrors(['password', 'password_confirmation']);
+        ]))->assertSessionHasErrors('password');
+
+        // `confirmed` reports against `password`, not a second
+        // `password_confirmation` key - the mismatch has to be visible on the
+        // field the user actually edits, which is what the view renders.
+        $passwordErrors = session('errors')->get('password');
+        $this->assertCount(3, $passwordErrors, 'length, case mix and mismatch, all on one field');
+        $this->assertStringContainsString('تکرار گذرواژه', implode(' ', $passwordErrors));
 
         $response = $this->get(route('register'))->assertOk();
 
