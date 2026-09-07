@@ -8,6 +8,12 @@ use Illuminate\View\View;
 
 class PlanController extends Controller
 {
+    /**
+     * Canonical lineup (client-confirmed 2026-09-07): three cards —
+     * رایگان / اشتراک یک‌ماهه ۲۷۰ تومان / اشتراک سه‌ماهه ۶۰۰ تومان.
+     * Rows come from `plans` (price_irr is stored in Rial; 2 700 = 270
+     * Toman) and database/seeders/DatabaseSeeder.php is the source of truth.
+     */
     public function index(Request $request): View
     {
         $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();

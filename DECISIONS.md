@@ -55,7 +55,9 @@ working-process rules. Newest first.
 ### Open questions for the client (from brief §12)
 
 1. Hosting target (shared cPanel vs VPS) → final DB engine.
-2. Real Toman prices for 1-month / 3-month plans (seeder uses placeholders).
+2. ~~Real Toman prices for 1-month / 3-month plans (seeder uses
+   placeholders).~~ **Resolved 2026-09-07** — client confirmed the lineup:
+   رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان (see "Round 7").
 3. OTP SMS verification required at launch?
 4. Video hosting/CDN provider preference.
 5. Content volume at launch (sizes the admin workflow).
@@ -144,6 +146,38 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
     back). The proposed video-player loading state was DROPPED — the
     existing authorize button already carries loading/error feedback; a
     second indicator would be decorative.
+
+## Round 7 decisions (2026-09-07, pricing lineup + presentation)
+
+1. **The pricing lineup is three cards, and it is now the client's confirmed
+   answer to open question 2:** رایگان (price 0) / اشتراک یک‌ماهه ۲۷۰ تومان
+   (`price_irr` 2700) / اشتراک سه‌ماهه ۶۰۰ تومان (`price_irr` 6000). Prices
+   stay DB content — `plans.price_irr` is Rial, the card renders Toman — so
+   the seeder and `PlanController`'s synthetic free tier are the only sources;
+   nothing is hardcoded in the view.
+2. **Presentation is the CodeFronts "Scale-Up Focused Plan Hover" table
+   (MIT), scoped under `.prc-05` and fully recolored to the Broca palette**
+   — rausch accent for checkmarks, CTA hover and the featured glow;
+   hairline/hairline-soft borders; ink/body/muted type; rausch-tint wash on
+   the featured card; teal for the duration and per-month accents. The stock
+   `#f2f0f7` section background, `Segoe UI` font and `oklch(0.6 0.2 300)`
+   accent were dropped rather than overridden; the CSS reset is limited to
+   descendants so the root keeps Tailwind utilities (`mt-12`).
+3. **Three columns are explicit from `md` up, single column below.** The
+   upstream `repeat(auto-fit, minmax(220px,1fr))` orphaned the third card into
+   a second row around 900px; the grid is also capped (`min(100%, 73.5rem)`)
+   so a trimmed lineup still reads as cards, not full-width panels.
+4. **The free tier is labelled, not zeroed:** the price slot renders «رایگان»
+   in teal instead of `0 تومان`, and the duration pill / per-month line use
+   Persian numerals to match the surrounding copy.
+5. **Multi-month tiers quote an honest per-month equivalent** (600/3 = 200
+   Toman, i.e. ~26٪ below the 1-month tier), computed from the data against
+   the *priciest* per-month paid tier as baseline — a `min()` baseline made the
+   1-month plan its own reference and silently dropped the only informative
+   line. If the lineup ever flattens, the line disappears instead of lying. No
+   invented "تخفیف ویژه" badges. The featured tier
+   remains data-driven (`duration_months === 3`) rather than a new admin flag:
+   with a fixed three-plan lineup an extra column is not worth a migration.
 
 ### Residual open items (not blocking)
 

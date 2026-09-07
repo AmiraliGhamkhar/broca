@@ -458,6 +458,30 @@ All cards follow the same system:
 - rounded corners
 - optional hover lift for discoverability
 
+#### Pricing cards (`.prc-05`)
+
+Three tiers on `/plans`: **رایگان**, **یک‌ماهه ۲۷۰ تومان**, **سه‌ماهه ۶۰۰ تومان**.
+
+- Source: CodeFronts "Scale-Up Focused Plan Hover" (MIT), scoped under
+  `.prc-05` in `resources/css/app.css`; no JavaScript.
+- Colors are palette-only — `rausch` for the checkmarks, CTA hover and the
+  featured glow, `ink`/`body`/`muted` for type, `hairline-soft` for borders,
+  `rausch-tint` for the featured card wash, `teal` for the duration and
+  per-month-equivalent accents. `surface-soft` for the free pill.
+- Interaction stays as upstream: the hovered/focused card lifts
+  (`translateY(-10px) scale(1.04)`) with a pre-rendered accent shadow, while a
+  grid-level `:has()` rule eases siblings back and dims them.
+- Prices are DB content (`plans.price_irr`, Rial) rendered as Toman; the
+  free tier shows the word «رایگان» instead of `0`. Multi-month tiers add a
+  per-month equivalent line, measured against the priciest per-month paid tier
+  and hidden entirely when no saving exists. Amounts use `number_format()`
+  digits inside a `dir="ltr"` node; digits inside Persian sentences
+  (`۱ ماه دسترسی`, `۲۶٪`) go through `App\Support\PersianNumber`.
+- Layout is fixed at three columns from `md` up (never `auto-fit`, which orphans
+  the third card near 900px) and single column on phones.
+- `public/plans-pricing-preview.html` is a static, framework-free preview of the
+  same markup (same compiled stylesheet) for design review; it is not a route.
+
 ### 7.4 Pills, tags, and badges
 
 Used for:

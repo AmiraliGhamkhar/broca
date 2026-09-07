@@ -1151,12 +1151,19 @@ button.is-loading {
 /* =========================================================================
    Pricing table (prc-05)
    =========================================================================
-   Adapted from CodeFronts "Scale-Up Focused Plan Hover" (MIT) and recolored
-   to the Broca palette: Rausch accent, hairline borders, ink text, canvas
-   background inherited from the page (no forced section background).
-   Scoped under .prc-05 so nothing collides with existing styles. The
-   hover/focus interaction is unchanged: the active card lifts and scales
-   while a grid-level :has() rule eases siblings back and dims them.
+   CodeFronts "Scale-Up Focused Plan Hover" (MIT), adapted to the Broca
+   palette: Rausch accent, hairline borders, ink text, white cards on the
+   cream canvas (no forced section background). Scoped under .prc-05 so
+   nothing collides with the rest of the system.
+
+   Lineup = three tiers (free / 1-month 270 Toman / 3-month 600 Toman, all
+   seeded into `plans`). Only the *presentation* lives here; the prices are
+   DB content (`plans.price_irr`, stored in Rial and shown as Toman).
+
+   The hover interaction is the original one: the active card lifts and
+   scales while a grid-level :has() rule eases the siblings back and dims
+   them — the deep accent shadow is a pre-rendered pseudo-element fading
+   in, so nothing repaints per frame and there is no JavaScript.
    ========================================================================= */
 
 /* Box-sizing on the root too, but margin/padding reset only on descendants:
@@ -1179,14 +1186,45 @@ button.is-loading {
 .prc-05 {
     --accent: var(--color-rausch);
     --accent-deep: var(--color-rausch-active);
+    --card-radius: 1.25rem;
     width: 100%;
 }
 
+/* Three tiers read as a comparison, not as a masonry: fixed columns on
+   tablet+ (auto-fit would drop the third card into an orphan row around
+   900px), single column on phones. */
 .prc-05__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 22px;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
     align-items: stretch;
+    width: min(100%, 73.5rem);
+    margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+    .prc-05__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+}
+
+@media (min-width: 1120px) {
+    .prc-05__grid {
+        gap: 1.5rem;
+    }
+}
+
+.prc-05__empty {
+    grid-column: 1 / -1;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--card-radius);
+    background: var(--color-surface-soft);
+    padding: clamp(2rem, 6vw, 4rem);
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    font-weight: 700;
 }
 
 .prc-05__card {
@@ -1195,7 +1233,7 @@ button.is-loading {
     flex-direction: column;
     gap: 4px;
     border: 1px solid var(--color-hairline-soft);
-    border-radius: 1.25rem;
+    border-radius: var(--card-radius);
     background: #ffffff;
     padding: 1.75rem;
     transition:
@@ -1205,22 +1243,23 @@ button.is-loading {
     will-change: transform;
 }
 
+.prc-05__card:hover,
+.prc-05__card:focus-within {
+    transform: translateY(-10px) scale(1.04);
+    border-color: var(--color-hairline);
+    z-index: 1;
+}
+
 /* Pre-rendered accent shadow, faded in on hover — nothing repaints per frame. */
 .prc-05__card::after {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: 0 30px 60px -22px rgb(255 56 92 / 0.35);
+    box-shadow: 0 30px 60px -22px rgb(255 56 92 / 0.32);
     opacity: 0;
     transition: opacity 320ms ease;
     pointer-events: none;
-}
-
-.prc-05__card:hover,
-.prc-05__card:focus-within {
-    transform: translateY(-10px) scale(1.04);
-    z-index: 1;
 }
 
 .prc-05__card:hover::after,
@@ -1234,9 +1273,17 @@ button.is-loading {
     filter: saturate(0.6) opacity(0.75);
 }
 
-/* Featured (three-month) tier */
+/* Featured tier (the 600-Toman / three-month plan — see plans.blade.php):
+   a rausch-tinted header plus a soft fade keeps it the calm centre of
+   gravity even before anyone hovers. */
 .prc-05__card.is-featured {
     border-color: rgb(255 56 92 / 0.35);
+    background: linear-gradient(180deg, var(--color-rausch-tint) 0%, #ffffff 58%);
+}
+
+.prc-05__card.is-featured:hover,
+.prc-05__card.is-featured:focus-within {
+    border-color: rgb(255 56 92 / 0.55);
 }
 
 .prc-05__ribbon {
@@ -1294,12 +1341,25 @@ button.is-loading {
     line-height: 1.9;
 }
 
+/* Price block: ink numerals + "تومان" in LTR so the digits, their grouping
+   commas and the currency stay in reading order inside the RTL card. */
 .prc-05__price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
     color: var(--color-ink);
     font-size: clamp(2.1rem, 4vw, 2.6rem);
     font-weight: 900;
     letter-spacing: -0.02em;
     line-height: 1.15;
+}
+
+.prc-05__price.is-free {
+    justify-content: flex-start;
+    margin-bottom: 0.35rem;
+    color: var(--color-teal);
+    font-size: clamp(1.7rem, 3vw, 2.05rem);
+    letter-spacing: 0;
 }
 
 .prc-05__currency {
@@ -1308,10 +1368,17 @@ button.is-loading {
     font-weight: 700;
 }
 
+/* Per-month equivalence for multi-month tiers — honest math, not a badge. */
 .prc-05__per {
     margin-bottom: 1rem;
     color: var(--color-muted);
     font-size: 0.72rem;
+    line-height: 1.8;
+}
+
+.prc-05__per strong {
+    color: var(--color-teal);
+    font-weight: 800;
 }
 
 .prc-05__card ul {
@@ -1360,14 +1427,18 @@ button.is-loading {
 .prc-05__cta {
     display: block;
     width: 100%;
+    border: 0;
     border-radius: 0.5rem;
     background: var(--color-ink);
     color: #ffffff;
     padding: 0.8rem;
     text-align: center;
     text-decoration: none;
+    font-family: inherit;
     font-weight: 700;
     font-size: 0.82rem;
+    line-height: 1.6;
+    cursor: pointer;
     transition: background-color 250ms ease;
 }
 

@@ -37,82 +37,109 @@
         </div>
     </div>
 
-    {{-- Pricing table: CodeFronts "Scale-Up Focused Plan Hover" (MIT),
-         recolored to the Broca palette. Hover/focus lifts the active card
-         while siblings ease back — pure CSS via :has(), no JS. --}}
+    {{-- Pricing table: CodeFronts "Scale-Up Focused Plan Hover" (MIT), recolored
+         to the Broca palette (Rausch accent, hairline borders, ink text — see the
+         .prc-05 block in resources/css/app.css). Lineup is three cards: رایگان /
+         یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان. Hover/focus lifts the active card
+         while siblings ease back — pure CSS via :has(), no JS. Prices stay DB
+         content (`plans.price_irr` in Rial); only the rendering lives here. --}}
+    @php
+        // Comparison baseline for the per-month equivalent on the cards: the
+        // priciest paid tier per month (the 1-month plan at 270 Toman). Longer
+        // tiers then only claim a saving when there genuinely is one — if the
+        // lineup ever flattens, the line disappears instead of lying.
+        $baselinePerMonth = $plans
+            ->filter(fn ($p) => (int) $p->price_irr > 0 && (int) $p->duration_months >= 1)
+            ->map(fn ($p) => (int) ceil((int) $p->price_irr / 10 / max(1, (int) $p->duration_months)))
+            ->max();
+    @endphp
     <div class="prc-05 mt-12">
         <div class="prc-05__grid">
-        @forelse ($plans as $plan)
-            @php
-                $isPaid = (int) $plan->price_irr > 0 && (int) $plan->duration_months >= 1;
-                $isRecommended = $isPaid && (int) $plan->duration_months === 3;
-            @endphp
+            @forelse ($plans as $plan)
+                @php
+                    $isPaid = (int) $plan->price_irr > 0 && (int) $plan->duration_months >= 1;
+                    $isRecommended = $isPaid && (int) $plan->duration_months === 3;
+                    $toman = intdiv((int) $plan->price_irr, 10);
+                    $months = max(1, (int) $plan->duration_months);
+                    $perMonth = (int) ceil($toman / $months);
+                @endphp
 
-            <article class="prc-05__card {{ $isRecommended ? 'is-featured' : '' }}">
-                @if ($isRecommended)
-                    <span class="prc-05__ribbon">پیشنهاد متعادل برای بیشتر دانشجویان</span>
-                @endif
+                <article class="prc-05__card {{ $isRecommended ? 'is-featured' : '' }}">
+                    @if ($isRecommended)
+                        <span class="prc-05__ribbon">پیشنهاد متعادل برای بیشتر دانشجویان</span>
+                    @endif
 
-                <div class="prc-05__head">
-                    <div>
-                        <h3 class="prc-05__name">{{ $plan->name }}</h3>
-                        <p class="prc-05__description">{{ $plan->description }}</p>
+                    <div class="prc-05__head">
+                        <div>
+                            <h3 class="prc-05__name">{{ $plan->name }}</h3>
+                            <p class="prc-05__description">{{ $plan->description }}</p>
+                        </div>
+                        <span class="prc-05__duration {{ $isPaid ? 'is-paid' : 'is-free' }}">
+                            {{ $plan->duration_months ? \App\Support\PersianNumber::digits($plan->duration_months) . ' ماه دسترسی' : 'دسترسی رایگان' }}
+                        </span>
                     </div>
-                    <span class="prc-05__duration {{ $isPaid ? 'is-paid' : 'is-free' }}">
-                        {{ $plan->duration_months ? $plan->duration_months . ' ماه دسترسی' : 'دسترسی رایگان' }}
-                    </span>
-                </div>
 
-                <p class="prc-05__price" dir="ltr">
-                    {{ number_format((int) $plan->price_irr / 10) }}
-                    <span class="prc-05__currency">تومان</span>
-                </p>
-
-                <ul>
-                    <li>
-                        <strong>{{ $isPaid ? 'دسترسی گسترده به ویدیوهای آموزشی' : 'شروع با نمونه‌درس‌های منتخب' }}</strong>
-                        <span>{{ $isPaid ? 'تمام درس‌های ویدیویی منتشرشده قابل استفاده هستند.' : 'تا ۲ ویدیوی منتخب، در کل آرشیو و همه دوره‌ها — سهمیهٔ رایگان به‌صورت جدا برای هر دوره محاسبه نمی‌شود، بلکه در کل آرشیو (همه دوره‌ها روی هم) به‌کار می‌رود تا سبک تدریس و ساختار محتوا را ارزیابی کنید.' }}</span>
-                    </li>
-                    <li>
-                        <strong>{{ $isPaid ? 'دسترسی به جزوات و فایل‌های PDF' : 'امکان مشاهده نمونه جزوه' }}</strong>
-                        <span>{{ $isPaid ? 'جزوات و فایل‌های آموزشی منتشرشده برای مطالعه و جمع‌بندی در دسترس‌اند.' : 'کاربر قبل از خرید می‌تواند با سبک جزوات و کیفیت آن‌ها آشنا شود.' }}</span>
-                    </li>
-                    <li>
-                        <strong>{{ $isPaid ? 'مرور فاصله‌دار و سنجش یادگیری' : 'مرور و آزمون برای آشنایی اولیه' }}</strong>
-                        <span>{{ $isPaid ? 'فلش‌کارت‌ها و آزمون‌ها بخشی از چرخه یادگیری روزانه شما می‌شوند.' : 'سطح رایگان برای شناخت مدل یادگیری و تصمیم‌گیری آگاهانه طراحی شده است.' }}</span>
-                    </li>
-                </ul>
-
-                <div class="prc-05__actions">
-                    @auth
-                        @if ($hasActiveSubscription)
-                            <p class="prc-05__notice is-info">
-                                شما هم‌اکنون یک اشتراک فعال دارید؛ برای جلوگیری از تداخل دسترسی، خرید جدید تا پایان پلن فعلی غیرفعال است.
-                            </p>
-                            <a href="{{ route('dashboard') }}" class="prc-05__cta is-secondary">مشاهده وضعیت اشتراک</a>
-                        @elseif (config('broca.checkout_enabled') && $isPaid)
-                            <form method="post" action="{{ route('checkout', $plan) }}">
-                                @csrf
-                                <button type="submit" class="prc-05__cta">خرید اشتراک و ورود به درگاه امن</button>
-                            </form>
-                            <p class="prc-05__fineprint">پرداخت از طریق زرین‌پال انجام می‌شود و وضعیت فاکتور بعد از بازگشت از درگاه قابل پیگیری است.</p>
-                        @elseif (! config('broca.checkout_enabled') && $isPaid)
-                            <p class="prc-05__notice is-warn">
-                                درگاه پرداخت فعلاً برای این پلن غیرفعال است. پس از فعال‌سازی نهایی می‌توانید خرید را تکمیل کنید.
+                    @if ($isPaid)
+                        <p class="prc-05__price" dir="ltr">
+                            {{ number_format($toman) }}
+                            <span class="prc-05__currency">تومان</span>
+                        </p>
+                        @if ($months > 1 && $baselinePerMonth && $perMonth < $baselinePerMonth)
+                            <p class="prc-05__per">
+                                معادل <bdi dir="ltr">{{ number_format($perMonth) }}</bdi> تومان برای هر ماه —
+                                <strong>{{ \App\Support\PersianNumber::digits(round((1 - $perMonth / $baselinePerMonth) * 100)) }}٪</strong> ارزان‌تر از پلن یک‌ماهه
                             </p>
                         @else
-                            <a href="{{ route('dashboard') }}" class="prc-05__cta is-secondary">ورود به داشبورد و استفاده از حساب رایگان</a>
+                            <p class="prc-05__per">مبلغ یک‌بار برای {{ \App\Support\PersianNumber::digits($plan->duration_months) }} ماه دسترسی</p>
                         @endif
                     @else
-                        <a href="{{ route('register') }}" class="prc-05__cta">ثبت‌نام و انتخاب این پلن</a>
-                    @endauth
-                </div>
-            </article>
-        @empty
-            <div class="col-span-3 surface-panel p-10 text-center">
-                <p class="text-sm font-bold text-muted">پلن‌های اشتراک پس از تأیید نهایی در این صفحه نمایش داده می‌شوند.</p>
-            </div>
-        @endforelse
+                        <p class="prc-05__price is-free">رایگان</p>
+                        <p class="prc-05__per">بدون پرداخت — دسترسی رایگان تا سقف سهمیهٔ حساب پایه</p>
+                    @endif
+
+                    <ul>
+                        <li>
+                            <strong>{{ $isPaid ? 'دسترسی گسترده به ویدیوهای آموزشی' : 'شروع با نمونه‌درس‌های منتخب' }}</strong>
+                            <span>{{ $isPaid ? 'تمام درس‌های ویدیویی منتشرشده قابل استفاده هستند.' : 'تا ۲ ویدیوی منتخب، در کل آرشیو و همه دوره‌ها — سهمیهٔ رایگان به‌صورت جدا برای هر دوره محاسبه نمی‌شود، بلکه در کل آرشیو (همه دوره‌ها روی هم) به‌کار می‌رود تا سبک تدریس و ساختار محتوا را ارزیابی کنید.' }}</span>
+                        </li>
+                        <li>
+                            <strong>{{ $isPaid ? 'دسترسی به جزوات و فایل‌های PDF' : 'امکان مشاهده نمونه جزوه' }}</strong>
+                            <span>{{ $isPaid ? 'جزوات و فایل‌های آموزشی منتشرشده برای مطالعه و جمع‌بندی در دسترس‌اند.' : 'کاربر قبل از خرید می‌تواند با سبک جزوات و کیفیت آن‌ها آشنا شود.' }}</span>
+                        </li>
+                        <li>
+                            <strong>{{ $isPaid ? 'مرور فاصله‌دار و سنجش یادگیری' : 'مرور و آزمون برای آشنایی اولیه' }}</strong>
+                            <span>{{ $isPaid ? 'فلش‌کارت‌ها و آزمون‌ها بخشی از چرخه یادگیری روزانه شما می‌شوند.' : 'سطح رایگان برای شناخت مدل یادگیری و تصمیم‌گیری آگاهانه طراحی شده است.' }}</span>
+                        </li>
+                    </ul>
+
+                    <div class="prc-05__actions">
+                        @auth
+                            @if ($hasActiveSubscription)
+                                <p class="prc-05__notice is-info">
+                                    شما هم‌اکنون یک اشتراک فعال دارید؛ برای جلوگیری از تداخل دسترسی، خرید جدید تا پایان پلن فعلی غیرفعال است.
+                                </p>
+                                <a href="{{ route('dashboard') }}" class="prc-05__cta is-secondary">مشاهده وضعیت اشتراک</a>
+                            @elseif (config('broca.checkout_enabled') && $isPaid)
+                                <form method="post" action="{{ route('checkout', $plan) }}">
+                                    @csrf
+                                    <button type="submit" class="prc-05__cta">خرید اشتراک و ورود به درگاه امن</button>
+                                </form>
+                                <p class="prc-05__fineprint">پرداخت از طریق زرین‌پال انجام می‌شود و وضعیت فاکتور بعد از بازگشت از درگاه قابل پیگیری است.</p>
+                            @elseif (! config('broca.checkout_enabled') && $isPaid)
+                                <p class="prc-05__notice is-warn">
+                                    درگاه پرداخت فعلاً برای این پلن غیرفعال است. پس از فعال‌سازی نهایی می‌توانید خرید را تکمیل کنید.
+                                </p>
+                            @else
+                                <a href="{{ route('dashboard') }}" class="prc-05__cta is-secondary">ورود به داشبورد و استفاده از حساب رایگان</a>
+                            @endif
+                        @else
+                            <a href="{{ route('register') }}" class="prc-05__cta">ثبت‌نام و انتخاب این پلن</a>
+                        @endauth
+                    </div>
+                </article>
+            @empty
+                <p class="prc-05__empty">پلن‌های اشتراک پس از تأیید نهایی در این صفحه نمایش داده می‌شوند.</p>
+            @endforelse
         </div>
     </div>
 </section>
