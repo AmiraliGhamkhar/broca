@@ -23,18 +23,14 @@ class AdminTwoFactorManagementTest extends TestCase
         $this->actingAs($admin)->post(route('admin.two-factor.start'));
         $admin = $admin->fresh();
 
-        for ($i = 0; $i < 4; $i++) {
+        // Five wrong codes are still answered by the controller; the sixth is
+        // refused before it runs, and the named limiter replies with a redirect
+        // plus a Persian notice rather than a raw 429 page.
+        for ($i = 0; $i < 5; $i++) {
             $this->actingAs($admin)
                 ->post(route('admin.two-factor.enable'), ['code' => '000000'])
                 ->assertSessionHasErrors('code');
         }
-
-        // The 5th is the last allowed one; the 6th is refused before the
-        // controller runs, and the named limiter answers with a redirect plus a
-        // Persian notice rather than a raw 429 page.
-        $this->actingAs($admin)
-            ->post(route('admin.two-factor.enable'), ['code' => '000000'])
-            ->assertSessionHasErrors('code');
 
         $this->actingAs($admin)
             ->post(route('admin.two-factor.enable'), ['code' => '000000'])
@@ -54,7 +50,7 @@ class AdminTwoFactorManagementTest extends TestCase
     {
         $admin = $this->enrolledAdmin();
 
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $this->actingAs($admin)
                 ->post(route('admin.two-factor.disable'), ['code' => '000000'])
                 ->assertSessionHasErrors('code');

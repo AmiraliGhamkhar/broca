@@ -269,6 +269,18 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
     parallel counters. `tests/TestCase.php` additionally clears the cache store
     in `setUp()`: limiters are cache state and `RefreshDatabase` truncates only
     tables, so a shared store turns ordinary auth tests into 429s.
+13. **One counter per request, not two: the 2FA route limiter delegates counting
+    to the controller.** Adding `throttle:admin-2fa-verify` alongside the
+    controller's own `RateLimiter::hit()` on a wrong code made a single failed
+    attempt consume two units of the same 5/min budget, so an admin who typed
+    the code correctly on the sixth try was still refused — and the pre-existing
+    management tests (written for the old per-route `throttle:10,1`/`5,1`)
+    disagreed with the new arithmetic. The limiter now uses
+    `Limit::after(fn ($response) => $request->routeIs('admin.two-factor.recover'))`:
+    routes whose controller records failures itself are *checked* but not
+    auto-incremented, while `/recover` (whose controller has nothing to clear on
+    success) is counted by the middleware as usual. Clearing on a correct code
+    stays in the controller, which is what makes honest typos harmless.
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt

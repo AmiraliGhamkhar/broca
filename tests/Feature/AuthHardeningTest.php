@@ -221,15 +221,36 @@ class AuthHardeningTest extends TestCase
             'password' => self::STRONG_PASSWORD,
         ]);
 
-        // Cookie name is remember_web_{session.cookie}; built the same way the
-        // guard builds it, so this test cannot silently pass on a rename.
-        $name = 'remember_web_'.config('session.cookie');
+        // The name comes from the guard itself: Laravel 13 builds it as
+        // remember_web_{session.cookie}_{sha1(SessionGuard::class)}, so asserting
+        // on a hand-written string would break on a framework rename while
+        // proving nothing about this app.
+        $name = auth()->getGuard()->getRecallerName();
+        $this->assertStringStartsWith('remember_web_', $name);
 
         $this->post('/login', [
             'identifier' => 'remember@example.com',
             'password' => self::STRONG_PASSWORD,
             'remember' => '1',
         ])->assertRedirect(route('dashboard'))->assertCookie($name);
+
+        // The point is not that a cookie exists but that it authenticates. The
+        // test client keeps cookies across requests, so after an explicit
+        // logout the recaller must silently sign the user back in — and the
+        // remember token in the database must have been rotated by the logout,
+        // which is what makes the replay safe rather than a stolen credential.
+        $this->post('/logout')->assertRedirect(route('home'));
+
+        $this->get(route('dashboard'))->assertOk();
+
+        // And the replay is bounded: the framework expires the recaller cookie
+        // on logout while the *stored* token is rotated, so the value that was
+        // just sent cannot be replayed against the database afterwards.
+        $this->assertCookieExpired($name);
+        $this->assertNull(
+            User::where('email', 'remember@example.com')->value('remember_token'),
+            'logout must rotate the remember token out of the database'
+        );
     }
 
     public function test_login_without_remember_me_sets_no_remember_cookie(): void

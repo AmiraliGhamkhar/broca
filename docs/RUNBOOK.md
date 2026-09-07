@@ -296,7 +296,7 @@ dependency that can break every new account.**
 | `login` | 10/min per IP **+** 5/min per identifier·IP | as stated |
 | `password-reset` | 6/min | email (IP when email is absent or invalid) |
 | `verification-resend` | 3/min | user id |
-| `admin-2fa-verify` | 5/min | admin user id — **shared** by challenge, recover, enable and disable (one attacker with four forms is one attacker) |
+| `admin-2fa-verify` | 5/min | admin user id — **shared** by challenge, recover, enable and disable (one attacker with four forms is one attacker). For the three code forms the middleware only *checks* the bucket; the controller fills it on a wrong code and clears it on a right one, so a correct 6th attempt is never refused |
 | `admin-2fa-codes` | 10/min | admin user id; recovery-code regeneration verifies no secret, so it is not part of the guessing budget |
 
 `TRUSTED_PROXIES` is not cosmetic here: without it behind Cloudflare, every

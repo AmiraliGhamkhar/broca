@@ -71,13 +71,13 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
+        // No RateLimiter::hit()/clear() here on purpose: `admin-2fa-verify`
+        // counts every request to this route itself (see its `after` callback),
+        // because a recovery code is consumed on success and there is nothing
+        // for this controller to un-count.
         if (! $user?->is_admin || ! $user->hasConfirmedTwoFactor() || ! $user->consumeRecoveryCode($validated['recovery_code'])) {
-            RateLimiter::hit($this->throttleKey($request), 60);
-
             return back()->withErrors(['recovery_code' => 'کد بازیابی درست نیست یا پیش‌تر استفاده شده است.']);
         }
-
-        RateLimiter::clear($this->throttleKey($request));
 
         $request->session()->put(RequireAdminTwoFactor::SESSION_KEY, now()->timestamp);
         $request->session()->regenerate();
@@ -122,6 +122,9 @@ class TwoFactorController extends Controller
             return back()->withErrors(['code' => 'کد تأیید درست نیست؛ دوباره تلاش کنید.']);
         }
 
+        // A correct code resets the counter, so honest typos never turn into a
+        // lockout message (the route limiter defers its counting to this
+        // controller - see the `after` callback on admin-2fa-verify).
         RateLimiter::clear($this->throttleKey($request));
 
         $recoveryCodes = $this->freshRecoveryCodes();
@@ -143,8 +146,14 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->hasConfirmedTwoFactor() || ! Totp::verify((string) $user->totp_secret, $validated['code'])) {
+            // Turning 2FA off is the most valuable code to guess, so wrong
+            // attempts are counted exactly like the sign-in challenge.
+            RateLimiter::hit($this->throttleKey($request), 60);
+
             return back()->withErrors(['code' => 'کد تأیید درست نیست؛ غیرفعال‌سازی انجام نشد.']);
         }
+
+        RateLimiter::clear($this->throttleKey($request));
 
         $user->forceFill([
             'totp_secret' => null,
@@ -196,11 +205,14 @@ class TwoFactorController extends Controller
 
     private function throttleKey(Request $request): string
     {
-        // Matches what `throttle:admin-2fa-verify` builds for this limiter
-        // (the middleware prefixes the limiter name), so the manual hits from a
-        // wrong code and the middleware's own counting share one budget instead
-        // of running two parallel counters.
-        return '2fa-verify:'.($request->user()?->id ?? $request->ip());
+        // Deliberately NOT the key `throttle:admin-2fa-verify` builds: the
+        // middleware already counts every request to those routes per admin.
+        // This counter is the controller's own, and it is only incremented for
+        // a *wrong* code and cleared by a correct one — sharing one bucket with
+        // the middleware would make the two hit the same key twice per request
+        // and would punish an admin who typed the code correctly on the sixth
+        // attempt. Same protection, one side-effect each.
+        return '2fa:'.($request->user()?->id ?? $request->ip());
     }
 
     /**

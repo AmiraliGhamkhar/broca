@@ -45,6 +45,17 @@ jobs:
               line="${line//'%'/'%25'}"
               echo "::error::${line}"
             done
+
+            # ::error:: annotations are truncated and capped, which hides the
+            # assertion text that actually matters. Publish the raw failure
+            # blocks as a job summary: it renders on the PR's Checks tab, so a
+            # red run is diagnosable without log access.
+            {
+              echo '### Failed tests (raw output)'
+              echo '```'
+              awk '/^[0-9]+\) /{show=1} show' /tmp/test-output.log | head -180
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           }
 
