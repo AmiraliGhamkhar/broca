@@ -281,6 +281,7 @@ dependency that can break every new account.**
 | Credentials | `email` **or** Iranian mobile (`09…`, `+98…`, spaces/dashes/Persian digits accepted) + password |
 | Normalization | email lowercased + trimmed, phone canonicalized — before validation, uniqueness *and* lookup, on both register and login |
 | Password policy | ≥ `BROCA_PASSWORD_MIN` (floor 8), letters + upper + lower + digit; length capped at bcrypt's 72-byte read limit so an over-long password can never be silently truncated |
+| Persian error copy | Every rule that can reject a password has its own message in `RegisterUserRequest::messages()`. The `Password` rule's failures arrive keyed by rule name (`validation.password.mixed`), which `attributes()` cannot translate - add a message there whenever a rule is added, or users get English keys in a Persian form |
 | Breach check | `uncompromised()` only when `BROCA_PASSWORD_LEAK_CHECK=true` — it calls api.pwnedpasswords.com *during* the POST, so leave it off unless that host is reachable |
 | Mass assignment | `is_admin` / `status` are not fillable; payloads trying to set them are ignored |
 | Garbage input | array payloads (`name[]=x`), over-long fields and **invalid UTF-8** all come back as validation errors — the null-returning `/u` regex calls in `PhoneNormalizer` are guarded, so a pasted mojibake byte cannot 500 the register or login form |
