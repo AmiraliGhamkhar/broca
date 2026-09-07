@@ -501,3 +501,60 @@ Real legal copy, real ZarinPal merchant code, real prices, real video
 assets/provider. One architectural note carried forward: the Zibal gateway
 class is configured but has no route wiring — harmless dead code today, flag
 before anyone assumes dual-gateway support exists.
+
+---
+
+## 13. Round 9 — the four live-site reports (2026-09-07)
+
+Rounds 1–8 reviewed code. This round started from what the running site was
+doing: registration reached nobody, the administrator could not sign in with
+correct credentials, two of the three pricing cards were gone, and there was no
+way to see any of it without shell access. Each report is traced to the code
+path that produced it, then to the change that closes it.
+
+### 13.1 "Nothing is sent to their email or to their number"
+
+| # | Finding | Fix |
+|---|---|---|
+| R9-1 | **Verification mail depended on a queue worker that shared hosting does not guarantee.** `VerifyEmailNotification`/`ResetPasswordNotification` implement `ShouldQueue` with `QUEUE_CONNECTION=database`; the only drain is the `schedule:run` cron entry, and nothing in the deploy pipeline installs that cron. Every new account then sits unverified — and `/dashboard` and `/checkout` are behind `verified`. | Transactional notifications are dispatched on `broca.notifications.queue`, **`sync` by default** (`BROCA_NOTIFICATIONS_QUEUE`). Backups/media jobs keep `QUEUE_CONNECTION`. |
+| R9-2 | **There was no SMS path at all.** Registration collected a mobile number and never used it: the only proof of contact was mail. | New notification channel (`App\Notifications\Channels\SmsChannel`), driver-based client (`App\Services\Sms\*`) and a one-time-code flow (`App\Services\PhoneVerificationService`, `broca.phone_verification.*`, new `phone_verified_at` columns). |
+| R9-3 | **A dead transport used to be able to fail the request.** Inline delivery makes an SMTP outage throw *after* the account was committed — the worst possible answer to "did my signup work". | Both channels are dispatched inside their own `try/catch`, `report()`ed, and recoverable from the notice page (resend link / resend code). `broca:ops:health` and the bot's health button surface the misconfiguration. |
+
+### 13.2 "The admin cannot log in with its email and password"
+
+| # | Finding | Fix |
+|---|---|---|
+| R9-4 | **A non-canonical stored identifier is invisible to a byte-for-byte lookup.** Rows written by an import, by hand-run SQL, or before the normalizers existed (`"Admin@Example.com "`, `+98912…`) make the form answer «…یا گذرواژه درست نیست» to someone whose password is right. | `App\Support\UserLookup`: canonical match first (indexed), then the known historical spellings. Shared by login and by the operator commands. |
+| R9-5 | **A suspended or never-activated account was reported as a wrong password.** The extra `status` credential in `attempt()` collapses "inactive" into "bad credentials". | Login resolves the account, then reports an inactive account as inactive. Unknown identifiers keep one neutral message (no enumeration). |
+| R9-6 | **A legacy password (md5/sha1/plaintext from an import) can never match** and looked exactly like a forgotten password. | `broca:user:diagnose` prints the stored hash algorithm and names the remedy; `broca:user:repair --password=…` rewrites it. |
+| R9-7 | **The Telegram bot could suspend or demote the last admin.** The web panel refuses both; the bot refused neither, so one tap could leave `/admin` unreachable by everyone. | Last-active-admin guard in `applyUserAction`, mirroring the panel. `broca:user:repair --demote` refuses absolutely (not a `--force`-able prompt). |
+| R9-8 | **No recovery path that does not require the login to work.** | `broca:user:diagnose` (read-only), `broca:user:repair`, `broca:identifiers:normalize`, plus per-account email/mobile verification from the bot. |
+
+### 13.3 "What happened to the two other plan cards"
+
+| # | Finding | Fix |
+|---|---|---|
+| R9-9 | **The deploy hook migrates but never seeds, so the `plans` table can be empty.** `/plans` then renders only the controller's synthetic free tier — one card instead of three. The lineup existed in exactly one place that production never runs (`DatabaseSeeder::seedPlans`). | `App\Support\PlanCatalog` is the single source of truth (free / 1-month 270 T / 3-month 600 T); `broca:sync-plans` reconciles it into the database and runs in `.cpanel.yml` after `migrate`. Idempotent; without `--reset` it never overwrites an edited price. The seeder reads the same array. |
+| R9-10 | **The gap was silent.** Nothing told an operator that the lineup was incomplete. | Admin › plans shows a warning naming the missing codes and the command; `OpsHealthReport` flags it; the bot's plans status offers a one-tap restore (confirmed first). |
+
+### 13.4 Coverage added
+
+`PhoneVerificationTest` (registration sends a code, the code activates the
+account, wrong/expired codes, Persian digits, resend cooldown, phone-only
+verification unlocks `/dashboard`), `PlanLineupTest` (sync creates the three,
+idempotent, does not clobber an edited price, `--reset` restores),
+`AdminLoginLookupTest` (non-canonical email/phone, inactive message, neutral
+message for unknown accounts, diagnose/repair/normalize commands),
+`TelegramOpsTest` (health, plan restore, last-admin guard, account repair,
+unauthorized sender) and `SmsManagerTest` (drivers, placeholder substitution,
+HTTP-200-with-error-body, unconfigured degradation).
+
+### 13.5 Still open
+
+- **The SMS panel is unnamed.** The driver is generic HTTP and defaults to
+  `log`; going live is `SMS_DRIVER=http` plus `SMS_HTTP_URL`/body template.
+- **`BROCA_NOTIFICATIONS_QUEUE=database` on a host with a proven worker** is
+  the intended production shape; keep the cron (`schedule:run`) monitored if
+  you switch.
+- Prices remain DB-editable; `broca:sync-plans --reset` is the only thing that
+  re-asserts the canonical numbers.

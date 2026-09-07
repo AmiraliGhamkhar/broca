@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
+use App\Support\PlanCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,8 +19,18 @@ class PlanController extends Controller
 {
     public function index(): View
     {
+        $plans = Plan::query()->orderBy('sort_order')->get();
+
         return view('admin.plans.index', [
-            'plans' => Plan::query()->orderBy('sort_order')->get(),
+            'plans' => $plans,
+            // The public /plans page can only show what is in this table, and
+            // the deploy pipeline migrates without seeding — a missing row is
+            // a MISSING CARD on the pricing page, which is how the lineup
+            // "lost" two of its three cards. Say so, and name the fix.
+            'missingCanonical' => array_values(array_diff(
+                PlanCatalog::codes(),
+                $plans->pluck('code')->filter()->all()
+            )),
         ]);
     }
 

@@ -18,6 +18,21 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    public function __construct()
+    {
+        /*
+         * Delivered on `broca.notifications.queue`, which is `sync` by
+         * default. This notification is the ONLY way most users have ever had
+         * to activate an account, and on shared hosting the cron-driven queue
+         * worker is frequently missing or dead — every signup then ended with
+         * an account nobody could log into. Sending inline costs a few hundred
+         * milliseconds of SMTP once per signup and removes that dependency
+         * entirely; a host with a monitored worker sets
+         * BROCA_NOTIFICATIONS_QUEUE=database to move it off the request.
+         */
+        $this->connection = (string) config('broca.notifications.queue', 'sync');
+    }
+
     public function via(object $notifiable): array
     {
         return ['mail'];

@@ -19,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'active' => \App\Http\Middleware\EnsureActive::class,
+            // Gates /dashboard, /checkout and /admin on "the account proved a
+            // contact channel": the emailed link OR the SMS one-time code.
+            // Named explicitly (rather than overriding the framework's
+            // `verified` alias) so the guard is greppable at every route and
+            // cannot be swapped out by an alias-merge order change.
+            'verified.contact' => \App\Http\Middleware\EnsureVerifiedContact::class,
             'admin.2fa' => RequireAdminTwoFactor::class,
             'admin.audit' => LogAdminActivity::class,
         ]);

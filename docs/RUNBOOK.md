@@ -94,6 +94,7 @@ git pull
 composer install --no-dev --optimize-autoloader
 npm ci --ignore-scripts && npm run build
 php artisan migrate --force
+php artisan broca:sync-plans          # the canonical lineup — see §12
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 php artisan queue:restart
 ```
@@ -270,9 +271,13 @@ php artisan view:cache
 
 ## 11. Auth & account operations (register / login / reset)
 
-The signup funnel is register → verification mail → login → checkout. Only
-email is verified today (no SMS OTP), so **mail + queue delivery is the one
-dependency that can break every new account.**
+The signup funnel is register → **verification** → login → checkout, and
+verification now has two independent paths: the emailed link **and** an SMS
+one-time code to the registered mobile number. **Either one activates the
+account**, so mail delivery is no longer a single point of failure — but it is
+still the path most students will use, so it stays the first thing to check.
+
+Detail and panel contract: `docs/SMS_AND_VERIFICATION.md`.
 
 ### What the code enforces
 
@@ -285,7 +290,11 @@ dependency that can break every new account.**
 | Breach check | `uncompromised()` only when `BROCA_PASSWORD_LEAK_CHECK=true` — it calls api.pwnedpasswords.com *during* the POST, so leave it off unless that host is reachable |
 | Mass assignment | `is_admin` / `status` are not fillable; payloads trying to set them are ignored |
 | Garbage input | array payloads (`name[]=x`), over-long fields and **invalid UTF-8** all come back as validation errors — the null-returning `/u` regex calls in `PhoneNormalizer` are guarded, so a pasted mojibake byte cannot 500 the register or login form |
-| Suspension | login rejected (extra `status` credential) + live session rows deleted when an admin suspends + `active` middleware on every authenticated route |
+| Verification | emailed link **or** SMS code; `verified.contact` (`App\Http\Middleware\EnsureVerifiedContact`) accepts either and guards `/dashboard`, `/checkout`, playback and `/admin` |
+| Mobile code | 6 digits, bcrypt-hashed at rest, 10-minute TTL, 5 attempts per code, cleared on use/expiry/lockout, 60 s resend cooldown — the TTL and the attempt budget are what make a table dump unprofitable |
+| Delivery | transactional mail and SMS go out **inline** (`BROCA_NOTIFICATIONS_QUEUE=sync` by default). A failed send is `report()`ed and costs the user a resend, never a 500; when neither channel can leave the building the app logs `critical` with the account id |
+| Lookup | `App\Support\UserLookup` matches the canonical identifier first (indexed), then the historical spellings a row may still hold (`Admin@Example.com `, `+98912…`, Persian digits). Shared with the operator commands so the form and the CLI can never disagree |
+| Suspension | login rejected **and reported as such** (an inactive account no longer masquerades as a wrong password) + live session rows deleted when an admin suspends + `active` middleware on every authenticated route |
 | Password reset | invalidates all of the user's session rows and rotates the remember token |
 | 2FA (admin) | TOTP 30 s with ±1 step drift, 5 tries/min/admin, single-use recovery codes (bcrypt), the pass flag regenerates the session, and an accepted code cannot be replayed inside its window |
 
@@ -296,7 +305,8 @@ dependency that can break every new account.**
 | `registration` | 6/min | IP |
 | `login` | 10/min per IP **+** 5/min per identifier·IP | as stated |
 | `password-reset` | 6/min | email (IP when email is absent or invalid) |
-| `verification-resend` | 3/min | user id |
+| `verification-resend` | 3/min | user id — **shared** by "resend the email link" and "resend the SMS code" |
+| `phone-verify` | 10/min | user id; the outer bound on code entry. The per-code attempt budget (5) is enforced in `PhoneVerificationService`, this stops an attacker burning *code after code*, each of which is a paid text message |
 | `admin-2fa-verify` | 5/min | admin user id — **shared** by challenge, recover, enable and disable (one attacker with four forms is one attacker). The middleware counts every request to those routes; the sign-in challenge additionally keeps its own counter, keyed differently, only to word the "wait N seconds" message and to be cleared by a successful attempt |
 | `admin-2fa-codes` | 10/min | admin user id; recovery-code regeneration verifies no secret, so it is not part of the guessing budget |
 
@@ -307,20 +317,31 @@ site's login form for everyone.
 ### 10-minute verification after deploy
 
 ```bash
-# 1. queue is actually draining (queued mail depends on it)
+# 0. one screen that covers all of it: exits non-zero when anything is wrong
+php artisan broca:ops:health
+
+# 1. queue is actually draining (backups and any non-sync queue depend on it)
 php artisan tinker --execute 'echo DB::table("jobs")->count();'   # expect 0
 
-# 2. the mail transport is really talking SMTP
+# 2. the mail transport is really talking SMTP (not `log`, not `array`)
 php artisan tinker --execute 'echo config("mail.default");'       # expect smtp
 
-# 3. the app answers over the final HTTPS origin (signed URLs depend on APP_URL)
+# 3. transactional messages are not waiting on that queue
+php artisan tinker --execute 'echo config("broca.notifications.queue");'  # sync unless a worker is monitored
+
+# 4. the SMS path reaches the panel
+php artisan broca:sms:test 09123456789
+
+# 5. the app answers over the final HTTPS origin (signed URLs depend on APP_URL)
 curl -sI https://broca.example/login | head -1                    # expect 200
 ```
 
 Then, in the browser:
 
-1. `/register` with a real inbox → lands on the verification notice → the mail
-   arrives → the link returns to `/dashboard`.
+1. `/register` with a real inbox and a real handset → lands on the
+   verification notice → **both** the mail and the SMS arrive → either one
+   returns to `/dashboard`. Repeat once with the mail path unavailable
+   (`MAIL_MAILER=log`) to prove the code alone is enough.
 2. `/login` with the **phone** typed as `+۹۸ ۹۱۲ …` → works (same canonical
    form as the stored value).
 3. Sign out → "فراموشی گذرواژه" → reset link → new password → the *old* session
@@ -329,3 +350,55 @@ Then, in the browser:
    «تعداد تلاش‌ها زیاد است…».
 5. Suspend an account in `/admin/users` → its live tab loses access on the next
    request, and login with the correct password stays refused.
+
+---
+
+## 12. The plan lineup (why /plans can lose cards)
+
+`/plans` renders whatever `plans` rows are active, and **migrations do not
+create them** — the deploy pipeline runs `artisan migrate`, never `artisan
+db:seed`. On a host where the seeder was never run by hand the table stays
+empty and the page shows the controller's synthetic free tier and nothing else:
+one card where the client expects three.
+
+The canonical lineup (رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان) lives in
+`App\Support\PlanCatalog`, and one idempotent command reconciles it with the
+database:
+
+```bash
+php artisan broca:sync-plans            # create what is missing; never touch an edited price
+php artisan broca:sync-plans --reset    # also restore canonical names/prices/ordering
+php artisan broca:sync-plans --dry-run
+```
+
+It is wired into the cPanel deploy hook, and the Telegram bot offers the same
+repair under «🩺 عملیات و سلامت → 💳 وضعیت پلن‌ها» (confirmed before it writes).
+The admin panel and `broca:ops:health` both flag an incomplete lineup.
+
+Adding or removing a *product tier* is still a code change (`PlanCatalog`);
+editing a price is a database change (Admin › Plans) and survives every sync.
+
+---
+
+## 13. "Nobody can sign in" — the four causes and their cures
+
+```bash
+php artisan broca:user:diagnose {email|mobile|id}     # read-only, names the fix
+php artisan broca:user:repair   {email|mobile|id} …   # applies it
+```
+
+| Symptom | Cause | Cure |
+|---|---|---|
+| «…یا گذرواژه درست نیست» with a correct password | the stored identifier is not canonical (`Admin@Example.com `, `+98912…`) so the lookup cannot see it | `--normalize` (login already tolerates it; this makes the data canonical) |
+| Same message, account is real | `status` is not `active` | `--activate` |
+| Same message, always | the stored `password` is not bcrypt/argon (an md5/sha1/plaintext import) — **no** password will ever match | `--password="new"` (validated against the app policy) |
+| Login works, `/dashboard` bounces to the verification page | no verified contact channel | `--verify-email` (or `--verify-phone`), or the matching button in the bot |
+| Reached `/admin` and nothing else works | the last active admin was suspended or demoted | `--activate --promote`; all three surfaces now refuse to create this state |
+
+`broca:identifiers:normalize` rewrites every stored email and phone into the
+canonical spelling in one pass (`--dry-run` first), which is the cure for a
+whole imported table.
+
+The bot's user card shows the same four facts (status, verified email, verified
+mobile, whether login can succeed) and can clear the verification ones in a
+tap — the fastest route when the only tool at hand is a phone.

@@ -19,6 +19,8 @@ use App\Models\TelegramAdmin;
 use App\Models\TelegramChatSession;
 use App\Models\Video;
 use App\Services\FreeItemDesignationService;
+use App\Services\OpsHealthReport;
+use App\Services\Sms\SmsManager;
 use App\Support\Slug;
 use App\Support\StructuredMessageParser;
 use Illuminate\Database\Eloquent\Model;
@@ -162,7 +164,51 @@ class TelegramBotService
                 'admin' => $this->sendAdministrationHelp($chatId),
                 'appearance' => $this->sendAppearanceHelp($chatId),
                 'dashboard' => $this->sendDashboard($chatId),
+                'ops' => $this->sendOpsHelp($chatId),
                 default => $this->sendWelcome($chatId),
+            };
+
+            return;
+        }
+
+        /*
+         * OPERATIONS & HEALTH.
+         *
+         * Everything here exists because these are the failures that reach an
+         * operator on their phone first: "nobody gets the signup email", "the
+         * prices page lost two cards", "the admin cannot log in". Each action
+         * is read-only except where it is explicitly a repair, and every
+         * repair is confirmed first.
+         */
+        if ($verb === 'ops') {
+            match ($a) {
+                'health' => $this->sendHealth($chatId),
+                'plans' => $this->sendPlanLineupStatus($chatId),
+                'jobs' => $this->sendQueueStatus($chatId),
+                'sms' => $this->startSmsTestWorkflow($chatId, $telegramUserId),
+                default => $this->sendOpsHelp($chatId),
+            };
+
+            return;
+        }
+
+        if ($verb === 'plansrestore') {
+            $this->confirmPlanRestore($chatId);
+
+            return;
+        }
+
+        if ($verb === 'confirmplansrestore') {
+            $this->restorePlanLineup($chatId);
+
+            return;
+        }
+
+        if ($verb === 'jobs') {
+            match ($a) {
+                'run' => $this->drainQueue($chatId),
+                'retry' => $this->retryFailedJobs($chatId),
+                default => $this->sendQueueStatus($chatId),
             };
 
             return;
@@ -376,10 +422,20 @@ class TelegramBotService
             'users' => $this->listUsers($chatId),
             'user_find' => $this->findUsers($chatId, $argument),
             'user_manage' => $this->openUserById($chatId, $this->requiredId($argument, 'شناسه کاربر را وارد کنید.')),
+            // Account repair, for the "the admin cannot log in" call: these
+            // are the two flags that most often block a correct password.
+            'user_activate' => $this->repairUserById($chatId, $this->requiredId($argument, 'شناسه کاربر را وارد کنید.'), 'status', 'active'),
+            'user_verify' => $this->repairUserById($chatId, $this->requiredId($argument, 'شناسه کاربر را وارد کنید.'), 'email_verified', '1'),
             'activity' => $this->listActivity($chatId),
             'appearance' => $this->sendAppearanceHelp($chatId),
             'dashboard' => $this->sendDashboard($chatId),
             'backup_db' => $this->backupDatabase($chatId),
+            'health' => $this->sendHealth($chatId),
+            'plans_restore' => $this->restorePlanLineup($chatId),
+            'jobs' => $this->sendQueueStatus($chatId),
+            'sms_test' => $argument !== ''
+                ? $this->sendTestSms($chatId, $argument)
+                : $this->startSmsTestWorkflow($chatId, $telegramUserId),
             default => $this->sendUnknownCommand($chatId),
         };
     }
@@ -396,6 +452,8 @@ class TelegramBotService
             'مدیریت کاربران' => $this->listUsers($chatId),
             'ظاهر سایت' => $this->sendAppearanceHelp($chatId),
             'بکاپ دیتابیس' => $this->backupDatabase($chatId),
+            'عملیات و سلامت' => $this->sendOpsHelp($chatId),
+            'گزارش سلامت' => $this->sendHealth($chatId),
             default => false,
         };
     }
@@ -419,6 +477,7 @@ class TelegramBotService
             'subject.form' => $this->submitSubjectForm($session, (string) ($message['text'] ?? '')),
             'appearance.logo', 'appearance.hero' => $this->submitAppearanceImage($session, $message),
             'appearance.alt' => $this->submitAppearanceAlt($session, (string) ($message['text'] ?? '')),
+            'sms.test' => $this->submitSmsTest($session, (string) ($message['text'] ?? '')),
             default => throw new RuntimeException('گردش‌کار شناخته نشد. /cancel را بزنید و دوباره شروع کنید.'),
         };
     }
@@ -509,6 +568,312 @@ class TelegramBotService
                 [$this->button('↩️ بازگشت', 'menu:main')],
             ]),
         ]);
+
+        return true;
+    }
+
+    /**
+     * Operations & health menu — the page an operator opens when somebody
+     * reports "signup sends nothing", "the prices page lost cards", or "the
+     * admin cannot log in". Everything reachable from here is either read-only
+     * or confirmed before it writes.
+     */
+    private function sendOpsHelp(int $chatId): bool
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            '🩺 عملیات و سلامت',
+            '',
+            'گزارش سلامت: وضعیت ایمیل، پیامک، صف، پلن‌ها، مدیران و ربات.',
+            'بازگردانی پلن‌ها: چیدمان استاندارد (رایگان / یک‌ماهه / سه‌ماهه) را به جدول پلن‌ها برمی‌گرداند.',
+            'وضعیت صف: کارهای در انتظار و ناموفق؛ امکان تخلیهٔ دستی صف.',
+            'تست پیامک: یک پیامک واقعی از مسیر تنظیم‌شده می‌فرستد.',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('📊 گزارش سلامت', 'ops:health'), $this->button('💳 وضعیت پلن‌ها', 'ops:plans')],
+                [$this->button('📮 وضعیت صف', 'ops:jobs'), $this->button('📲 تست پیامک', 'ops:sms')],
+                [$this->button('↩️ بازگشت', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * The same report as `php artisan broca:ops:health` — one implementation
+     * (App\Services\OpsHealthReport) so the phone and the shell never
+     * disagree.
+     */
+    private function sendHealth(int $chatId): bool
+    {
+        // Telegram caps a message at 4096 characters; the report is short, but
+        // a long warning list must not turn into a failed send with no output.
+        $this->api->sendMessage($chatId, mb_substr((new OpsHealthReport)->render(), 0, 3900), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('🔄 تازه‌سازی', 'ops:health'), $this->button('💳 وضعیت پلن‌ها', 'ops:plans')],
+                [$this->button('📮 وضعیت صف', 'ops:jobs'), $this->button('↩️ عملیات', 'menu:ops')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Why the pricing page can lose cards: /plans renders whatever rows the
+     * `plans` table holds, and the deploy pipeline migrates without seeding.
+     */
+    private function sendPlanLineupStatus(int $chatId): bool
+    {
+        $report = new OpsHealthReport;
+        $missing = $report->missingPlanCodes();
+
+        $plans = Plan::query()->orderBy('sort_order')->orderBy('id')->get();
+        $lines = ['💳 وضعیت چیدمان پلن‌ها', ''];
+
+        foreach ($plans as $plan) {
+            $lines[] = sprintf(
+                '#%d | %s | %s | %s ماه | %s تومان | %s',
+                $plan->id,
+                $plan->code,
+                $plan->name,
+                $plan->duration_months,
+                number_format(intdiv((int) $plan->price_irr, 10)),
+                $plan->is_active ? 'فعال' : 'غیرفعال'
+            );
+        }
+
+        if ($plans->isEmpty()) {
+            $lines[] = 'هیچ پلنی در جدول نیست؛ صفحهٔ /plans فقط کارت رایگانِ پیش‌فرض را نشان می‌دهد.';
+        }
+
+        $lines[] = '';
+        $lines[] = $missing === []
+            ? '✅ چیدمان استاندارد کامل است (رایگان / یک‌ماهه / سه‌ماهه).'
+            : '⚠️ پلن‌های پیش‌فرض موجود نیستند: '.implode('، ', $missing)
+                .' — یعنی روی صفحهٔ /plans کارت‌های آن‌ها نمایش داده نمی‌شود.';
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('♻️ بازگردانی پلن‌های پیش‌فرض', 'plansrestore:1')],
+                [$this->button('📋 لیست پلن‌ها', 'list:plans'), $this->button('↩️ عملیات', 'menu:ops')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function confirmPlanRestore(int $chatId): void
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            '♻️ بازگردانی چیدمان استاندارد پلن‌ها',
+            '',
+            'پلن‌های پیش‌فرض (رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان) در صورت نبود، ساخته می‌شوند.',
+            'قیمت‌هایی که خودتان تغییر داده‌اید دست‌نخورده باقی می‌مانند.',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ تأیید و بازگردانی', 'confirmplansrestore:1')],
+                [$this->button('↩️ انصراف', 'ops:plans')],
+            ]),
+        ]);
+    }
+
+    /**
+     * Idempotent on purpose: `broca:sync-plans` only creates what is missing,
+     * so pressing this twice (impatient operators do) cannot overwrite a price
+     * someone edited by hand.
+     */
+    private function restorePlanLineup(int $chatId): bool
+    {
+        try {
+            Artisan::call('broca:sync-plans');
+        } catch (Throwable $exception) {
+            report($exception);
+
+            throw new RuntimeException('بازگردانی پلن‌ها ناموفق بود: '.$exception->getMessage());
+        }
+
+        $output = trim(Artisan::output());
+        $missing = (new OpsHealthReport)->missingPlanCodes();
+
+        $this->api->sendMessage($chatId, implode("\n", array_filter([
+            $missing === []
+                ? '✅ چیدمان پلن‌ها کامل شد. صفحهٔ /plans را reload کنید.'
+                : '⚠️ هنوز ناقص است: '.implode('، ', $missing),
+            $output !== '' ? mb_substr($output, 0, 1500) : null,
+        ])), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('📋 لیست پلن‌ها', 'list:plans'), $this->button('💳 وضعیت پلن‌ها', 'ops:plans')],
+                [$this->button('↩️ عملیات', 'menu:ops')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Queue state, and the manual drain.
+     *
+     * WHY THIS MATTERS: transactional mail is delivered inline now
+     * (config/broca.php `notifications.queue`), but backups, media jobs and
+     * anything pushed to the default connection still need a worker. On shared
+     * hosting that worker is a cron entry, and when it is missing the symptom
+     * is silence — so the operator needs a way to see the backlog and to drain
+     * it by hand from a phone.
+     */
+    private function sendQueueStatus(int $chatId): bool
+    {
+        $pending = $this->queueTableCount(config('queue.connections.database.table', 'jobs'));
+        $failed = $this->queueTableCount('failed_jobs');
+
+        $this->api->sendMessage($chatId, implode("\n", [
+            '📮 وضعیت صف',
+            '',
+            'صف پیش‌فرض: '.config('queue.default'),
+            'صف اعلان‌های حساس: '.config('broca.notifications.queue'),
+            'در انتظار: '.$pending,
+            'ناموفق: '.$failed,
+            '',
+            $pending > 0
+                ? '⚠️ کارهای در انتظار روی هاست بدون queue worker اجرا نمی‌شوند. «تخلیهٔ صف» آن‌ها را همین حالا اجرا می‌کند.'
+                : '✅ صف خالی است.',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('▶️ تخلیهٔ صف (حداکثر ۲۰ ثانیه)', 'jobs:run')],
+                [$this->button('♻️ تلاش دوبارهٔ کارهای ناموفق', 'jobs:retry')],
+                [$this->button('🔄 تازه‌سازی', 'ops:jobs'), $this->button('↩️ عملیات', 'menu:ops')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function drainQueue(int $chatId): bool
+    {
+        try {
+            // Bounded on purpose: this runs inside Telegram's webhook window,
+            // and a runaway worker would look like a dead bot.
+            Artisan::call('queue:work', [
+                '--stop-when-empty' => true,
+                '--max-time' => 20,
+                '--tries' => 1,
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            throw new RuntimeException('تخلیهٔ صف ناموفق بود: '.$exception->getMessage());
+        }
+
+        $pending = $this->queueTableCount(config('queue.connections.database.table', 'jobs'));
+
+        $this->api->sendMessage($chatId, $pending > 0
+            ? 'صف یک دور اجرا شد؛ هنوز '.$pending.' کار در انتظار است (دوباره بزنید یا cron را بررسی کنید).'
+            : '✅ صف اجرا و خالی شد.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('🔄 تازه‌سازی', 'ops:jobs'), $this->button('↩️ عملیات', 'menu:ops')],
+                ]),
+            ]);
+
+        return true;
+    }
+
+    private function retryFailedJobs(int $chatId): bool
+    {
+        try {
+            Artisan::call('queue:retry', ['id' => ['all']]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            throw new RuntimeException('تلاش دوباره ناموفق بود: '.$exception->getMessage());
+        }
+
+        $this->api->sendMessage($chatId, '♻️ کارهای ناموفق دوباره به صف برگشتند: '.trim(Artisan::output()), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('▶️ تخلیهٔ صف', 'jobs:run'), $this->button('🔄 تازه‌سازی', 'ops:jobs')],
+                [$this->button('↩️ عملیات', 'menu:ops')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function queueTableCount(string $table): int
+    {
+        try {
+            return DB::table($table)->count();
+        } catch (Throwable) {
+            // Not migrated / non-database driver: report zero rather than
+            // crashing the only tool the operator has.
+            return 0;
+        }
+    }
+
+    private function startSmsTestWorkflow(int $chatId, int $telegramUserId): bool
+    {
+        $this->storeSession($chatId, $telegramUserId, 'sms.test');
+        $this->api->sendMessage($chatId, implode("\n", [
+            '📲 تست ارسال پیامک',
+            '',
+            'درایور فعلی: '.config('sms.default').' | فعال: '.((bool) config('sms.enabled', true) ? 'بله' : 'خیر'),
+            '',
+            'شمارهٔ موبایل را بفرستید (مثال: 09123456789).',
+            config('sms.default') === 'log'
+                ? 'نکته: درایور log است؛ پیام ارسال نمی‌شود و فقط در لاگ نوشته می‌شود.'
+                : '',
+        ]), [
+            'reply_markup' => $this->workflowMarkup('menu:ops'),
+        ]);
+
+        return true;
+    }
+
+    private function submitSmsTest(TelegramChatSession $session, string $text): void
+    {
+        $phone = trim($text);
+
+        if ($phone === '') {
+            throw new RuntimeException('شمارهٔ موبایل را وارد کنید.');
+        }
+
+        $this->finish($session, $this->smsTestResult($phone));
+    }
+
+    private function sendTestSms(int $chatId, string $phone): bool
+    {
+        $this->api->sendMessage($chatId, $this->smsTestResult(trim($phone)), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('📲 تست دیگر', 'ops:sms'), $this->button('↩️ عملیات', 'menu:ops')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function smsTestResult(string $phone): string
+    {
+        try {
+            $result = app(SmsManager::class)->send(
+                $phone,
+                'تست پیامک بروکا: پیکربندی پیامک برقرار است.',
+                ['code' => '000000']
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return '❌ ارسال پیامک ناموفق بود: '.mb_substr($exception->getMessage(), 0, 400);
+        }
+
+        return $result->delivered
+            ? "✅ پیامک از مسیر «{$result->driver}» عبور کرد.\n".$result->detail
+            : "⚠️ پیام ارسال نشد ({$result->driver}): ".$result->detail;
+    }
+
+    /**
+     * One-shot account repair from a slash command (`/user_activate 12`,
+     * `/user_verify 12`) — the fastest route when an admin is locked out and
+     * the only tool at hand is a phone.
+     */
+    private function repairUserById(int $chatId, int $id, string $field, string $value): bool
+    {
+        $this->applyUserAction($chatId, $id, $field, $value);
 
         return true;
     }
@@ -1869,6 +2234,29 @@ class TelegramBotService
 
     private function showUserManageMenu(int $chatId, User $user): void
     {
+        $rows = [
+            [$this->button($user->status === 'active' ? '⛔️ تعلیق حساب' : '✅ فعال‌سازی حساب', 'useraction:'.$user->id.':status:'.($user->status === 'active' ? 'suspended' : 'active'))],
+            [$this->button($user->is_admin ? '👤 سلب نقش مدیر' : '🛡 اعطای نقش مدیر', 'useraction:'.$user->id.':admin:'.($user->is_admin ? '0' : '1'))],
+        ];
+
+        /*
+         * Verification repair. These two buttons are the answer to the most
+         * common form of "I cannot log in": the password is right, login
+         * succeeds, and the post-login gate bounces the account to the
+         * verification screen forever because the mail never arrived. Support
+         * can now clear it from a phone instead of asking for a DB dump.
+         */
+        $verificationRow = array_values(array_filter([
+            $user->hasVerifiedEmail() ? null : $this->button('✅ تأیید ایمیل', 'useraction:'.$user->id.':email_verified:1'),
+            (! $user->hasVerifiedPhone() && $user->phone) ? $this->button('📲 تأیید موبایل', 'useraction:'.$user->id.':phone_verified:1') : null,
+        ]));
+
+        if ($verificationRow !== []) {
+            $rows[] = $verificationRow;
+        }
+
+        $rows[] = [$this->button('↩️ لیست کاربران', 'list:users')];
+
         $this->api->sendMessage($chatId, implode("\n", [
             '👤 مدیریت کاربر #'.$user->id,
             'نام: '.$user->name,
@@ -1877,14 +2265,13 @@ class TelegramBotService
             'وضعیت: '.($user->status === 'active' ? 'فعال' : 'تعلیق‌شده'),
             'نقش: '.($user->is_admin ? 'مدیر' : 'فراگیر'),
             'تأیید ایمیل: '.($user->email_verified_at ? 'بله' : 'خیر'),
+            'تأیید موبایل: '.($user->phone_verified_at ? 'بله' : 'خیر'),
+            'ورود دومرحله‌ای: '.($user->hasConfirmedTwoFactor() ? 'فعال' : 'غیرفعال'),
+            'قابل ورود: '.($user->status === 'active' && $user->hasVerifiedContact() ? 'بله' : 'خیر'),
             'ثبت‌نام در دوره‌ها: '.$user->enrollments()->count(),
             'اشتراک‌ها: '.$user->subscriptions()->count(),
             'تلاش‌های آزمون: '.$user->quizAttempts()->count(),
-        ]), ['reply_markup' => $this->inlineKeyboard([
-            [$this->button($user->status === 'active' ? '⛔️ تعلیق حساب' : '✅ فعال‌سازی حساب', 'useraction:'.$user->id.':status:'.($user->status === 'active' ? 'suspended' : 'active'))],
-            [$this->button($user->is_admin ? '👤 سلب نقش مدیر' : '🛡 اعطای نقش مدیر', 'useraction:'.$user->id.':admin:'.($user->is_admin ? '0' : '1'))],
-            [$this->button('↩️ لیست کاربران', 'list:users')],
-        ])]);
+        ]), ['reply_markup' => $this->inlineKeyboard($rows)]);
     }
 
     private function showPlanManageMenu(int $chatId, Plan $plan): void
@@ -2175,6 +2562,8 @@ class TelegramBotService
             ['status', 'suspended'] => 'تعلیق حساب',
             ['admin', '1'] => 'اعطای نقش مدیر',
             ['admin', '0'] => 'سلب نقش مدیر',
+            ['email_verified', '1'] => 'تأیید ایمیل حساب',
+            ['phone_verified', '1'] => 'تأیید شمارهٔ موبایل حساب',
             default => throw new RuntimeException('عملیات کاربر نامعتبر است.'),
         };
         $this->api->sendMessage($chatId, "آیا «{$label}» برای کاربر {$user->name} را تأیید می‌کنید؟", [
@@ -2189,18 +2578,65 @@ class TelegramBotService
     {
         $user = User::query()->findOrFail($userId);
         if ($field === 'status' && in_array($value, ['active', 'suspended'], true)) {
+            /*
+             * LAST-ADMIN GUARD — the lockout this file used to allow.
+             *
+             * The web panel refuses to suspend yourself and refuses to demote
+             * the last admin; the bot did neither. One tap on a phone could
+             * therefore leave the site with no administrator who can sign in:
+             * the login form then answers «ایمیل/شمارهٔ همراه یا گذرواژه درست
+             * نیست» to the one person whose password is right, and there is no
+             * way back in through the UI. Repair from the shell is possible
+             * (php artisan broca:user:repair) — preventing it is cheaper.
+             */
+            if ($value === 'suspended' && $this->isLastActiveAdmin($user)) {
+                throw new RuntimeException('این آخرین مدیر فعال سیستم است؛ تعلیق آن دسترسی به پنل مدیریت را برای همیشه مسدود می‌کند.');
+            }
+
             $user->forceFill(['status' => $value])->save();
         } elseif ($field === 'admin' && in_array($value, ['0', '1'], true)) {
             if ($user->is_admin && $value === '0' && User::query()->where('is_admin', true)->count() <= 1) {
                 throw new RuntimeException('حداقل یک مدیر باید در سیستم باقی بماند.');
             }
             $user->forceFill(['is_admin' => $value === '1'])->save();
+        } elseif ($field === 'email_verified' && $value === '1') {
+            // Marking the email verified is how support unblocks an account
+            // whose verification mail never arrived: the user can then reach
+            // /dashboard and /checkout again.
+            if (! $user->hasVerifiedEmail()) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
+        } elseif ($field === 'phone_verified' && $value === '1') {
+            if (trim((string) $user->phone) === '') {
+                throw new RuntimeException('این حساب شمارهٔ موبایل ندارد؛ ابتدا از پنل وب شماره ثبت کنید.');
+            }
+
+            if (! $user->hasVerifiedPhone()) {
+                $user->markPhoneAsVerified();
+            }
         } else {
             throw new RuntimeException('عملیات کاربر نامعتبر است.');
         }
 
         $this->auditTelegramByChat($chatId, 'ویرایش کاربر #'.$user->id.' از تلگرام');
         $this->showUserManageMenu($chatId, $user->fresh());
+    }
+
+    /**
+     * True when suspending/demoting this account would leave the site with no
+     * administrator who can actually sign in.
+     */
+    private function isLastActiveAdmin(User $user): bool
+    {
+        if (! $user->is_admin) {
+            return false;
+        }
+
+        return User::query()
+            ->where('is_admin', true)
+            ->where('status', 'active')
+            ->whereKeyNot($user->getKey())
+            ->count() === 0;
     }
 
     private function toggleFreeDesignation(int $chatId, string $entity, int $id, bool $designated): void
@@ -2464,6 +2900,9 @@ class TelegramBotService
             [$this->button('🎓 دوره‌ها', 'menu:courses'), $this->button('🎥 رسانه', 'menu:media')],
             [$this->button('🧪 آزمون و فلش‌کارت', 'menu:study'), $this->button('🎨 ظاهر سایت', 'menu:appearance')],
             [$this->button('👥 کاربران و گزارش‌ها', 'menu:admin')],
+            // Health + repair: the page an operator opens when someone says
+            // "signup sends nothing" or "the admin cannot log in".
+            [$this->button('🩺 عملیات و سلامت', 'menu:ops')],
             [$this->button('🗄 بکاپ دیتابیس', 'backup:run')],
         ]);
     }

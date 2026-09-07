@@ -18,6 +18,29 @@
 8. `php artisan serve` → http://127.0.0.1:8000.
 9. Run tests with `composer test` (alias for `php artisan test`).
 
+## Signup verification and SMS (local defaults)
+
+Out of the box nothing leaves your machine:
+
+- **Mail** — set `MAIL_MAILER=log` and read the verification link in
+  `storage/logs/laravel.log`, or point `MAIL_*` at Mailpit/Mailhog.
+- **SMS** — `SMS_DRIVER=log` (the default), so the one-time code is written to
+  the same log file instead of being texted. The rest of the flow is real:
+  register, open `/email/verify`, type the code from the log.
+
+Transactional mail and SMS are delivered **inline**
+(`BROCA_NOTIFICATIONS_QUEUE=sync`) so none of this depends on a queue worker.
+
+```env
+BROCA_NOTIFICATIONS_QUEUE=sync
+BROCA_PHONE_VERIFICATION=true
+SMS_DRIVER=log
+```
+
+To exercise a real panel, switch to the generic HTTP driver and check it with
+`php artisan broca:sms:test 09123456789` — full contract in
+`docs/SMS_AND_VERIFICATION.md`.
+
 ## Telegram admin bot
 
 Set these in `.env` if you want to exercise the webhook locally or on a staging host:
@@ -53,6 +76,15 @@ ZARINPAL_CALLBACK_URL="${APP_URL}/payments/zarinpal/callback"
 
 Amounts are integers in Rial. `ZARINPAL_SANDBOX=true` switches the driver to
 ZarinPal's sandbox endpoints.
+
+## Plans on a fresh database
+
+`php artisan migrate --seed` creates the three-tier lineup. If you migrate
+without seeding, reconcile it from code:
+
+```bash
+php artisan broca:sync-plans     # free / 1-month / 3-month, idempotent
+```
 
 ## Common issues
 

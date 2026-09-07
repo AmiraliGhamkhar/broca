@@ -14,8 +14,9 @@
 Deployment is automated by **`.cpanel.yml`** in the repository root: push to
 the branch, then hit *Update from Remote* → *Deploy HEAD Commit* in cPanel's
 Git Version Control. It installs Composer deps, builds assets **only if Node
-exists** (falling back to the committed `public/build`), migrates, and rebuilds
-caches behind `artisan down`/`up`.
+exists** (falling back to the committed `public/build`), migrates, syncs the
+canonical plan lineup (`broca:sync-plans`), and rebuilds caches behind
+`artisan down`/`up`.
 
 It assumes:
 
@@ -95,6 +96,30 @@ MAIL_FROM_NAME="Broca"
 BROCA_PASSWORD_MIN=8
 BROCA_PASSWORD_LEAK_CHECK=false
 
+# Signup verification. Transactional mail and SMS are delivered INLINE on
+# purpose: with `database`, a missing or dead queue worker means the
+# verification mail never leaves the server and every new signup is dead on
+# arrival. Only set it to `database` once you have watched the worker drain.
+BROCA_NOTIFICATIONS_QUEUE=sync
+BROCA_PHONE_VERIFICATION=true
+BROCA_PHONE_CODE_TTL=10
+BROCA_PHONE_RESEND_COOLDOWN=60
+
+# SMS panel. `log` writes the code to storage/logs/laravel.log and sends
+# nothing — safe for the first deploy. Switching to a real panel is an env
+# change (generic HTTP driver), not a code change: see
+# docs/SMS_AND_VERIFICATION.md §3.
+SMS_ENABLED=true
+SMS_DRIVER=log
+SMS_FROM=
+SMS_HTTP_URL=
+SMS_HTTP_METHOD=POST
+SMS_HTTP_ENCODE=json
+SMS_HTTP_HEADERS={}
+SMS_HTTP_BODY={}
+SMS_HTTP_SUCCESS_STATUS=200,201,202
+SMS_HTTP_TIMEOUT=15
+
 ZARINPAL_MERCHANT_ID=real-merchant-id
 ZARINPAL_SANDBOX=false
 ZARINPAL_CALLBACK_URL="https://brocamed.ir/payments/zarinpal/callback"
@@ -113,9 +138,10 @@ Notes:
 - `TELEGRAM_WEBHOOK_SECRET` should be a long random string.
 - `TELEGRAM_ADMIN_IDS` should contain only the small trusted admin set.
 - `BROCA_EXTERNAL_VIDEO_ORIGINS` is required when externally hosted videos are embedded.
-- `MAIL_FROM_ADDRESS` must be a real mailbox on the sending domain — verification and
-  password-reset mail is the only recovery path accounts have, so a dead mailbox means a
-  dead signup funnel (see `docs/RUNBOOK.md` §11).
+- `MAIL_FROM_ADDRESS` must be a real mailbox on the sending domain. It is no longer the
+  only recovery path — registration also sends a one-time code to the mobile number, and
+  either one activates the account — but it is still the path most students use (see
+  `docs/RUNBOOK.md` §11 and `docs/SMS_AND_VERIFICATION.md`).
 
 ## 4. Install dependencies and build
 
@@ -166,7 +192,16 @@ This is required for scheduled maintenance and backups.
 
 ## 7. Queue worker on shared hosting
 
-Broca uses queued work for some tasks. On shared hosting, one common fallback is a cron-driven worker.
+Broca uses queued work for some tasks — most importantly the Telegram-triggered
+database backup. On shared hosting, one common fallback is a cron-driven worker.
+
+**What no longer depends on it:** verification mail, verification SMS and
+password-reset mail are delivered inline (`BROCA_NOTIFICATIONS_QUEUE=sync`, the
+default) because they are the only messages a user must receive during the
+request that creates the account, and a missing worker used to leave every new
+account permanently unverified. Keep `sync` unless you have monitored the
+worker draining; if you do switch to `database`, the cron below becomes
+launch-critical rather than merely desirable.
 
 Preferred if your host supports a persistent worker or process manager:
 
@@ -327,6 +362,12 @@ Run through this once after go-live:
 - [ ] Site loads over HTTPS
 - [ ] Admin login works
 - [ ] `php artisan migrate --force` completed successfully
+- [ ] `php artisan broca:sync-plans` run — **/plans shows three cards**
+      (migrations do not create plan rows; without this the page shows only the
+      free tier)
+- [ ] `php artisan broca:ops:health` exits 0
+- [ ] `php artisan broca:sms:test 09…` succeeds once a panel is configured
+- [ ] A real signup receives **both** the email link and the SMS code
 - [ ] `php artisan storage:link` exists
 - [ ] Scheduler cron added in cPanel
 - [ ] Queue worker or queue cron working
@@ -367,6 +408,10 @@ After the code is live, verify these pages in a real browser, not only with curl
 
 ### Plans `/plans`
 
+- **three cards are rendered** (رایگان / یک‌ماهه ۲۷۰ تومان / سه‌ماهه ۶۰۰ تومان).
+  If only one shows, the `plans` table is empty — run
+  `php artisan broca:sync-plans` (the deploy hook does it; the manual form
+  exists for hosts deployed before that hook was added).
 - title/meta/canonical are correct in page source
 - FAQ, breadcrumb and item-list JSON-LD are present
 - CTA behavior matches real state:
@@ -415,6 +460,16 @@ php artisan schedule:run
 php artisan queue:restart
 php artisan broca:telegram-set-webhook
 php artisan broca:telegram-admin 11111111 --first-name="Admin"
+
+# Product data + delivery
+php artisan broca:sync-plans               # canonical lineup (free / 1m / 3m)
+php artisan broca:ops:health               # exits non-zero when anything is off
+php artisan broca:sms:test 09123456789
+
+# Account recovery ("nobody can sign in")
+php artisan broca:user:diagnose user@example.com     # read-only
+php artisan broca:user:repair user@example.com --activate --verify-email
+php artisan broca:identifiers:normalize --dry-run
 ```
 
 ## 15. Common cPanel failure points
@@ -463,6 +518,34 @@ Usually:
 - cron fallback missing
 - database queue tables not migrated
 
+Note that signup verification no longer fails this way — see §7.
+
+### Signup reaches nobody (no email, no SMS)
+
+Check in this order:
+
+1. `php artisan broca:ops:health` — it names the mail driver, the notification
+   queue, the pending-job count, the SMS driver and whether its URL is set.
+2. `MAIL_MAILER` is `log`/`array` → nothing will ever leave the server.
+3. Failed jobs piling up → `php artisan queue:retry all` then drain the queue.
+4. `SMS_DRIVER` is `log` → codes are written to `storage/logs/laravel.log`,
+   not sent.
+5. Still nothing → `php artisan broca:user:diagnose user@example.com` (the
+   account may be unverifiable for a different reason, e.g. a legacy password
+   hash).
+
+### /plans shows one card instead of three
+
+The `plans` table is empty or incomplete: `php artisan broca:sync-plans`.
+The deploy hook runs it on every release; older deployments need it once by
+hand. See `docs/RUNBOOK.md` §12.
+
+### The admin cannot sign in with the right password
+
+`php artisan broca:user:diagnose {email}` then
+`php artisan broca:user:repair {email} --activate --verify-email`
+(or `--promote`). All four causes and their cures are in `docs/RUNBOOK.md` §13.
+
 ## 16. Recommended deployment order for updates
 
 For future releases on cPanel:
@@ -472,6 +555,7 @@ git pull
 composer install --no-dev --optimize-autoloader
 npm ci --ignore-scripts && npm run build
 php artisan migrate --force
+php artisan broca:sync-plans
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache

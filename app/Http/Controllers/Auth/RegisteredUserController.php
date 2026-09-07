@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
+use App\Services\PhoneVerificationService;
 use App\Support\PasswordPolicy;
 use App\Support\PhoneNormalizer;
 use Illuminate\Auth\Events\Registered;
@@ -17,6 +18,10 @@ use PDOException;
 
 class RegisteredUserController extends Controller
 {
+    public function __construct(private readonly PhoneVerificationService $phoneVerification)
+    {
+    }
+
     public function create(): View
     {
         return view('auth.register', [
@@ -66,16 +71,94 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        // Verification email is queued (see VerifyEmailNotification).
-        event(new Registered($user));
         auth()->login($user);
 
         // Regenerate the session id now that the request carries real
         // credentials: the pre-auth session must not become the authed one.
         $request->session()->regenerate();
 
-        return redirect()->route('verification.notice')->with('status',
-            'حساب شما ساخته شد. برای فعال‌سازی کامل، لینک تأیید ارسال‌شده به ایمیل خود را باز کنید.');
+        // Both verification channels are sent AFTER the session exists, so a
+        // failure here can never cost the user their new account — only the
+        // convenience of an immediate code.
+        $this->sendVerifications($user);
+
+        return redirect()->route('verification.notice')
+            ->with('status', $this->confirmationMessage($user));
+    }
+
+    /**
+     * Email link + SMS code, independently.
+     *
+     * Each channel is wrapped on its own for a specific reason:
+     *
+     *  - MAIL: the notification is delivered inline (config/broca.php
+     *    `notifications.queue` = sync by default) so it does not depend on a
+     *    queue worker that shared hosting may not be running. Inline means an
+     *    SMTP failure would otherwise surface as a 500 *after* the account
+     *    was committed — the worst possible answer to "did my signup work".
+     *  - SMS: the panel is a paid third party; an outage there must leave the
+     *    email path untouched.
+     *
+     * Both failures are reported (so they land in laravel.log and the
+     * exception handler) and both are recoverable from the notice page: resend
+     * the link, or resend the code.
+     *
+     * @return array{mail: bool, sms: bool} which channels actually went out
+     */
+    private function sendVerifications(User $user): array
+    {
+        $sent = ['mail' => false, 'sms' => false];
+
+        try {
+            // Verification email is queued (see VerifyEmailNotification) on
+            // the connection configured for transactional delivery.
+            event(new Registered($user));
+            $sent['mail'] = true;
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        if (config('broca.phone_verification.enabled', true)) {
+            try {
+                $sent['sms'] = $this->phoneVerification->sendCode($user, ignoreCooldown: true);
+            } catch (\Throwable $exception) {
+                // sendCode() already reports transport failures; this catches
+                // anything else so signup is never the thing that breaks.
+                report($exception);
+            }
+        }
+
+        if (! $sent['mail'] && ! $sent['sms']) {
+            // The one case worth a log line of its own: the account exists and
+            // neither proof of contact could leave the building. Whoever is
+            // on call needs to see it next to the account, not buried in a
+            // transport exception.
+            logger()->critical('Registration delivered no verification channel', [
+                'user_id' => $user->getKey(),
+                'email' => $user->email,
+                'mail_driver' => config('mail.default'),
+                'sms_driver' => config('sms.default'),
+                'sms_enabled' => (bool) config('sms.enabled', true),
+            ]);
+        }
+
+        return $sent;
+    }
+
+    /**
+     * The sentence the student reads next to the two forms on the notice page.
+     * It names whichever channel actually went out — promising an email that
+     * the server failed to send is how a signup turns into a support ticket.
+     */
+    private function confirmationMessage(User $user): string
+    {
+        $phoneVerified = $user->hasVerifiedPhone();
+
+        if ($phoneVerified) {
+            return 'حساب شما ساخته شد و شمارهٔ همراه تأیید شد.';
+        }
+
+        return 'حساب شما ساخته شد. برای فعال‌سازی کامل، لینک ارسال‌شده به ایمیل یا کد ارسال‌شده به شمارهٔ همراه را وارد کنید.';
     }
 
     private function isUniqueViolation(\Illuminate\Database\QueryException|PDOException $e): bool

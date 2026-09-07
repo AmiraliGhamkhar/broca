@@ -15,6 +15,7 @@ use App\Models\QuizQuestion;
 use App\Models\Subject;
 use App\Models\User;
 use App\Models\Video;
+use App\Support\PlanCatalog;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -421,39 +422,16 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 
+    /**
+     * The lineup is declared once, in App\Support\PlanCatalog, and shared with
+     * `php artisan broca:sync-plans` — the seeder must never carry a second
+     * copy of the prices, or the two drift the first time an operator edits
+     * one of them.
+     */
     private function seedPlans(): void
     {
-        $plans = [
-            [
-                'code' => 'free',
-                'name' => 'پلن پایه رایگان',
-                // Global cap wording — mirrors EntitlementService constants;
-                // the quota is shared across the whole archive, not per course.
-                'description' => 'تا ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت و ۱ سؤال آزمون در کل آرشیو — برای ارزیابی پیش از خرید.',
-                'duration_months' => 0,
-                'price_irr' => 0,
-                'sort_order' => 1,
-            ],
-            [
-                'code' => 'monthly',
-                'name' => 'اشتراک یک‌ماهه طلایی',
-                'description' => 'دسترسی نامحدود به تمام ویدیوهای بالینی، جزوات اختصاصی، آزمون‌ها و سیستم هوشمند SRS برای ۳۰ روز.',
-                'duration_months' => 1,
-                'price_irr' => 2700, // 270 Toman
-                'sort_order' => 2,
-            ],
-            [
-                'code' => 'quarterly',
-                'name' => 'اشتراک سه‌ماهه جامع',
-                'description' => 'دسترسی کامل به کل آرشیو دوره‌ها، آزمون‌های جامع و دسته‌های فلش‌کارت برای ۹۰ روز با تخفیف ویژه.',
-                'duration_months' => 3,
-                'price_irr' => 6000, // 600 Toman
-                'sort_order' => 3,
-            ],
-        ];
-
-        foreach ($plans as $p) {
-            Plan::updateOrCreate(['code' => $p['code']], $p + ['is_active' => true]);
+        foreach (PlanCatalog::lineup() as $definition) {
+            Plan::updateOrCreate(['code' => $definition['code']], $definition);
         }
     }
 

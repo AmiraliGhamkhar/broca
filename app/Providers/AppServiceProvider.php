@@ -44,6 +44,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(EntitlementService::class);
+
+        // One manager instance keeps the resolved transport (and its HTTP
+        // client config) for the request; the transports themselves are
+        // stateless.
+        $this->app->singleton(\App\Services\Sms\SmsManager::class);
     }
 
     /**
@@ -101,6 +106,17 @@ class AppServiceProvider extends ServiceProvider
         // anything else that sets a password validate through this, so the rule
         // and the copy shown to users can never drift apart.
         Password::defaults(fn (): Password => PasswordPolicy::rule());
+
+        /*
+         * Register the SMS channel under its short name as well as by class,
+         * so a notification can say `via() == ['sms']` (Laravel's own style)
+         * while the channel itself is resolved from the container with its
+         * SmsManager dependency.
+         */
+        \Illuminate\Support\Facades\Notification::extend(
+            'sms',
+            fn (\Illuminate\Contracts\Foundation\Application $app) => new \App\Notifications\Channels\SmsChannel($app->make(\App\Services\Sms\SmsManager::class))
+        );
 
         // Staging safety valve (Laravel's Mail::alwaysTo): every outbound mail
         // is retargeted to one inbox so a staging run can exercise real SMTP
@@ -188,6 +204,28 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->user()?->id ?: $request->ip())
                 ->response(function () use ($request) {
                     $message = 'برای ارسال دوباره لینک تأیید کمی صبر کنید (هر دقیقه حداکثر ۳ بار).';
+
+                    if ($request->expectsJson() || $request->is('api/*')) {
+                        return response()->json(['message' => $message], 429);
+                    }
+
+                    return back()->with('error', $message);
+                });
+        });
+
+        /*
+         * Mobile-verification code entry. The service already caps attempts
+         * per issued code (broca.phone_verification.max_attempts), so this is
+         * the outer bound: it stops an attacker from burning code after code
+         * — each resend is a paid text message — faster than the panel bills
+         * us. Keyed by user (not IP) so a campus NAT cannot be starved by one
+         * student's typos.
+         */
+        RateLimiter::for('phone-verify', function (Request $request): Limit {
+            return Limit::perMinute(10)
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function () use ($request) {
+                    $message = 'تعداد تلاش‌ها برای تأیید کد پیامک زیاد است. یک دقیقه صبر کنید.';
 
                     if ($request->expectsJson() || $request->is('api/*')) {
                         return response()->json(['message' => $message], 429);

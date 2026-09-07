@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
+use App\Support\PlanCatalog;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -22,16 +23,15 @@ class PlanController extends Controller
         // something an admin can toggle off in the plans table. If no
         // zero-price row exists (fresh install, DB trimmed), surface the
         // canonical free tier so the page never hides it.
+        //
+        // The two PAID tiers are not invented here: they are database content
+        // that `php artisan broca:sync-plans` (wired into the deploy hook)
+        // writes from App\Support\PlanCatalog. A host whose plans table was
+        // never populated shows this one card and nothing else — which reads
+        // as "the other two cards disappeared" — so the admin panel and the
+        // Telegram bot both surface that gap instead of leaving it silent.
         if (! $plans->contains(fn (Plan $plan) => (int) $plan->price_irr === 0)) {
-            $plans->prepend(new Plan([
-                'code' => 'free',
-                'name' => 'پلن پایه رایگان',
-                'description' => 'تا ۲ ویدیوی منتخب، ۱ جزوه، ۱۰ فلش‌کارت و ۱ سؤال آزمون در کل آرشیو — برای ارزیابی پیش از خرید.',
-                'duration_months' => 0,
-                'price_irr' => 0,
-                'sort_order' => 0,
-                'is_active' => true,
-            ]));
+            $plans->prepend(new Plan(PlanCatalog::free()));
         }
 
         return view('plans', [

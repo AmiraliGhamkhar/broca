@@ -18,6 +18,9 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
 
     public function __construct(public readonly string $token)
     {
+        // Same reasoning as VerifyEmailNotification: a password reset is
+        // useless if the mail waits for a queue worker that never runs.
+        $this->connection = (string) config('broca.notifications.queue', 'sync');
     }
 
     public function via(object $notifiable): array
