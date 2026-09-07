@@ -410,11 +410,23 @@ class AuthHardeningTest extends TestCase
         $this->post('/login', ['identifier' => $broken, 'password' => 'whatever'])
             ->assertSessionHasErrors('identifier');
 
-        // A malformed address is either rejected by the rule or accepted and
-        // answered with the same neutral flash — it must not crash, and it must
-        // not say whether the account exists.
+        // A mojibake address is caught by the rule itself: `email:rfc` rejects
+        // it, the form comes back with that one error, and nobody is emailed.
+        // That is not an enumeration leak — a syntactically broken address can
+        // never be a real account — and it is kinder than the neutral flash,
+        // which would tell the user to go check an inbox that never got mail.
+        // What this pins down is the crash: bytes that reach validate() must
+        // produce a 302 with errors, never a 500.
+        //
+        // Notification::assertNothingSent() only exists while the channel
+        // manager is faked, hence the per-test fake (the suite fakes per test
+        // deliberately — a global one would swallow AuthTest's "the verification
+        // mail was actually sent" assertions).
+        Notification::fake();
+
         $this->post('/forgot-password', ['email' => $broken.'@example.com'])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('email');
+        Notification::assertNothingSent();
 
         $this->assertDatabaseMissing('users', ['email' => 'bad-utf8@example.com']);
     }
