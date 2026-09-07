@@ -201,9 +201,30 @@ class AppServiceProvider extends ServiceProvider
         // across a 90-second drift window — an unbounded endpoint is therefore
         // realistically guessable. 5 tries/minute per admin, keyed by user id
         // (not IP: admins share offices and NAT), turns that into ~10^4
-        // windows, i.e. not an attack anyone can actually run.
-        RateLimiter::for('admin-2fa', function (Request $request): Limit {
-            return Limit::perMinute(5)->by('2fa:'.($request->user()?->id ?? $request->ip()));
+        // windows, i.e. not an attack anyone can actually run. The four
+        // code-consuming endpoints share this one budget on purpose: splitting
+        // it would multiply an attacker's guesses by four.
+        RateLimiter::for('admin-2fa-verify', function (Request $request): Limit {
+            return Limit::perMinute(5)
+                ->by('2fa-verify:'.($request->user()?->id ?? $request->ip()))
+                ->response(function () use ($request) {
+                    $message = 'تعداد تلاش‌ها برای تأیید کد دو مرحله‌ای زیاد است. لطفاً یک دقیقه بعد دوباره امتحان کنید.';
+
+                    if ($request->expectsJson() || $request->is('api/*')) {
+                        return response()->json(['message' => $message], 429);
+                    }
+
+                    return back()->with('error', $message);
+                });
+        });
+
+        // Regenerating recovery codes verifies no secret, so it is not part of
+        // the guessing surface — giving it its own (looser) budget keeps the
+        // deliberate act of re-rolling codes from being blocked by five typos
+        // in the neighbouring forms.
+        RateLimiter::for('admin-2fa-codes', function (Request $request): Limit {
+            return Limit::perMinute(10)
+                ->by('2fa-codes:'.($request->user()?->id ?? $request->ip()));
         });
 
         // Checkout hits ZarinPal and can create an invoice row per call.

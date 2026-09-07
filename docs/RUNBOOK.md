@@ -139,6 +139,16 @@ bare utility class name written in a markdown note or a code comment becomes a
 "used" class and lands in the CSS. Describe classes in prose in `docs/` and
 `DECISIONS.md` rather than quoting a selector.
 
+### Test-suite note: rate limiters are cache state, not table state
+
+`tests/TestCase.php` clears the cache store in `setUp()`. Every limiter (named
+limiters, the login counter, the two 2FA budgets) lives in the cache, while
+`RefreshDatabase` only truncates tables — so on a persistent cache store a test
+that posts to `/register` or `/login` a few times is answered with a 429 instead
+of the redirect it asserts, and the failure looks like a bug in the auth code
+rather than in the harness. A test that *wants* throttling builds the state up
+inside its own body.
+
 ## 8. Public runtime verification gates
 
 These are launch gates for the current trust-first public redesign and should
@@ -286,7 +296,8 @@ dependency that can break every new account.**
 | `login` | 10/min per IP **+** 5/min per identifier·IP | as stated |
 | `password-reset` | 6/min | email (IP when email is absent or invalid) |
 | `verification-resend` | 3/min | user id |
-| `admin-2fa` | 5/min | admin user id |
+| `admin-2fa-verify` | 5/min | admin user id — **shared** by challenge, recover, enable and disable (one attacker with four forms is one attacker) |
+| `admin-2fa-codes` | 10/min | admin user id; recovery-code regeneration verifies no secret, so it is not part of the guessing budget |
 
 `TRUSTED_PROXIES` is not cosmetic here: without it behind Cloudflare, every
 visitor lands in **one** bucket, and a single user's typo storm locks the

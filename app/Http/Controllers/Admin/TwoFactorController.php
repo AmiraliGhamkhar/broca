@@ -196,7 +196,11 @@ class TwoFactorController extends Controller
 
     private function throttleKey(Request $request): string
     {
-        return '2fa:'.($request->user()?->id ?? $request->ip());
+        // Matches what `throttle:admin-2fa-verify` builds for this limiter
+        // (the middleware prefixes the limiter name), so the manual hits from a
+        // wrong code and the middleware's own counting share one budget instead
+        // of running two parallel counters.
+        return '2fa-verify:'.($request->user()?->id ?? $request->ip());
     }
 
     /**

@@ -17,28 +17,44 @@ class AdminTwoFactorManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_enable_is_rate_limited_after_ten_attempts(): void
+    public function test_enable_is_rate_limited_after_five_attempts(): void
     {
         $admin = User::factory()->admin()->create();
         $this->actingAs($admin)->post(route('admin.two-factor.start'));
         $admin = $admin->fresh();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $this->actingAs($admin)
                 ->post(route('admin.two-factor.enable'), ['code' => '000000'])
                 ->assertSessionHasErrors('code');
         }
 
+        // The 5th is the last allowed one; the 6th is refused before the
+        // controller runs, and the named limiter answers with a redirect plus a
+        // Persian notice rather than a raw 429 page.
         $this->actingAs($admin)
             ->post(route('admin.two-factor.enable'), ['code' => '000000'])
-            ->assertStatus(429);
+            ->assertSessionHasErrors('code');
+
+        $this->actingAs($admin)
+            ->post(route('admin.two-factor.enable'), ['code' => '000000'])
+            ->assertRedirect(route('admin.two-factor.edit'))
+            ->assertSessionHas('error');
     }
 
-    public function test_disable_is_rate_limited_after_ten_attempts(): void
+    /**
+     * The disable form shares the code-verification budget with the challenge,
+     * enable and recovery endpoints (five per minute): one attacker with four
+     * forms is still one attacker, and splitting the budget per route would
+     * simply multiply their guesses. The form answer is the Persian redirect
+     * with `error` flashed, not a bare 429 page — that is what
+     * `admin-2fa-verify`'s Limit::response() exists for.
+     */
+    public function test_disable_shares_the_code_verification_budget(): void
     {
         $admin = $this->enrolledAdmin();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $this->actingAs($admin)
                 ->post(route('admin.two-factor.disable'), ['code' => '000000'])
                 ->assertSessionHasErrors('code');
@@ -46,7 +62,10 @@ class AdminTwoFactorManagementTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.two-factor.disable'), ['code' => '000000'])
-            ->assertStatus(429);
+            ->assertRedirect(route('admin.two-factor.edit'))
+            ->assertSessionHas('error');
+
+        $this->assertStringContainsString('دو مرحله‌ای', session('error'));
     }
 
     public function test_recovery_code_regeneration_is_rate_limited(): void

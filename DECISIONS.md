@@ -256,6 +256,19 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
     name quoted in docs or comments becomes a "used" class, so prose must describe
     classes instead of writing selectors (this is how the issue was first
     reproduced, three times, while documenting it).
+12. **The admin 2FA budget is one shared limiter for the four code-checking
+    endpoints, and recovery-code regeneration got its own** (`admin-2fa-verify`
+    5/min and `admin-2fa-codes` 10/min, both keyed by admin user id). Putting a
+    single `admin-2fa` limiter on all five endpoints was the wrong shape: the
+    code-verification limit is anti-guessing, and re-rolling recovery codes
+    verifies nothing, so five typos in a neighbouring form could not block a
+    deliberate action — and the pre-existing 2FA management tests, written
+    against the old per-route `5,1`/`10,1` budgets, failed. The controller's
+    manual `RateLimiter::hit()`/`clear()` now uses the same key the middleware
+    builds, so wrong codes and route hits drain one budget instead of two
+    parallel counters. `tests/TestCase.php` additionally clears the cache store
+    in `setUp()`: limiters are cache state and `RefreshDatabase` truncates only
+    tables, so a shared store turns ordinary auth tests into 429s.
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt

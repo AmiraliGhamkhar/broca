@@ -20,6 +20,19 @@ abstract class TestCase extends BaseTestCase
         if (getenv('WASM_HARNESS')) {
             \Illuminate\Support\Sleep::fake();
         }
+
+        /*
+         * Every rate limiter in the app (named limiters, the login counter, the
+         * 2FA budgets) lives in the cache store. phpunit uses CACHE_STORE=array
+         * and a fresh application per test normally isolates it — but that
+         * isolation is exactly what makes auth tests order-dependent the moment
+         * a store survives, and a test that posts to /register or /login a
+         * handful of times would then be answered with a 429 instead of the
+         * redirect it asserts. Clearing here keeps each test's limiter state
+         * self-contained, and any test that *wants* throttling builds it up
+         * inside its own body.
+         */
+        \Illuminate\Support\Facades\Cache::clear();
     }
 
     protected function actingAsAdmin(User $admin): static
