@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PasswordPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 
 class NewPasswordController extends Controller
@@ -18,19 +18,24 @@ class NewPasswordController extends Controller
         return view('auth.reset-password', [
             'token' => $token,
             'email' => $request->query('email', old('email')),
+            'passwordHint' => PasswordPolicy::hint(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'token' => ['required'],
-            'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::defaults()->uncompromised()],
+        $validated = $request->validate([
+            'token' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email:rfc', 'max:255'],
+            'password' => ['required', 'string', 'confirmed', PasswordPolicy::maxRule(), PasswordPolicy::rule()],
         ]);
 
+        // The broker matches the address exactly; normalize it like every
+        // other credential path so a reset link typed by hand still works.
+        $validated['email'] = mb_strtolower(trim($validated['email']));
+
         $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
+            $validated,
             function (User $user, string $password): void {
                 // The 'hashed' cast on User hashes the plain value on assign.
                 $user->forceFill(['password' => $password])->save();

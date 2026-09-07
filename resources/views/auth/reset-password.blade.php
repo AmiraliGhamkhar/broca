@@ -46,7 +46,11 @@
 
                 @if ($errors->any())
                     <div class="mt-6 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
-                        {{ $errors->first() }}
+                        <ul class="list-disc ps-5 space-y-1.5 marker:text-rausch/70">
+                            @foreach ($errors->all() as $message)
+                                <li>{{ $message }}</li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
 
@@ -57,24 +61,34 @@
                     <div>
                         <label for="email" class="block text-xs font-bold text-ink mb-1">آدرس ایمیل</label>
                         <input type="email" id="email" name="email" value="{{ old('email', $email ?? '') }}" required dir="ltr" autocomplete="email"
-                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                               spellcheck="false" class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                        <x-forms.error field="email" />
                     </div>
 
-                    <div>
+                    <div x-data="{ reveal: false }">
                         <label for="password" class="block text-xs font-bold text-ink mb-1">گذرواژهٔ جدید</label>
-                        <input type="password" id="password" name="password" required dir="ltr" autocomplete="new-password" placeholder="••••••••"
-                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                        <div class="relative">
+                            <input :type="reveal ? 'text' : 'password'" id="password" name="password" required dir="ltr" autocomplete="new-password" placeholder="••••••••"
+                                   class="w-full p-3.5 ps-12 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                            <button type="button" x-on:click="reveal = !reveal" :aria-pressed="reveal" aria-label="نمایش گذرواژه"
+                                    class="absolute inset-y-0 start-0 px-3 text-[11px] font-bold text-muted hover:text-ink transition-colors">
+                                <span x-text="reveal ? 'پنهان' : 'نمایش'"></span>
+                            </button>
+                        </div>
+                        <p class="mt-1.5 text-[11px] text-muted leading-6">{{ $passwordHint ?? 'حداقل ۸ کاراکتر، شامل یک حرف بزرگ، یک حرف کوچک و یک رقم.' }}</p>
+                        <x-forms.error field="password" />
                     </div>
 
                     <div>
                         <label for="password_confirmation" class="block text-xs font-bold text-ink mb-1">تکرار گذرواژهٔ جدید</label>
                         <input type="password" id="password_confirmation" name="password_confirmation" required dir="ltr" autocomplete="new-password" placeholder="••••••••"
-                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white">
+                               class="w-full p-3.5 rounded-xl border border-ink/20 text-sm font-medium bg-white focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                        <x-forms.error field="password_confirmation" />
                     </div>
 
                     <button type="submit" class="button-primary w-full justify-center">
                         <x-ui.icon name="shield" class="size-4" />
-                        ذخیره گذرواژه جدید و ورود
+                        ذخیره گذرواژه جدید و بازگشت به صفحهٔ ورود
                     </button>
                 </form>
             </div>

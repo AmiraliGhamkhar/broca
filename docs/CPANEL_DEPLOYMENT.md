@@ -90,6 +90,11 @@ MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=no-reply@brocamed.ir
 MAIL_FROM_NAME="Broca"
 
+# Auth policy (see docs/RUNBOOK.md §11): min length for register + reset.
+# Leave the breach check off unless api.pwnedpasswords.com is reachable.
+BROCA_PASSWORD_MIN=8
+BROCA_PASSWORD_LEAK_CHECK=false
+
 ZARINPAL_MERCHANT_ID=real-merchant-id
 ZARINPAL_SANDBOX=false
 ZARINPAL_CALLBACK_URL="https://brocamed.ir/payments/zarinpal/callback"
@@ -108,6 +113,9 @@ Notes:
 - `TELEGRAM_WEBHOOK_SECRET` should be a long random string.
 - `TELEGRAM_ADMIN_IDS` should contain only the small trusted admin set.
 - `BROCA_EXTERNAL_VIDEO_ORIGINS` is required when externally hosted videos are embedded.
+- `MAIL_FROM_ADDRESS` must be a real mailbox on the sending domain — verification and
+  password-reset mail is the only recovery path accounts have, so a dead mailbox means a
+  dead signup funnel (see `docs/RUNBOOK.md` §11).
 
 ## 4. Install dependencies and build
 

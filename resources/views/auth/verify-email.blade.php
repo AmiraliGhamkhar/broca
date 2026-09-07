@@ -14,7 +14,12 @@
         <div class="space-y-3">
             <span class="sr-only">تأیید هویت ایمیلی</span>
             <h1 class="section-title mt-3">ایمیل خود را تأیید کنید</h1>
-            <p class="text-sm leading-7 text-muted max-w-xl mx-auto">لینک تأیید حساب به ایمیل شما ارسال شده است. برای فعال‌سازی کامل حساب، صندوق ورودی یا پوشه Spam را بررسی کنید و روی لینک تأیید بزنید.</p>
+            <p class="text-sm leading-7 text-muted max-w-xl mx-auto">
+                لینک تأیید حساب به
+                <bdi dir="ltr" class="font-bold text-ink">{{ auth()->user()->email }}</bdi>
+                ارسال شده است. برای فعال‌سازی کامل حساب، صندوق ورودی یا پوشه Spam را بررسی کنید و روی لینک تأیید بزنید.
+            </p>
+            <p class="text-[11px] text-muted leading-6">پیش از تأیید ایمیل می‌توانید وارد شوید و از داشبورد استفاده کنید، اما خرید اشتراک پس از تأیید ایمیل فعال می‌شود.</p>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2 text-right">
@@ -40,6 +45,8 @@
             <form method="post" action="{{ route('logout') }}" class="inline">
                 @csrf
                 <button type="submit" class="text-rausch underline font-bold">خروج از حساب</button>
+                <span class="mx-2 text-hairline">|</span>
+                <a href="{{ route('plans') }}" class="text-rausch underline font-bold">مقایسهٔ پلن‌های اشتراک</a>
             </form>
         </div>
     </div>

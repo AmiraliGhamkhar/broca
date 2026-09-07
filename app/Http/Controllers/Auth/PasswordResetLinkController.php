@@ -17,11 +17,16 @@ class PasswordResetLinkController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'email' => ['required', 'email'],
+        $validated = $request->validate([
+            'email' => ['required', 'email:rfc', 'max:255'],
         ]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        // Same normalization as registration and login: the broker looks the
+        // address up byte-for-byte, so a capitalized or space-padded input
+        // would silently "find no account" for a real user.
+        $email = mb_strtolower(trim($validated['email']));
+
+        $status = Password::sendResetLink(['email' => $email]);
 
         if ($status === Password::RESET_LINK_SENT) {
             return back()->with('status', 'لینک بازیابی گذرواژه به ایمیل شما ارسال شد.');
@@ -31,7 +36,9 @@ class PasswordResetLinkController extends Controller
             return back()->with('status', 'لینک بازیابی پیش‌تر ارسال شده؛ کمی صبر کنید و ایمیل خود را بررسی کنید.');
         }
 
-        // Do not reveal whether the address exists.
-        return back()->with('status', 'اگر این ایمیل در سامانه ثبت شده باشد، لینک بازیابی ارسال می‌شود.');
+        // No user enumeration on a public form: the answer is the same whether
+        // or not the address belongs to an account.
+        return back()->withInput($request->only('email'))
+            ->with('status', 'اگر این ایمیل در سامانه ثبت شده باشد، لینک بازیابی ارسال می‌شود.');
     }
 }

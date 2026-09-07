@@ -179,6 +179,66 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
    remains data-driven (`duration_months === 3`) rather than a new admin flag:
    with a fixed three-plan lineup an extra column is not worth a migration.
 
+## Round 8 decisions (2026-09-07, register/login to production level)
+
+1. **The password policy is one object, not three copies.** `App\Support\PasswordPolicy`
+   defines it, `/register`, `/reset-password` and the app-wide
+   `Password::defaults()` binding all resolve to it. It also caps length at
+   bcrypt's 72-byte read limit: an un-capped 90-char password is *stored
+   truncated*, which means someone could sign in with its first 72 bytes.
+2. **The HaveIBeenPwned `uncompromised()` check is opt-in
+   (`BROCA_PASSWORD_LEAK_CHECK`, default off).** The old code claimed it
+   "fails open on network errors"; it does not — the HTTP call happens inside
+   validation, so on a restricted or slow host (Iranian shared hosting
+   included) it either stalls the POST or rejects a perfectly good password.
+   Blocking every signup because a third party is unreachable is the worse
+   failure mode. The only cost is one weak-password class we also catch via
+   case/digit requirements.
+3. **Every credential path normalizes identically, before validation.**
+   Register lowercases+trims the email and canonicalizes the phone
+   (`PhoneNormalizer` handles Persian digits, `+98`, separators) — and login
+   now does the *same* to the identifier. Previously login only lowercased
+   emails, so an address autofilled as `Ali@Example.com ` could be stored
+   trimmed and then never found. Normalization before the `unique` rule is
+   what turns duplicates into 422s instead of DB-level 500s; a residual race
+   (two POSTs, one row) is translated in the controller for the same reason.
+4. **Input shapes must not 500 either.** `(string) ['x']` throws in PHP 8, so a
+   `name[]=x` payload used to be a server error at `prepareForValidation()`.
+   Non-strings now normalize to `''` and fail as ordinary `required`/`string`
+   validation errors.
+5. **Throttle answers are named limiters with Persian copy, not positional
+   `throttle:20,1`.** A named limiter can render a custom response; positional
+   ones can only produce the framework's "Too Many Attempts." For a form post,
+   the visitor is bounced back with a readable notice (`session('error')`)
+   instead of a raw 429 page. Budgets: register 6/min/IP, login 10/min/IP
+   (composing with the controller's 5/min per identifier·IP), password reset
+   6/min per address, verification resend 3/min per user, admin 2FA 5/min per
+   admin.
+6. **Login deliberately says one thing for both failure modes.** "Account not
+   found" vs "wrong password" is an enumeration oracle on a public form; the
+   friendlier-but-split wording was considered and rejected. (Registration keeps
+   its `unique` messages — an accepted trade-off every Laravel app makes, and
+   the phone+email pairing is what an attacker would need.)
+7. **Admin 2FA got the two fixes that actually matter:** the 5-attempts/min
+   bound (a 6-digit code over a ~90 s drift window was guessable at
+   10/min/admin) and a replay guard — an accepted code is remembered per
+   session so it cannot be re-submitted while the window is still open. A
+   passing challenge also regenerates the session id, so a pre-2FA session
+   never becomes the admin one.
+8. **Suspension kills sessions immediately instead of at the next request.**
+   `admin/users` update deletes the user's `sessions` rows (best-effort: no-op
+   on a non-database driver, where `EnsureActive` still locks them out),
+   mirroring what password reset already did.
+9. **Email verification stays *not* required for login, but required for
+   money.** Enrolling / watching / quizzing works unverified; checkout and
+   media playback keep `verified`. Gating the whole learner area behind mail
+   that a misconfigured SMTP host may never deliver would turn an infra risk
+   into a total lockout; the notice page says plainly that purchasing unlocks
+   after verification.
+10. **`BROCA_MAIL_TO` (staging-only `Mail::alwaysTo`) was added** so a staging
+    run can exercise real SMTP without mailing students; it is ignored in
+    production by design. Operational detail moved to `docs/RUNBOOK.md` §11.
+
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt

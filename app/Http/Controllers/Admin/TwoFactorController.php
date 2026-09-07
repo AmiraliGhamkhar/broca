@@ -7,6 +7,7 @@ use App\Http\Middleware\RequireAdminTwoFactor;
 use App\Support\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 
 /**
@@ -15,6 +16,9 @@ use Illuminate\View\View;
  */
 class TwoFactorController extends Controller
 {
+    /** Session key holding the last accepted TOTP code (replay guard). */
+    private const REPLAY_KEY = 'admin.2fa.last_code';
+
     public function challenge(Request $request): View|RedirectResponse
     {
         $user = $request->user();
@@ -34,11 +38,26 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
-        if (! $user?->is_admin || ! $user->hasConfirmedTwoFactor() || ! Totp::verify((string) $user->totp_secret, $validated['code'])) {
+        // Identity is re-checked here rather than trusted from the route group,
+        // and it is checked BEFORE the code: an admin who has lost 2FA must not
+        // be able to use this endpoint as an oracle.
+        if (! $user?->is_admin || ! $user->hasConfirmedTwoFactor()) {
+            return redirect()->route('admin.two-factor.edit');
+        }
+
+        if ($this->alreadyUsed($request, $validated['code'])
+            || ! Totp::verify((string) $user->totp_secret, $validated['code'])) {
+            RateLimiter::hit($this->throttleKey($request), 60);
+
             return back()->withErrors(['code' => 'کد تأیید درست نیست.']);
         }
 
+        RateLimiter::clear($this->throttleKey($request));
+        $request->session()->put(self::REPLAY_KEY, trim($validated['code']));
         $request->session()->put(RequireAdminTwoFactor::SESSION_KEY, now()->timestamp);
+
+        // Second factor passed → fresh session id, so a session issued before
+        // 2FA cannot be the one that carries admin access.
         $request->session()->regenerate();
 
         return redirect()->intended(route('admin.dashboard'));
@@ -53,8 +72,12 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user?->is_admin || ! $user->hasConfirmedTwoFactor() || ! $user->consumeRecoveryCode($validated['recovery_code'])) {
+            RateLimiter::hit($this->throttleKey($request), 60);
+
             return back()->withErrors(['recovery_code' => 'کد بازیابی درست نیست یا پیش‌تر استفاده شده است.']);
         }
+
+        RateLimiter::clear($this->throttleKey($request));
 
         $request->session()->put(RequireAdminTwoFactor::SESSION_KEY, now()->timestamp);
         $request->session()->regenerate();
@@ -94,8 +117,12 @@ class TwoFactorController extends Controller
         $user = $request->user();
 
         if (! $user->totp_secret || $user->hasConfirmedTwoFactor() || ! Totp::verify((string) $user->totp_secret, $validated['code'])) {
+            RateLimiter::hit($this->throttleKey($request), 60);
+
             return back()->withErrors(['code' => 'کد تأیید درست نیست؛ دوباره تلاش کنید.']);
         }
+
+        RateLimiter::clear($this->throttleKey($request));
 
         $recoveryCodes = $this->freshRecoveryCodes();
 
@@ -145,6 +172,31 @@ class TwoFactorController extends Controller
         return redirect()->route('admin.two-factor.edit')
             ->with('recovery_codes', $recoveryCodes)
             ->with('status', 'کدهای بازیابی جدید ساخته شدند. کدهای پیشین دیگر کار نمی‌کنند — این کدها را فقط یک بار می‌بینید.');
+    }
+
+    /**
+     * A TOTP code stays valid for the whole drift window (~90 s), so "verify
+     * once, accept forever within the window" would let anyone who briefly
+     * read the code (shoulder-surf, log, screen share) replay it. Remembering
+     * the last accepted code per session kills that without touching the
+     * legitimate flow: a second factor is entered once per session anyway.
+     */
+    private function alreadyUsed(Request $request, string $code): bool
+    {
+        $normalized = preg_replace('/\D/', '', $code) ?? '';
+
+        if ($request->session()->get(self::REPLAY_KEY) === $normalized) {
+            return true;
+        }
+
+        $request->session()->put(self::REPLAY_KEY, $normalized);
+
+        return false;
+    }
+
+    private function throttleKey(Request $request): string
+    {
+        return '2fa:'.($request->user()?->id ?? $request->ip());
     }
 
     /**
