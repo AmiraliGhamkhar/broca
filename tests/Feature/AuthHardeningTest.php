@@ -163,11 +163,17 @@ class AuthHardeningTest extends TestCase
         ]))->assertSessionHasErrors('password');
 
         // `confirmed` reports against `password`, not a second
-        // `password_confirmation` key - the mismatch has to be visible on the
-        // field the user actually edits, which is what the view renders.
-        $passwordErrors = session('errors')->get('password');
-        $this->assertCount(3, $passwordErrors, 'length, case mix and mismatch, all on one field');
-        $this->assertStringContainsString('تکرار گذرواژه', implode(' ', $passwordErrors));
+        // `password_confirmation` key, so every complaint about a password lands
+        // on the field the user actually edits - which is what the view renders.
+        // Asserted as "each rule said its piece", not as a count: a count would
+        // break the day a rule is added, and that is a change to welcome, not to
+        // police. (For `short` the real list is four: length, letters, case mix,
+        // mismatch - I had guessed three, and CI corrected me.)
+        $messages = implode(' ', session('errors')->get('password'));
+
+        foreach (['حداقل', 'حروف بزرگ و کوچک', 'حداقل یک حرف', 'تکرار گذرواژه'] as $needle) {
+            $this->assertStringContainsString($needle, $messages, "missing the {$needle} complaint");
+        }
 
         $response = $this->get(route('register'))->assertOk();
 
