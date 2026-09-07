@@ -294,6 +294,18 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
     simultaneously true — and the `remember_web_` cookie test asks
     `Auth::guard()->getRecallerName()` instead of rebuilding the name, because
     Laravel 13 appends `sha1(SessionGuard::class)` to it.
+15. **The admin 2FA admission test is the route limiter alone** (`5/min` per
+    admin, counted on every request to challenge/recover/enable/disable);
+    `Limit::after()` is *not* used. Two attempts to make the controllers own the
+    bucket instead both failed in CI: sharing one cache key between middleware and
+    controller made a single wrong code cost two units (so a correct sixth code
+    was refused), and delegating with `after()` did not restore the promised
+    arithmetic either. The controller's own counter stays on the sign-in
+    challenge only, keyed separately, where its job is the human message and the
+    clear-on-success — an honest typo storm gets a friendly countdown, while the
+    route limiter is what actually refuses a scripted guesser. Lesson recorded
+    because the code comment is the only place a reader would learn it: do not
+    let two layers decide admission on one budget.
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt

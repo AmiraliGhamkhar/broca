@@ -71,16 +71,11 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
+        // Recovery codes are long, single-use and bcrypt-compared, so the route
+        // limiter alone bounds them; no per-attempt bookkeeping here.
         if (! $user?->is_admin || ! $user->hasConfirmedTwoFactor() || ! $user->consumeRecoveryCode($validated['recovery_code'])) {
-            RateLimiter::hit($this->throttleKey($request), 60);
-
             return back()->withErrors(['recovery_code' => 'کد بازیابی درست نیست یا پیش‌تر استفاده شده است.']);
         }
-
-        // A consumed code is single-use and valid, so it releases the budget
-        // rather than merely "not failing" — otherwise an admin who mistyped
-        // four times could never use the real code.
-        RateLimiter::clear($this->throttleKey($request));
 
         $request->session()->put(RequireAdminTwoFactor::SESSION_KEY, now()->timestamp);
         $request->session()->regenerate();
@@ -119,16 +114,13 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
+        // Admission is decided by `throttle:admin-2fa-verify` on the route; this
+        // path deliberately does not touch that bucket. A wrong code here is
+        // already counted by the middleware, and clearing on success would let a
+        // scripted guesser reset its own budget by guessing correctly.
         if (! $user->totp_secret || $user->hasConfirmedTwoFactor() || ! Totp::verify((string) $user->totp_secret, $validated['code'])) {
-            RateLimiter::hit($this->throttleKey($request), 60);
-
             return back()->withErrors(['code' => 'کد تأیید درست نیست؛ دوباره تلاش کنید.']);
         }
-
-        // A correct code resets the counter, so honest typos never turn into a
-        // lockout message (the route limiter defers its counting to this
-        // controller - see the `after` callback on admin-2fa-verify).
-        RateLimiter::clear($this->throttleKey($request));
 
         $recoveryCodes = $this->freshRecoveryCodes();
 
@@ -148,15 +140,12 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
+        // Same shape as enable: the route limiter counts the attempts, the
+        // controller only refuses. Disabling 2FA is the most valuable code to
+        // guess, which is exactly why it shares the challenge's budget.
         if (! $user->hasConfirmedTwoFactor() || ! Totp::verify((string) $user->totp_secret, $validated['code'])) {
-            // Turning 2FA off is the most valuable code to guess, so wrong
-            // attempts are counted exactly like the sign-in challenge.
-            RateLimiter::hit($this->throttleKey($request), 60);
-
             return back()->withErrors(['code' => 'کد تأیید درست نیست؛ غیرفعال‌سازی انجام نشد.']);
         }
-
-        RateLimiter::clear($this->throttleKey($request));
 
         $user->forceFill([
             'totp_secret' => null,
@@ -208,13 +197,10 @@ class TwoFactorController extends Controller
 
     private function throttleKey(Request $request): string
     {
-        // Deliberately NOT the key `throttle:admin-2fa-verify` builds: the
-        // middleware already counts every request to those routes per admin.
-        // This counter is the controller's own, and it is only incremented for
-        // a *wrong* code and cleared by a correct one — sharing one bucket with
-        // the middleware would make the two hit the same key twice per request
-        // and would punish an admin who typed the code correctly on the sixth
-        // attempt. Same protection, one side-effect each.
+        // The sign-in challenge's own counter — separate from the route
+        // limiter's bucket on purpose (see throttleKey's callers): it exists to
+        // say "wait N seconds" about *this* admin's guessing and to be cleared
+        // by a successful attempt, which is what keeps honest typos harmless.
         return '2fa:'.($request->user()?->id ?? $request->ip());
     }
 

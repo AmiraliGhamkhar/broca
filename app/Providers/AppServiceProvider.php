@@ -207,14 +207,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('admin-2fa-verify', function (Request $request): Limit {
             return Limit::perMinute(5)
                 ->by('2fa-verify:'.($request->user()?->id ?? $request->ip()))
-                // Never auto-hit: all four code endpoints own their counting in
-                // the controller (RateLimiter::hit() on a rejected code,
-                // clear() on an accepted one). If the middleware also hit, one
-                // typo would cost two units of a five-unit budget, so an admin
-                // who types the code correctly on the sixth attempt is still
-                // refused - a punishment for honest users that buys nothing,
-                // because every request to these routes is already a guess.
-                ->after(fn ($response) => false)
+                // No `after()` override here. Every request to these four routes
+                // *is* a guess, so the middleware counting each one is the whole
+                // point of the limiter; the controller's own counter (keyed
+                // differently, on purpose) exists to word the message and to
+                // reset on success, not to decide admission. Sharing one key
+                // between the two would make a failed attempt cost two units and
+                // refuse an admin who types the correct code on the sixth try.
                 ->response(function () use ($request) {
                     $message = 'تعداد تلاش‌ها برای تأیید کد دو مرحله‌ای زیاد است. لطفاً یک دقیقه بعد دوباره امتحان کنید.';
 
