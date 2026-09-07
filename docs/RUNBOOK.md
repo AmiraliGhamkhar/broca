@@ -104,6 +104,41 @@ Telegram webhook registration, see `docs/CPANEL_DEPLOYMENT.md`.
 Rollback: `git checkout <previous-tag> && composer install && php artisan migrate:rollback`
 (migrations are reversible; verify with `php artisan migrate:status`).
 
+### Why `npm run build` wipes `public/build` first
+
+`public/build` is committed (a Node-less cPanel host cannot build), so CI fails a
+pull request when `npm run build` changes it. That gate recently fired on a PR
+that touched no frontend source, and the cause is worth remembering: **Tailwind's
+source detection scans the whole repository, including its own previous compiled
+stylesheet in `public/build`.** A rebuild performed on top of the committed
+artifacts therefore finds utility-shaped text in that file and emits it again —
+the build that bit us re-created a one-word filter utility (present in every
+stylesheet since `main`, which is why every rebuild changed the content hash with
+nobody editing anything), and each later build inherited it.
+
+The fix is in the `build` script: `node -e "require('fs').rmSync('public/build',
+{recursive:true,force:true})" && vite build`. Deleting the directory whose files
+are about to be regenerated cannot lose anything, and it makes the build
+idempotent: from a polluted tree the first run restores exactly the committed
+artifacts, and `git status --porcelain public/build` prints nothing afterwards.
+
+Measured, and **does not** work — do not re-try these:
+
+- `@source not "public/build"` in `resources/css/app.css` (also the `**` glob
+  form): the scanner still reads the old output.
+- `build.emptyOutDir: true`, in the config and as `vite build --emptyOutDir`:
+  the directory is emptied after Tailwind has already scanned it.
+- Running the wipe from `vite.config.js` at import time: also too late, because
+  `@tailwindcss/vite` creates its scanner during config loading, before the body
+  of that file executes. It has to happen in the shell command.
+- Replacing auto-detection with `@import "tailwindcss" source(none)` plus
+  explicit `@source` globs: built fine but dropped 470 real utilities.
+
+One consequence to keep in mind: because every file in the repo is a source, a
+bare utility class name written in a markdown note or a code comment becomes a
+"used" class and lands in the CSS. Describe classes in prose in `docs/` and
+`DECISIONS.md` rather than quoting a selector.
+
 ## 8. Public runtime verification gates
 
 These are launch gates for the current trust-first public redesign and should

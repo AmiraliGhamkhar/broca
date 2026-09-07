@@ -238,7 +238,24 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
 10. **`BROCA_MAIL_TO` (staging-only `Mail::alwaysTo`) was added** so a staging
     run can exercise real SMTP without mailing students; it is ignored in
     production by design. Operational detail moved to `docs/RUNBOOK.md` §11.
-
+11. **`npm run build` now deletes `public/build` before invoking Vite.** CI's
+    "committed assets must match a fresh build" gate failed on a PR that touched
+    no frontend source: Tailwind's source detection scans every file in the repo,
+    *including its own previous compiled stylesheet in `public/build`*, so a
+    rebuild performed on top of the committed artifacts re-emits utility-shaped
+    text found there — a one-word filter utility has been riding along in every
+    build since `main`, which is what kept changing the content hash with nobody
+    editing anything. Measured and rejected: `@source not "public/build"` (ignored
+    by the Vite plugin), `build.emptyOutDir` in config and via `--emptyOutDir`
+    (empties after the scan), wiping from `vite.config.js` at import time (the
+    plugin builds its scanner during config loading, so also too late), and
+    `source(none)` + explicit `@source` globs (dropped 470 real utilities,
+    reverted). Only a pre-build shell wipe runs early enough; from a polluted tree
+    it restores exactly the committed artifacts, so the build is idempotent and
+    the CI gate is meaningful. Side effect of scanning everything: a bare utility
+    name quoted in docs or comments becomes a "used" class, so prose must describe
+    classes instead of writing selectors (this is how the issue was first
+    reproduced, three times, while documenting it).
 ### Residual open items (not blocking)
 
 - Final hero pick from the three candidates (swap = copy 2 files + alt
