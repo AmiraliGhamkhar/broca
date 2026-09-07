@@ -298,6 +298,35 @@ class AuthHardeningTest extends TestCase
         $this->assertFalse(\Illuminate\Support\Facades\Password::broker()->tokenExists($user->fresh(), $token));
     }
 
+    public function test_malformed_utf8_payloads_fail_gracefully(): void
+    {
+        // preg_replace()/preg_match() with /u return null on an invalid UTF-8
+        // subject, and PhoneNormalizer runs under declare(strict_types=1) — one
+        // pasted byte of mojibake used to be enough for a 500 page. The answer
+        // must be the form again with errors, or a plain redirect: never a 5xx.
+        $broken = "\xFF\xFE phone \x00";
+
+        $this->post('/register', [
+            'name' => $broken,
+            'email' => 'bad-utf8@example.com',
+            'phone' => $broken,
+            'password' => self::STRONG_PASSWORD,
+            'password_confirmation' => self::STRONG_PASSWORD,
+            'consent' => 'on',
+        ])->assertSessionHasErrors('phone');
+
+        $this->post('/login', ['identifier' => $broken, 'password' => 'whatever'])
+            ->assertSessionHasErrors('identifier');
+
+        // A malformed address is either rejected by the rule or accepted and
+        // answered with the same neutral flash — it must not crash, and it must
+        // not say whether the account exists.
+        $this->post('/forgot-password', ['email' => $broken.'@example.com'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('users', ['email' => 'bad-utf8@example.com']);
+    }
+
     public function test_guests_cannot_reach_the_verification_notice(): void
     {
         $this->get(route('verification.notice'))->assertRedirect(route('login'));

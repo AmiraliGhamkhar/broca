@@ -32,7 +32,9 @@ class NewPasswordController extends Controller
 
         // The broker matches the address exactly; normalize it like every
         // other credential path so a reset link typed by hand still works.
-        $validated['email'] = mb_strtolower(trim($validated['email']));
+        $validated['email'] = preg_match('//u', $validated['email']) === 1
+            ? mb_strtolower(trim($validated['email']))
+            : trim($validated['email']);
 
         $status = Password::reset(
             $validated,

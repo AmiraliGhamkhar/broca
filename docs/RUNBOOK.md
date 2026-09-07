@@ -238,6 +238,7 @@ dependency that can break every new account.**
 | Password policy | ≥ `BROCA_PASSWORD_MIN` (floor 8), letters + upper + lower + digit; length capped at bcrypt's 72-byte read limit so an over-long password can never be silently truncated |
 | Breach check | `uncompromised()` only when `BROCA_PASSWORD_LEAK_CHECK=true` — it calls api.pwnedpasswords.com *during* the POST, so leave it off unless that host is reachable |
 | Mass assignment | `is_admin` / `status` are not fillable; payloads trying to set them are ignored |
+| Garbage input | array payloads (`name[]=x`), over-long fields and **invalid UTF-8** all come back as validation errors — the null-returning `/u` regex calls in `PhoneNormalizer` are guarded, so a pasted mojibake byte cannot 500 the register or login form |
 | Suspension | login rejected (extra `status` credential) + live session rows deleted when an admin suspends + `active` middleware on every authenticated route |
 | Password reset | invalidates all of the user's session rows and rotates the remember token |
 | 2FA (admin) | TOTP 30 s with ±1 step drift, 5 tries/min/admin, single-use recovery codes (bcrypt), the pass flag regenerates the session, and an accepted code cannot be replayed inside its window |

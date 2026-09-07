@@ -31,12 +31,20 @@ class RegisterUserRequest extends FormRequest
         $phone = $this->stringInput('phone');
 
         // Persian/Arabic digits first: a phone typed as ۰۹۱۲… on an iOS
-        // keyboard must pass both the rule and the unique lookup.
-        $normalizedPhone = PhoneNormalizer::isValid($phone) ? PhoneNormalizer::normalize($phone) : $phone;
+        // keyboard must pass both the rule and the unique lookup. Anything
+        // unrecognizable is merged back untouched, so the field rules — not a
+        // normalizer — own the error message.
+        $normalizedPhone = PhoneNormalizer::isValid($phone)
+            ? PhoneNormalizer::normalize($phone)
+            : $phone;
+
+        $email = $this->stringInput('email');
 
         $this->merge([
             'name' => trim($this->stringInput('name')),
-            'email' => mb_strtolower(trim($this->stringInput('email'))),
+            // mb_strtolower() only rewrites valid UTF-8; the guard keeps a
+            // mangled byte sequence from arriving at the unique lookup at all.
+            'email' => preg_match('//u', $email) === 1 ? mb_strtolower($email) : $email,
             'phone' => $normalizedPhone,
         ]);
     }

@@ -24,7 +24,9 @@ class PasswordResetLinkController extends Controller
         // Same normalization as registration and login: the broker looks the
         // address up byte-for-byte, so a capitalized or space-padded input
         // would silently "find no account" for a real user.
-        $email = mb_strtolower(trim($validated['email']));
+        $email = preg_match('//u', $validated['email']) === 1
+            ? mb_strtolower(trim($validated['email']))
+            : trim($validated['email']);
 
         $status = Password::sendResetLink(['email' => $email]);
 
