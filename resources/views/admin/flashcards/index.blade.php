@@ -48,7 +48,7 @@
                     <article class="editorial-card {{ ($selectedDeck && $selectedDeck->id === $deck->id) ? 'ring-2 ring-rausch/25 border-rausch/20' : '' }}">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <p class="text-[11px] font-bold text-rausch">{{ $deck->course->title ?? '—' }}</p>
+                                <p class="text-[11px] font-bold text-rausch-text">{{ $deck->course->title ?? '—' }}</p>
                                 <h3 class="mt-2 text-sm font-black text-ink">{{ $deck->title }}</h3>
                                 <p class="mt-2 text-[11px] leading-6 text-muted">{{ $deck->cards_count }} کارت مرور</p>
                             </div>
@@ -56,13 +56,13 @@
                         </div>
 
                         <div class="flex items-center justify-between gap-3 mt-5 pt-5 border-t border-hairline-soft text-xs">
-                            <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="font-bold text-rausch underline">مدیریت کارت‌ها</a>
+                            <a href="{{ route('admin.flashcards.index', ['deck_id' => $deck->id]) }}" class="font-bold text-rausch-text underline">مدیریت کارت‌ها</a>
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('admin.flashcards.decks.edit', $deck) }}" class="button-soft">ویرایش</a>
                                 <form method="post" action="{{ route('admin.flashcards.decks.destroy', $deck) }}" onsubmit="return confirm('حذف دسته کارت؟');">
                                     @csrf
                                     @method('delete')
-                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                    <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch-text transition hover:bg-rausch-tint">حذف</button>
                                 </form>
                             </div>
                         </div>
@@ -83,7 +83,7 @@
                 <div class="form-panel p-7 sm:p-8">
                     <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-hairline-soft">
                         <div>
-                            <p class="text-xs font-bold text-rausch">{{ $selectedDeck->course->title ?? '' }}</p>
+                            <p class="text-xs font-bold text-rausch-text">{{ $selectedDeck->course->title ?? '' }}</p>
                             <h2 class="text-xl font-black text-ink mt-2">کارت‌های دسته: {{ $selectedDeck->title }}</h2>
                         </div>
                         <a href="{{ route('admin.flashcards.cards.create', ['deck_id' => $selectedDeck->id]) }}" class="button-primary">
@@ -127,7 +127,7 @@
                                             <form method="post" action="{{ route('admin.flashcards.cards.destroy', $card) }}" onsubmit="return confirm('حذف این کارت؟');">
                                                 @csrf
                                                 @method('delete')
-                                                <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch transition hover:bg-rausch-tint">حذف</button>
+                                                <button type="submit" class="rounded border border-rausch/25 px-4 py-2 text-xs font-bold text-rausch-text transition hover:bg-rausch-tint">حذف</button>
                                             </form>
                                         </div>
                                     </div>

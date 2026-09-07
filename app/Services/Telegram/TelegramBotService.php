@@ -2,20 +2,25 @@
 
 namespace App\Services\Telegram;
 
+use App\Models\AdminActivityLog;
 use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Flashcard;
 use App\Models\FlashcardDeck;
+use App\Models\Invoice;
 use App\Models\Note;
 use App\Models\Plan;
 use App\Models\Quiz;
 use App\Models\QuizOption;
 use App\Models\QuizQuestion;
 use App\Models\Subject;
+use App\Models\Subscription;
 use App\Models\TelegramAdmin;
 use App\Models\TelegramChatSession;
+use App\Models\User;
 use App\Models\Video;
 use App\Services\FreeItemDesignationService;
+use App\Support\BrandAssets;
 use App\Support\Slug;
 use App\Support\StructuredMessageParser;
 use Illuminate\Database\Eloquent\Model;
@@ -34,6 +39,11 @@ use Throwable;
 class TelegramBotService
 {
     private const SESSION_TTL_MINUTES = 180;
+
+    /** Remote (URL) downloads larger than this are refused — shared-hosting disks are metered. */
+    private const MAX_REMOTE_DOWNLOAD_BYTES = 200 * 1024 * 1024;
+
+    private const MAX_REMOTE_DOWNLOAD_MB = 200;
 
     private const PUBLICATION_TRANSITIONS = [
         'draft' => ['in_review'],
@@ -156,6 +166,8 @@ class TelegramBotService
                 'courses' => $this->sendCoursesHelp($chatId),
                 'media' => $this->sendMediaHelp($chatId),
                 'study' => $this->sendStudyHelp($chatId),
+                'users' => $this->sendUsersHelp($chatId),
+                'brand' => $this->sendBrandHelp($chatId),
                 default => $this->sendWelcome($chatId),
             };
 
@@ -174,6 +186,7 @@ class TelegramBotService
                 'quizzes' => $this->listQuizzes($chatId),
                 'cards' => $this->listCards($chatId, (int) $b),
                 'questions' => $this->listQuestions($chatId, (int) $b),
+                'users' => $this->listUsers($chatId, max(1, (int) $b)),
                 default => $this->sendWelcome($chatId),
             };
 
@@ -190,6 +203,7 @@ class TelegramBotService
             match ($a) {
                 'plan' => $this->startPlanWorkflow($chatId, $telegramUserId, null),
                 'blog' => $this->startBlogWorkflow($chatId, $telegramUserId, null),
+                'subject' => $this->startSubjectWorkflow($chatId, $telegramUserId, null),
                 'course' => $this->startCourseWorkflow($chatId, $telegramUserId, null),
                 'video' => $this->startVideoWorkflow($chatId, $telegramUserId, null),
                 'note' => $this->startNoteWorkflow($chatId, $telegramUserId, null),
@@ -207,6 +221,7 @@ class TelegramBotService
             match ($a) {
                 'plan' => $this->startPlanWorkflow($chatId, $telegramUserId, (int) $b),
                 'blog' => $this->startBlogWorkflow($chatId, $telegramUserId, (int) $b),
+                'subject' => $this->startSubjectWorkflow($chatId, $telegramUserId, (int) $b),
                 'course' => $this->startCourseWorkflow($chatId, $telegramUserId, (int) $b),
                 'video' => $this->startVideoWorkflow($chatId, $telegramUserId, (int) $b),
                 'note' => $this->startNoteWorkflow($chatId, $telegramUserId, (int) $b),
@@ -226,6 +241,96 @@ class TelegramBotService
                 'blog' => $this->startCoverWorkflow($chatId, $telegramUserId, 'blog.cover', (int) $b),
                 default => $this->sendWelcome($chatId),
             };
+
+            return;
+        }
+
+        if ($verb === 'setbrand') {
+            $this->startBrandImageWorkflow($chatId, $telegramUserId, $a === 'hero' ? 'hero' : 'logo');
+
+            return;
+        }
+
+        if ($verb === 'removebrand') {
+            $this->confirmRemoveBrand($chatId, $a === 'hero' ? 'hero' : 'logo');
+
+            return;
+        }
+
+        if ($verb === 'confirmremovebrand') {
+            $this->applyRemoveBrand($chatId, $a === 'hero' ? 'hero' : 'logo');
+
+            return;
+        }
+
+        if ($verb === 'stats') {
+            $this->sendStats($chatId);
+
+            return;
+        }
+
+        if ($verb === 'activity') {
+            $this->sendActivityLog($chatId);
+
+            return;
+        }
+
+        if ($verb === 'userstatus') {
+            $this->confirmUserStatus($chatId, (int) $a);
+
+            return;
+        }
+
+        if ($verb === 'confirmuserstatus') {
+            $this->applyUserStatus($chatId, (int) $a);
+
+            return;
+        }
+
+        if ($verb === 'useradmin') {
+            $this->confirmUserAdmin($chatId, (int) $a);
+
+            return;
+        }
+
+        if ($verb === 'confirmuseradmin') {
+            $this->applyUserAdmin($chatId, (int) $a);
+
+            return;
+        }
+
+        if ($verb === 'userenroll') {
+            $this->pickCourseForEnrollment($chatId, (int) $a);
+
+            return;
+        }
+
+        if ($verb === 'confirmenroll') {
+            $this->applyEnrollment($chatId, (int) $a, (int) $b);
+
+            return;
+        }
+
+        if ($verb === 'userunenroll') {
+            $this->pickEnrollmentForRemoval($chatId, (int) $a);
+
+            return;
+        }
+
+        if ($verb === 'confirmunenroll') {
+            $this->applyUnenrollment($chatId, (int) $a, (int) $b);
+
+            return;
+        }
+
+        if ($verb === 'subjectvisibility') {
+            $this->confirmSubjectVisibility($chatId, (int) $a);
+
+            return;
+        }
+
+        if ($verb === 'confirmsubjectvisibility') {
+            $this->applySubjectVisibility($chatId, (int) $a);
 
             return;
         }
@@ -291,6 +396,8 @@ class TelegramBotService
             'blog_new' => $this->startBlogWorkflow($chatId, $telegramUserId, null),
             'blog_edit' => $this->startBlogWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه مطلب وبلاگ را وارد کنید.')),
             'subjects' => $this->listSubjects($chatId),
+            'subject_new' => $this->startSubjectWorkflow($chatId, $telegramUserId, null),
+            'subject_edit' => $this->startSubjectWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه شاخه را وارد کنید.')),
             'courses' => $this->listCourses($chatId),
             'course_new' => $this->startCourseWorkflow($chatId, $telegramUserId, null),
             'course_edit' => $this->startCourseWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه دوره را وارد کنید.')),
@@ -312,6 +419,13 @@ class TelegramBotService
             'question_edit' => $this->startQuestionEditWorkflow($chatId, $telegramUserId, $this->requiredId($argument, 'شناسه سؤال را وارد کنید.')),
             'set_course_cover' => $this->startCoverWorkflow($chatId, $telegramUserId, 'course.cover', $this->requiredId($argument, 'شناسه دوره را وارد کنید.')),
             'set_blog_cover' => $this->startCoverWorkflow($chatId, $telegramUserId, 'blog.cover', $this->requiredId($argument, 'شناسه مطلب وبلاگ را وارد کنید.')),
+            'users' => $this->listUsers($chatId, 1),
+            'user' => $this->showUserManageMenu($chatId, $this->requiredId($argument, 'شناسه کاربر را وارد کنید.')),
+            'stats' => $this->sendStats($chatId),
+            'activity' => $this->sendActivityLog($chatId),
+            'set_logo' => $this->startBrandImageWorkflow($chatId, $telegramUserId, 'logo'),
+            'remove_logo' => $this->confirmRemoveBrand($chatId, 'logo'),
+            'set_hero' => $this->startBrandImageWorkflow($chatId, $telegramUserId, 'hero'),
             'backup_db' => $this->backupDatabase($chatId),
             default => $this->sendUnknownCommand($chatId),
         };
@@ -326,6 +440,9 @@ class TelegramBotService
             'بلاگ' => $this->sendBlogsHelp($chatId),
             'ویدیو و جزوه' => $this->sendMediaHelp($chatId),
             'آزمون و فلش‌کارت' => $this->sendStudyHelp($chatId),
+            'کاربران' => $this->sendUsersHelp($chatId),
+            'برند و ظاهر' => $this->sendBrandHelp($chatId),
+            'آمار سایت' => $this->sendStats($chatId),
             'بکاپ دیتابیس' => $this->backupDatabase($chatId),
             default => false,
         };
@@ -338,6 +455,7 @@ class TelegramBotService
         match ($workflow) {
             'plan.form' => $this->submitPlanForm($session, (string) ($message['text'] ?? '')),
             'blog.form' => $this->submitBlogForm($session, (string) ($message['text'] ?? '')),
+            'subject.form' => $this->submitSubjectForm($session, (string) ($message['text'] ?? '')),
             'course.form' => $this->submitCourseForm($session, (string) ($message['text'] ?? '')),
             'video.form' => $this->submitVideoForm($session, $message),
             'note.form' => $this->submitNoteForm($session, $message),
@@ -347,6 +465,7 @@ class TelegramBotService
             'question.form' => $this->submitQuestionForm($session, (string) ($message['text'] ?? '')),
             'course.cover' => $this->submitCourseCover($session, $message),
             'blog.cover' => $this->submitBlogCover($session, $message),
+            'brand.logo', 'brand.hero' => $this->submitBrandImage($session, $message),
             default => throw new RuntimeException('گردش‌کار شناخته نشد. /cancel را بزنید و دوباره شروع کنید.'),
         };
     }
@@ -358,6 +477,13 @@ class TelegramBotService
             '',
             'از دکمه‌های زیر برای مدیریت استفاده کنید.',
             'برای ورود اطلاعات هر بخش، ربات بعد از انتخاب شما یک فرم یا مرحله راهنما می‌فرستد.',
+            '',
+            '📌 قابلیت‌ها:',
+            '• پلن‌ها، وبلاگ، دوره‌ها، شاخه‌ها، ویدیو، جزوه، فلش‌کارت و آزمون',
+            '• انتشار مرحله‌ای (پیش‌نویس ← بازبینی ← انتشار ← آرشیو)',
+            '• مدیریت کاربران (تعلیق، مدیر، ثبت‌نام در دوره)',
+            '• تغییر لوگو و تصویر هیرو صفحهٔ اصلی',
+            '• آمار سایت، آخرین فعالیت‌های مدیران و بکاپ دیتابیس',
         ]), [
             'reply_markup' => $this->mainMenuMarkup(),
         ]);
@@ -391,10 +517,10 @@ class TelegramBotService
 
     private function sendCoursesHelp(int $chatId): bool
     {
-        $this->api->sendMessage($chatId, 'مدیریت دوره‌ها و شاخه‌های آموزشی.', [
+        $this->api->sendMessage($chatId, 'مدیریت دوره‌ها و شاخه‌های آموزشی (ساخت، ویرایش، انتشار، حذف و کاور).', [
             'reply_markup' => $this->inlineKeyboard([
-                [$this->button('📚 لیست سابجکت‌ها', 'list:subjects'), $this->button('🎓 لیست دوره‌ها', 'list:courses')],
-                [$this->button('➕ دوره جدید', 'new:course')],
+                [$this->button('📚 لیست شاخه‌ها', 'list:subjects'), $this->button('🎓 لیست دوره‌ها', 'list:courses')],
+                [$this->button('➕ دوره جدید', 'new:course'), $this->button('➕ شاخه جدید', 'new:subject')],
                 [$this->button('↩️ بازگشت', 'menu:main')],
             ]),
         ]);
@@ -421,6 +547,43 @@ class TelegramBotService
             'reply_markup' => $this->inlineKeyboard([
                 [$this->button('🗂 لیست دِک‌ها', 'list:decks'), $this->button('🧪 لیست آزمون‌ها', 'list:quizzes')],
                 [$this->button('➕ دِک جدید', 'new:deck'), $this->button('➕ آزمون جدید', 'new:quiz')],
+                [$this->button('↩️ بازگشت', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function sendUsersHelp(int $chatId): bool
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            'مدیریت کاربران سایت:',
+            '• لیست کاربران با صفحه‌بندی و کارت کامل هر کاربر',
+            '• تعلیق / فعال‌سازی حساب (فوراً از نشست خارج می‌شود)',
+            '• ارتقا به مدیر یا سلب مدیریت (با محافظ آخرین مدیر)',
+            '• ثبت‌نام کاربر در دوره یا لغو ثبت‌نام',
+            '',
+            'دستور مستقیم: /user {شناسه}',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('👤 لیست کاربران', 'list:users:1')],
+                [$this->button('↩️ بازگشت', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function sendBrandHelp(int $chatId): bool
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            'برند و ظاهر سایت:',
+            '🖼 لوگو — بالای سایت و فوتر را جایگزین حرف «ب» می‌کند (PNG شفاف بهترین نتیجه را می‌دهد).',
+            '🌄 هیرو — تصویر بزرگ صفحهٔ اصلی؛ نسخهٔ WebP به‌صورت خودکار بازسازی می‌شود.',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('🖼 تغییر لوگو', 'setbrand:logo'), $this->button('🌄 تغییر هیرو', 'setbrand:hero')],
+                [$this->button('🗑 حذف لوگو (بازگشت به «ب»)', 'removebrand:logo')],
                 [$this->button('↩️ بازگشت', 'menu:main')],
             ]),
         ]);
@@ -493,17 +656,23 @@ class TelegramBotService
 
     private function listSubjects(int $chatId): bool
     {
-        $subjects = Subject::query()->orderBy('sort_order')->orderBy('name')->get();
-        $lines = ['📚 سابجکت‌ها:'];
+        $subjects = Subject::query()->withCount('courses')->orderBy('sort_order')->orderBy('name')->get();
+        $lines = ['📚 شاخه‌های آموزشی:'];
+        $buttons = [
+            [$this->button('➕ شاخه جدید', 'new:subject'), $this->button('🎓 لیست دوره‌ها', 'list:courses')],
+        ];
 
         foreach ($subjects as $subject) {
-            $lines[] = sprintf('#%d | %s', $subject->id, $subject->name);
+            $lines[] = sprintf('#%d | %s | %d دوره%s', $subject->id, $subject->name, $subject->courses_count, $subject->is_visible ? '' : ' | پنهان');
+            $buttons[] = [$this->button('🛠 '.$this->truncate($subject->name, 28), 'manage:subject:'.$subject->id)];
+        }
+
+        if ($subjects->isEmpty()) {
+            $lines[] = 'هنوز شاخه‌ای ثبت نشده است.';
         }
 
         $this->api->sendMessage($chatId, implode("\n", $lines), [
-            'reply_markup' => $this->inlineKeyboard([
-                [$this->button('🎓 لیست دوره‌ها', 'list:courses'), $this->button('↩️ منوی دوره‌ها', 'menu:courses')],
-            ]),
+            'reply_markup' => $this->inlineKeyboard($buttons),
         ]);
 
         return true;
@@ -1021,6 +1190,10 @@ class TelegramBotService
             throw new RuntimeException('برای حالت url باید playback_url را وارد کنید.');
         }
 
+        if ($validated['source_mode'] === 'url' && ! empty($validated['playback_url'])) {
+            $this->assertExternalVideoOrigin($validated['playback_url']);
+        }
+
         if ($validated['status'] === 'published' && empty($validated['published_at'])) {
             $validated['published_at'] = now();
         }
@@ -1531,6 +1704,7 @@ class TelegramBotService
         match ($entity) {
             'plan' => $this->showPlanManageMenu($chatId, Plan::query()->findOrFail($id)),
             'blog' => $this->showBlogManageMenu($chatId, BlogPost::query()->findOrFail($id)),
+            'subject' => $this->showSubjectManageMenu($chatId, Subject::query()->findOrFail($id)),
             'course' => $this->showCourseManageMenu($chatId, Course::query()->findOrFail($id)),
             'video' => $this->showVideoManageMenu($chatId, Video::query()->findOrFail($id)),
             'note' => $this->showNoteManageMenu($chatId, Note::query()->findOrFail($id)),
@@ -1538,6 +1712,7 @@ class TelegramBotService
             'quiz' => $this->showQuizManageMenu($chatId, Quiz::query()->findOrFail($id)),
             'card' => $this->showCardManageMenu($chatId, Flashcard::query()->findOrFail($id)),
             'question' => $this->showQuestionManageMenu($chatId, QuizQuestion::query()->findOrFail($id)),
+            'user' => $this->showUserManageMenu($chatId, $id),
             default => $this->sendWelcome($chatId),
         };
     }
@@ -1779,6 +1954,19 @@ class TelegramBotService
         $model = $this->managedModel($entity, $id);
         $backCallback = $this->postDeleteCallback($entity, $model);
 
+        // Friendly domain guard mirroring the admin panel: a subject with
+        // courses is protected by a RESTRICT foreign key — the SQL error
+        // would otherwise surface raw.
+        if ($entity === 'subject' && $model instanceof Subject && $model->courses()->exists()) {
+            $this->api->sendMessage($chatId, '❌ این شاخه دارای دوره است. ابتدا دوره‌های آن را منتقل یا حذف کنید.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'manage:subject:'.$id)],
+                ]),
+            ]);
+
+            return;
+        }
+
         try {
             $model->delete();
         } catch (Throwable $exception) {
@@ -1889,6 +2077,7 @@ class TelegramBotService
         return match ($entity) {
             'plan' => Plan::query()->findOrFail($id),
             'blog' => BlogPost::query()->findOrFail($id),
+            'subject' => Subject::query()->findOrFail($id),
             'course' => Course::query()->findOrFail($id),
             'video' => Video::query()->findOrFail($id),
             'note' => Note::query()->findOrFail($id),
@@ -1905,6 +2094,7 @@ class TelegramBotService
         return match ($entity) {
             'plan' => 'list:plans',
             'blog' => 'list:blogs',
+            'subject' => 'list:subjects',
             'course' => 'list:courses',
             'video' => 'list:videos',
             'note' => 'list:notes',
@@ -1930,6 +2120,7 @@ class TelegramBotService
         return match ($entity) {
             'plan' => 'پلن',
             'blog' => 'مقاله',
+            'subject' => 'شاخهٔ آموزشی',
             'course' => 'دوره',
             'video' => 'ویدیو',
             'note' => 'جزوه',
@@ -1969,6 +2160,8 @@ class TelegramBotService
             [$this->button('💳 پلن‌ها', 'menu:plans'), $this->button('📝 وبلاگ', 'menu:blogs')],
             [$this->button('🎓 دوره‌ها', 'menu:courses'), $this->button('🎥 رسانه', 'menu:media')],
             [$this->button('🧪 آزمون و فلش‌کارت', 'menu:study')],
+            [$this->button('👤 کاربران', 'menu:users'), $this->button('🖼 برند و ظاهر', 'menu:brand')],
+            [$this->button('📊 آمار سایت', 'stats:run'), $this->button('📜 آخرین فعالیت‌ها', 'activity:run')],
             [$this->button('🗄 بکاپ دیتابیس', 'backup:run')],
         ]);
     }
@@ -2105,6 +2298,36 @@ class TelegramBotService
         }
     }
 
+    /**
+     * playback_url (source_mode: url) is only allowed for hosts on
+     * BROCA_EXTERNAL_VIDEO_ORIGINS. Nothing else enforced this at save time —
+     * CSP was the only gate, and an empty list meant the stored URL silently
+     * failed to play. Fail closed with actionable copy.
+     */
+    private function assertExternalVideoOrigin(string $url): void
+    {
+        $host = (string) (parse_url($url, PHP_URL_HOST) ?: '');
+
+        if (! preg_match('/^https?:\/\//i', $url) || $host === '') {
+            throw new RuntimeException('playback_url باید یک آدرس http/https معتبر باشد.');
+        }
+
+        $allowed = collect(config('broca.external_video_origins', []))
+            ->filter(fn ($origin) => is_string($origin) && $origin !== '')
+            ->map(fn (string $origin) => (string) (parse_url($origin, PHP_URL_HOST) ?: $origin))
+            ->all();
+
+        if ($allowed === []) {
+            throw new RuntimeException(
+                'پخش از URL بیرونی غیرفعال است. ابتدا BROCA_EXTERNAL_VIDEO_ORIGINS را در فایل .env تنظیم کنید (مثال: https://cdn.example.com).'
+            );
+        }
+
+        if (! in_array(strtolower($host), array_map('strtolower', $allowed), true)) {
+            throw new RuntimeException('دامنهٔ playback_url در فهرست مجاز (BROCA_EXTERNAL_VIDEO_ORIGINS) نیست: '.$host);
+        }
+    }
+
     private function syncFreeDesignation(object $item, bool $designated): void
     {
         $current = (bool) $item->is_free_designated;
@@ -2140,15 +2363,43 @@ class TelegramBotService
 
         $this->api->downloadTelegramFile($filePath, $tmp);
 
-        $filename = Slug::unique($title.'-'.now()->format('YmdHis'), fn (string $candidate): bool => file_exists(public_path('videos/'.$candidate.'.'.$extension))).'.'.$extension;
-        $target = public_path('videos/'.$filename);
-        if (! is_dir(dirname($target))) {
-            mkdir(dirname($target), 0775, true);
+        // Videos are paywalled content — they MUST live on the private disk.
+        // A copy inside public/ would be statically served by the web server
+        // with zero auth (paywall bypass, audit 2026-09-07).
+        $filename = Slug::unique(self::fileBase($title).'-'.now()->format('YmdHis'), fn (string $candidate): bool => Storage::disk('local')->exists('videos/'.$candidate.'.'.$extension)).'.'.$extension;
+        $storageKey = 'videos/'.$filename;
+
+        Storage::disk('local')->makeDirectory('videos');
+
+        try {
+            Storage::disk('local')->put($storageKey, fopen($tmp, 'r'));
+        } catch (Throwable $exception) {
+            @unlink($tmp);
+            throw new RuntimeException('ذخیرهٔ فایل ویدیو روی دیسک ناموفق بود: '.$this->truncate($exception->getMessage(), 160));
         }
 
-        rename($tmp, $target);
+        @unlink($tmp);
 
-        return $target;
+        // manifest_reference is a bare filename; media() resolves it inside
+        // the private videos directory.
+        return $filename;
+    }
+
+    /**
+     * Byte-safe filename base: ext4 caps each path component at 255 BYTES
+     * and Persian titles are 2–4 bytes per character, so a long title must
+     * be capped by byte length (mb_substr by characters could still exceed
+     * the limit and the subsequent file write would fail silently).
+     */
+    private static function fileBase(string $title, int $maxBytes = 160): string
+    {
+        $base = trim(Slug::fromTitle($title));
+
+        while ($base !== '' && strlen($base) > $maxBytes) {
+            $base = mb_substr($base, 0, (int) max(1, floor(mb_strlen($base) * $maxBytes / strlen($base))));
+        }
+
+        return $base !== '' ? $base : 'file';
     }
 
     /** @return array{storage_key:string,mime_type:string,size_bytes:int,checksum:string} */
@@ -2229,6 +2480,22 @@ class TelegramBotService
                     @unlink($tmp);
 
                     throw new RuntimeException('دریافت فایل از URL ناموفق بود (HTTP '.$response->status().').');
+                }
+
+                // Disk-fill guard (audit 2026-09-07): a declared or observed
+                // size beyond the cap is rejected instead of quietly filling
+                // the (metered, shared) host disk.
+                $declared = $response->header('Content-Length');
+                if ($declared !== null && is_numeric($declared) && (int) $declared > self::MAX_REMOTE_DOWNLOAD_BYTES) {
+                    @unlink($tmp);
+
+                    throw new RuntimeException('حجم فایل بیشتر از سقف مجاز ('.self::MAX_REMOTE_DOWNLOAD_MB.' مگابایت) است.');
+                }
+
+                if (filesize($tmp) > self::MAX_REMOTE_DOWNLOAD_BYTES) {
+                    @unlink($tmp);
+
+                    throw new RuntimeException('حجم فایل بیشتر از سقف مجاز ('.self::MAX_REMOTE_DOWNLOAD_MB.' مگابایت) است.');
                 }
 
                 break;
@@ -2362,6 +2629,635 @@ class TelegramBotService
         @unlink($tmp);
 
         return Storage::disk('public')->url($storagePath);
+    }
+
+    /* ==================================================================
+     |  شاخه‌های آموزشی (Subjects) — ساخت، ویرایش، نمایش/پنهان، حذف
+     * ================================================================== */
+
+    private function startSubjectWorkflow(int $chatId, int $telegramUserId, ?int $id): bool
+    {
+        $subject = $id ? Subject::query()->findOrFail($id) : null;
+
+        $this->storeSession($chatId, $telegramUserId, 'subject.form', ['id' => $subject?->id]);
+        $this->api->sendMessage($chatId, $this->subjectTemplate($subject), [
+            'reply_markup' => $this->workflowMarkup($subject ? 'manage:subject:'.$subject->id : 'menu:courses'),
+        ]);
+
+        return true;
+    }
+
+    private function subjectTemplate(?Subject $subject): string
+    {
+        return implode("\n", [
+            'ارسال/ویرایش شاخهٔ آموزشی:',
+            'id: '.$this->display($subject?->id),
+            'name: '.$this->display($subject?->name),
+            'description: '.$this->display($subject?->description),
+            'is_visible: '.$this->boolText($subject?->is_visible ?? true),
+            'sort_order: '.$this->display($subject?->sort_order ?? 0),
+        ]);
+    }
+
+    private function submitSubjectForm(TelegramChatSession $session, string $text): void
+    {
+        $data = StructuredMessageParser::parse($text);
+        $id = $this->nullableInt($data['id'] ?? ($session->context['id'] ?? null));
+        $subject = $id ? Subject::query()->findOrFail($id) : null;
+
+        $validated = Validator::make([
+            'name' => $data['name'] ?? $subject?->name,
+            'description' => $this->nullableString($data['description'] ?? $subject?->description),
+            'is_visible' => $this->nullableBool($data['is_visible'] ?? (($subject?->is_visible ?? true) ? '1' : '0')),
+            'sort_order' => $this->nullableInt($data['sort_order'] ?? $subject?->sort_order ?? 0),
+        ], [
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'is_visible' => ['required', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ])->validate();
+
+        if ($subject) {
+            $nameChanged = $validated['name'] !== $subject->name;
+            $subject->fill(collect($validated)->except(['sort_order'])->all());
+            $subject->sort_order = (int) ($validated['sort_order'] ?? $subject->sort_order);
+
+            // Renaming re-slugs, exactly like the admin panel.
+            if ($nameChanged) {
+                $subject->slug = Slug::unique($validated['name'], fn (string $slug): bool => Subject::query()
+                    ->where('slug', $slug)
+                    ->where('id', '!=', $subject->id)
+                    ->exists());
+            }
+
+            $subject->save();
+        } else {
+            $subject = new Subject(collect($validated)->except(['sort_order'])->all());
+            $subject->sort_order = (int) ($validated['sort_order'] ?? 0);
+            $subject->slug = Slug::unique($validated['name'], fn (string $slug): bool => Subject::query()->where('slug', $slug)->exists());
+            $subject->save();
+        }
+
+        $this->finish($session, '✅ شاخه ذخیره شد: #'.$subject->id.' — '.$subject->name);
+    }
+
+    private function showSubjectManageMenu(int $chatId, Subject $subject): void
+    {
+        $this->api->sendMessage($chatId, implode("\n", [
+            '📚 مدیریت شاخه #'.$subject->id,
+            $subject->name,
+            'دوره‌ها: '.$subject->courses()->count(),
+            'نمایش: '.($subject->is_visible ? '👁 نمایان' : '🙈 پنهان'),
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✏️ ویرایش', 'edit:subject:'.$subject->id), $this->button('🗑 حذف', 'delete:subject:'.$subject->id)],
+                [$this->button($subject->is_visible ? '🙈 پنهان کردن' : '👁 نمایان کردن', 'subjectvisibility:'.$subject->id)],
+                [$this->button('↩️ لیست شاخه‌ها', 'list:subjects')],
+            ]),
+        ]);
+    }
+
+    private function confirmSubjectVisibility(int $chatId, int $id): void
+    {
+        $subject = Subject::query()->findOrFail($id);
+        $target = ! $subject->is_visible;
+
+        $this->api->sendMessage($chatId, implode("\n", [
+            'تغییر نمایش شاخه را تأیید می‌کنید؟',
+            'شاخه: '.$subject->name,
+            'از: '.($subject->is_visible ? 'نمایان' : 'پنهان'),
+            'به: '.($target ? 'نمایان' : 'پنهان'),
+            $target ? '' : '⚠️ شاخهٔ پنهان از کاتالوگ، نقشهٔ سایت و نسخهٔ Markdown حذف می‌شود.',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ تأیید', 'confirmsubjectvisibility:'.$subject->id)],
+                [$this->button('↩️ بازگشت', 'manage:subject:'.$subject->id)],
+            ]),
+        ]);
+    }
+
+    private function applySubjectVisibility(int $chatId, int $id): void
+    {
+        $subject = Subject::query()->findOrFail($id);
+        $subject->is_visible = ! $subject->is_visible;
+        $subject->save();
+
+        $this->api->sendMessage($chatId, '✅ نمایش شاخه به «'.($subject->is_visible ? 'نمایان' : 'پنهان').'» تغییر کرد.', [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('↩️ بازگشت به مدیریت شاخه', 'manage:subject:'.$subject->id)],
+            ]),
+        ]);
+    }
+
+    /* ==================================================================
+     |  مدیریت کاربران — لیست، کارت، تعلیق/فعال‌سازی، مدیر، ثبت‌نام
+     * ================================================================== */
+
+    private function userStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'active' => '✅ فعال',
+            'suspended' => '⛔️ معلق',
+            default => $status,
+        };
+    }
+
+    private function listUsers(int $chatId, int $page): bool
+    {
+        $perPage = 8;
+        $query = User::query()->latest('id');
+        $total = (clone $query)->count();
+        $pages = max(1, (int) ceil($total / $perPage));
+        $page = min(max(1, $page), $pages);
+        $users = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        $lines = ['👤 کاربران — '.$total.' نفر | صفحهٔ '.$page.' از '.$pages.':'];
+        $buttons = [];
+
+        foreach ($users as $user) {
+            $lines[] = sprintf(
+                '#%d | %s | %s | %s%s',
+                $user->id,
+                $this->truncate($user->name, 24),
+                $user->phone !== null && $user->phone !== '' ? $user->phone : $user->email,
+                $this->userStatusLabel((string) $user->status),
+                $user->is_admin ? ' | 🛡 مدیر' : ''
+            );
+            $buttons[] = [$this->button('🛠 #'.$user->id.' — '.$this->truncate($user->name, 24), 'manage:user:'.$user->id)];
+        }
+
+        if ($users->isEmpty()) {
+            $lines[] = 'کاربری یافت نشد.';
+        }
+
+        $nav = [];
+        if ($page > 1) {
+            $nav[] = $this->button('▶️ صفحهٔ قبلی', 'list:users:'.($page - 1));
+        }
+        if ($page < $pages) {
+            $nav[] = $this->button('صفحهٔ بعدی ◀️', 'list:users:'.($page + 1));
+        }
+        if ($nav !== []) {
+            $buttons[] = $nav;
+        }
+        $buttons[] = [$this->button('↩️ منوی کاربران', 'menu:users')];
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard($buttons),
+        ]);
+
+        return true;
+    }
+
+    private function showUserManageMenu(int $chatId, int $id): void
+    {
+        $user = User::query()->withCount(['enrollments', 'subscriptions', 'quizAttempts'])->findOrFail($id);
+        $subscription = $user->activeSubscription();
+        $timezone = config('broca.display_timezone');
+
+        $lines = [
+            '👤 کاربر #'.$user->id,
+            'نام: '.$user->name,
+            'ایمیل: '.$user->email,
+            'موبایل: '.($user->phone !== null && $user->phone !== '' ? $user->phone : '—'),
+            'وضعیت: '.$this->userStatusLabel((string) $user->status),
+            'نقش: '.($user->is_admin ? '🛡 مدیر' : 'دانشجو'),
+            'اشتراک: '.($subscription
+                ? ($subscription->plan?->name ?? 'پلن').($subscription->ends_at ? ' — تا '.$subscription->ends_at->timezone($timezone)->format('Y/m/d') : ' — بدون انقضا')
+                : 'بدون اشتراک فعال'),
+            'ثبت‌نام در دوره‌ها: '.$user->enrollments_count.' | آزمون: '.$user->quiz_attempts_count.' | اشتراک‌ها: '.$user->subscriptions_count,
+            'عضویت: '.$user->created_at?->timezone($timezone)->format('Y/m/d'),
+        ];
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button($user->status === 'active' ? '⛔️ تعلیق حساب' : '✅ فعال‌سازی حساب', 'userstatus:'.$user->id)],
+                [$this->button($user->is_admin ? '🛡 سلب مدیریت' : '🛡 ارتقا به مدیر', 'useradmin:'.$user->id)],
+                [$this->button('🎓 ثبت‌نام در دوره', 'userenroll:'.$user->id), $this->button('📚 لغو ثبت‌نام', 'userunenroll:'.$user->id)],
+                [$this->button('↩️ لیست کاربران', 'list:users:1')],
+            ]),
+        ]);
+    }
+
+    private function confirmUserStatus(int $chatId, int $id): void
+    {
+        $user = User::query()->findOrFail($id);
+        $suspending = $user->status === 'active';
+
+        $this->api->sendMessage($chatId, implode("\n", [
+            'تغییر وضعیت حساب را تأیید می‌کنید؟',
+            'کاربر: #'.$user->id.' — '.$user->name,
+            'از: '.$this->userStatusLabel((string) $user->status),
+            'به: '.($suspending ? '⛔️ معلق' : '✅ فعال'),
+            $suspending ? '⚠️ کاربر معلق فوراً از همهٔ نشست‌های فعال خارج می‌شود.' : '',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ تأیید', 'confirmuserstatus:'.$user->id)],
+                [$this->button('↩️ بازگشت', 'manage:user:'.$user->id)],
+            ]),
+        ]);
+    }
+
+    private function applyUserStatus(int $chatId, int $id): void
+    {
+        $user = User::query()->findOrFail($id);
+        $user->status = $user->status === 'active' ? 'suspended' : 'active';
+        $user->save();
+
+        $this->api->sendMessage($chatId, '✅ وضعیت کاربر #'.$user->id.' به '.$this->userStatusLabel((string) $user->status).' تغییر کرد.', [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('↩️ بازگشت به کارت کاربر', 'manage:user:'.$user->id)],
+            ]),
+        ]);
+    }
+
+    private function confirmUserAdmin(int $chatId, int $id): void
+    {
+        $user = User::query()->findOrFail($id);
+        $promoting = ! $user->is_admin;
+
+        $this->api->sendMessage($chatId, implode("\n", [
+            'تغییر نقش کاربر را تأیید می‌کنید؟',
+            'کاربر: #'.$user->id.' — '.$user->name,
+            'از: '.($user->is_admin ? '🛡 مدیر' : 'دانشجو'),
+            'به: '.($promoting ? '🛡 مدیر (دسترسی کامل پنل)' : 'دانشجو'),
+            $promoting ? '⚠️ مدیران به همهٔ محتوا، کاربران و آمار دسترسی دارند.' : '⚠️ در صورت سلب مدیریتِ آخرین مدیر، عملیات رد می‌شود.',
+        ]), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ تأیید', 'confirmuseradmin:'.$user->id)],
+                [$this->button('↩️ بازگشت', 'manage:user:'.$user->id)],
+            ]),
+        ]);
+    }
+
+    private function applyUserAdmin(int $chatId, int $id): void
+    {
+        // Same invariant as the admin panel, now under a row lock: two
+        // concurrent demotions can never remove the final administrator.
+        $result = DB::transaction(function () use ($id): array {
+            $target = User::query()->whereKey($id)->lockForUpdate()->first();
+
+            if ($target === null) {
+                return [null, 'کاربر یافت نشد.'];
+            }
+
+            if ($target->is_admin && User::query()->where('is_admin', true)->count() <= 1) {
+                return [null, 'حداقل یک مدیر باید در سیستم باقی بماند؛ سلب مدیریت این حساب ممکن نیست.'];
+            }
+
+            $target->forceFill(['is_admin' => ! $target->is_admin])->save();
+
+            return [$target, null];
+        });
+
+        [$target, $error] = $result;
+
+        if ($error !== null) {
+            $this->api->sendMessage($chatId, '❌ '.$error, [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'manage:user:'.$id)],
+                ]),
+            ]);
+
+            return;
+        }
+
+        $this->api->sendMessage($chatId, '✅ نقش کاربر #'.$target->id.' به '.($target->is_admin ? '🛡 مدیر' : 'دانشجو').' تغییر کرد.', [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('↩️ بازگشت به کارت کاربر', 'manage:user:'.$target->id)],
+            ]),
+        ]);
+    }
+
+    private function pickCourseForEnrollment(int $chatId, int $userId): void
+    {
+        $user = User::query()->findOrFail($userId);
+        $courses = Course::query()->with('subject')->published()->orderBy('sort_order')->orderBy('id')->limit(10)->get();
+
+        if ($courses->isEmpty()) {
+            $this->api->sendMessage($chatId, 'هنوز دورهٔ منتشرشده‌ای برای ثبت‌نام وجود ندارد.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'manage:user:'.$userId)],
+                ]),
+            ]);
+
+            return;
+        }
+
+        $lines = ['🎓 ثبت‌نام '.$user->name.' در کدام دوره؟ (۱۰ دورهٔ منتشرشدهٔ آخر):'];
+        $buttons = [];
+
+        foreach ($courses as $course) {
+            $enrolled = $user->enrollments()->where('course_id', $course->id)->where('status', 'active')->exists();
+            $lines[] = sprintf('#%d | %s%s', $course->id, $this->truncate($course->title, 40), $enrolled ? ' (قبلاً ثبت‌نام شده)' : '');
+            if (! $enrolled) {
+                $buttons[] = [$this->button('➕ #'.$course->id.' — '.$this->truncate($course->title, 26), 'confirmenroll:'.$userId.':'.$course->id)];
+            }
+        }
+
+        $buttons[] = [$this->button('↩️ بازگشت', 'manage:user:'.$userId)];
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard($buttons),
+        ]);
+    }
+
+    private function applyEnrollment(int $chatId, int $userId, int $courseId): void
+    {
+        $user = User::query()->findOrFail($userId);
+        $course = Course::query()->published()->findOrFail($courseId);
+
+        $enrollment = $user->enrollments()->firstOrCreate(
+            ['course_id' => $course->id],
+            ['enrolled_at' => now(), 'status' => 'active'],
+        );
+
+        $message = $enrollment->wasRecentlyCreated
+            ? '✅ کاربر در دورهٔ «'.$course->title.'» ثبت‌نام شد.'
+            : 'ℹ️ این کاربر از قبل در این دوره ثبت‌نام داشته است.';
+
+        $this->api->sendMessage($chatId, $message, [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('↩️ بازگشت به کارت کاربر', 'manage:user:'.$userId)],
+            ]),
+        ]);
+    }
+
+    private function pickEnrollmentForRemoval(int $chatId, int $userId): void
+    {
+        $user = User::query()->findOrFail($userId);
+        $enrollments = $user->enrollments()->with('course')->where('status', 'active')->get();
+
+        if ($enrollments->isEmpty()) {
+            $this->api->sendMessage($chatId, 'این کاربر ثبت‌نام فعالی ندارد.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'manage:user:'.$userId)],
+                ]),
+            ]);
+
+            return;
+        }
+
+        $lines = ['📚 لغو ثبت‌نام '.$user->name.' از کدام دوره؟'];
+        $buttons = [];
+
+        foreach ($enrollments as $enrollment) {
+            $lines[] = sprintf('#%d | %s', $enrollment->course_id, $enrollment->course?->title ?? 'دورهٔ حذف‌شده');
+            $buttons[] = [$this->button('➖ #'.$enrollment->course_id.' — '.$this->truncate((string) $enrollment->course?->title, 24), 'confirmunenroll:'.$userId.':'.$enrollment->course_id)];
+        }
+
+        $buttons[] = [$this->button('↩️ بازگشت', 'manage:user:'.$userId)];
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard($buttons),
+        ]);
+    }
+
+    private function applyUnenrollment(int $chatId, int $userId, int $courseId): void
+    {
+        $user = User::query()->findOrFail($userId);
+        $enrollment = $user->enrollments()->where('course_id', $courseId)->where('status', 'active')->first();
+
+        if ($enrollment === null) {
+            $this->api->sendMessage($chatId, 'ثبت‌نام فعالی برای این دوره پیدا نشد.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'manage:user:'.$userId)],
+                ]),
+            ]);
+
+            return;
+        }
+
+        // Cancelled — not deleted — so the enrollment history stays auditable.
+        $enrollment->update(['status' => 'cancelled']);
+
+        $this->api->sendMessage($chatId, '✅ ثبت‌نام کاربر در دورهٔ «'.($enrollment->course?->title ?? '#'.$courseId).'» لغو شد.', [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('↩️ بازگشت به کارت کاربر', 'manage:user:'.$userId)],
+            ]),
+        ]);
+    }
+
+    /* ==================================================================
+     |  آمار سایت و آخرین فعالیت‌ها
+     * ================================================================== */
+
+    private function sendStats(int $chatId): bool
+    {
+        $stats = [
+            '👥 کاربران' => User::count(),
+            '🆕 ثبت‌نام امروز' => User::query()->where('created_at', '>=', now()->startOfDay())->count(),
+            '🎓 دوره‌های منتشرشده' => Course::published()->count(),
+            '🎥 ویدیوهای منتشرشده' => Video::published()->count(),
+            '📄 جزوات منتشرشده' => Note::published()->count(),
+            '🗂 فلش‌کارت‌های منتشرشده' => Flashcard::published()->count(),
+            '🧪 آزمون‌های منتشرشده' => Quiz::published()->count(),
+            '❓ سؤال‌های منتشرشده' => QuizQuestion::published()->count(),
+            '📝 مقالات منتشرشده' => BlogPost::published()->count(),
+            '⭐️ اشتراک‌های فعال' => Subscription::query()->where('status', 'active')->count(),
+            '🧾 درآمد ۳۰ روز گذشته (ریال)' => number_format((int) Invoice::query()->where('status', Invoice::STATUS_PAID)->where('paid_at', '>=', now()->subDays(30))->sum('amount_irr')),
+            '⏳ فاکتورهای در انتظار پرداخت' => Invoice::query()->where('status', Invoice::STATUS_PENDING)->count(),
+        ];
+
+        $lines = ['📊 آمار بروکا:', ''];
+        foreach ($stats as $label => $value) {
+            $lines[] = $label.': '.$value;
+        }
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('📜 آخرین فعالیت‌ها', 'activity:run')],
+                [$this->button('↩️ منوی اصلی', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    private function sendActivityLog(int $chatId): bool
+    {
+        $logs = AdminActivityLog::query()->with('user')->latest('id')->limit(10)->get();
+        $timezone = config('broca.display_timezone');
+
+        if ($logs->isEmpty()) {
+            $this->api->sendMessage($chatId, 'هنوز فعالیتی ثبت نشده است.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ منوی اصلی', 'menu:main')],
+                ]),
+            ]);
+
+            return true;
+        }
+
+        $lines = ['📜 ۱۰ فعالیت اخیر مدیران:'];
+
+        foreach ($logs as $log) {
+            $lines[] = implode(' | ', array_filter([
+                '#'.$log->id,
+                $log->action,
+                $log->actor_email_snapshot ?: $log->user?->email,
+                'HTTP '.$log->status_code,
+                $log->created_at?->timezone($timezone)->format('m/d H:i'),
+            ]));
+        }
+
+        $this->api->sendMessage($chatId, implode("\n", $lines), [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('↩️ منوی اصلی', 'menu:main')],
+            ]),
+        ]);
+
+        return true;
+    }
+
+    /* ==================================================================
+     |  برند و ظاهر — لوگو و تصویر هیرو
+     * ================================================================== */
+
+    private function startBrandImageWorkflow(int $chatId, int $telegramUserId, string $target): void
+    {
+        $this->storeSession($chatId, $telegramUserId, $target === 'hero' ? 'brand.hero' : 'brand.logo', ['target' => $target]);
+
+        $text = $target === 'hero'
+            ? implode("\n", [
+                '🌄 تصویر هیرو صفحهٔ اصلی را بفرستید (photo یا document تصویری).',
+                '',
+                'نکته‌ها:',
+                '• نسبت پیشنهادی ۳:۴ عمودی؛ حداکثر ۸ مگابایت.',
+                '• نسخهٔ WebP به‌صورت خودکار بازسازی می‌شود؛ اگر سرور GD نداشته باشد، سایت به JPEG برمی‌گردد.',
+            ])
+            : implode("\n", [
+                '🖼 لوگوی سایت را بفرستید (photo یا document تصویری).',
+                '',
+                'نکته‌ها:',
+                '• PNG با پس‌زمینهٔ شفاف بهترین نتیجه را می‌دهد.',
+                '• لوگو در هدر و فوتر جایگزین حرف «ب» می‌شود.',
+                '• فرمت SVG پذیرفته نمی‌شود (SVG می‌تواند کد اجرایی حمل کند).',
+            ]);
+
+        $this->api->sendMessage($chatId, $text, [
+            'reply_markup' => $this->workflowMarkup('menu:brand'),
+        ]);
+    }
+
+    private function submitBrandImage(TelegramChatSession $session, array $message): void
+    {
+        $target = (string) $session->workflow === 'brand.hero' ? 'hero' : 'logo';
+        $image = $this->extractImageUpload($message);
+
+        $url = BrandAssets::store($image, $target);
+
+        $this->finish($session, $target === 'hero'
+            ? "✅ تصویر هیرو به‌روزرسانی شد.\nآدرس فایل: ".$url."\nتغییر بلافاصله در صفحهٔ اصلی دیده می‌شود."
+            : "✅ لوگوی سایت به‌روزرسانی شد.\nآدرس فایل: ".$url."\nلوگوی جدید در هدر و فوتر جایگزین حرف «ب» شده است.");
+    }
+
+    private function confirmRemoveBrand(int $chatId, string $target): void
+    {
+        if ($target !== 'logo') {
+            $this->api->sendMessage($chatId, 'حذف تصویر هیرو از طریق ربات انجام نمی‌شود — صفحهٔ اصلی همیشه به یک تصویر نیاز دارد. برای تغییر، همان دکمهٔ «تغییر هیرو» را بزنید.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'menu:brand')],
+                ]),
+            ]);
+
+            return;
+        }
+
+        $this->api->sendMessage($chatId, 'لوگو حذف شود؟ سایت دوباره حرف پیش‌فرض «ب» را نشان می‌دهد.', [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('✅ بله، حذف شود', 'confirmremovebrand:logo')],
+                [$this->button('↩️ بازگشت', 'menu:brand')],
+            ]),
+        ]);
+    }
+
+    private function applyRemoveBrand(int $chatId, string $target): void
+    {
+        if ($target !== 'logo') {
+            $this->api->sendMessage($chatId, 'حذف هیرو پشتیبانی نمی‌شود.', [
+                'reply_markup' => $this->inlineKeyboard([
+                    [$this->button('↩️ بازگشت', 'menu:brand')],
+                ]),
+            ]);
+
+            return;
+        }
+
+        BrandAssets::removeLogo();
+
+        $this->api->sendMessage($chatId, '✅ لوگو حذف شد؛ سایت دوباره حرف «ب» را نشان می‌دهد.', [
+            'reply_markup' => $this->inlineKeyboard([
+                [$this->button('↩️ منوی برند', 'menu:brand')],
+            ]),
+        ]);
+    }
+
+    /**
+     * Extract an image upload (photo or image document) into raw bytes +
+     * normalized extension. SVG is refused outright: it is an operator-only
+     * path, but an SVG logo is same-origin scriptable — an unnecessary
+     * stored-XSS vector.
+     *
+     * @return array{body:string, extension:string}
+     */
+    private function extractImageUpload(array $message): array
+    {
+        $photo = $message['photo'] ?? null;
+        $document = $message['document'] ?? null;
+        $fileId = null;
+        $extension = 'jpg';
+
+        if (is_array($photo) && count($photo) > 0) {
+            $largest = end($photo);
+            $fileId = is_array($largest) ? ($largest['file_id'] ?? null) : null;
+            $extension = 'jpg';
+        } elseif (is_array($document) && ! empty($document['file_id']) && str_starts_with((string) ($document['mime_type'] ?? ''), 'image/')) {
+            $mime = strtolower((string) ($document['mime_type'] ?? ''));
+
+            if (str_contains($mime, 'svg')) {
+                throw new RuntimeException('فرمت SVG پذیرفته نمی‌شود؛ PNG یا JPG بفرستید.');
+            }
+
+            $fileId = (string) $document['file_id'];
+            $extension = match (true) {
+                str_contains($mime, 'png') => 'png',
+                str_contains($mime, 'webp') => 'webp',
+                str_contains($mime, 'gif') => 'gif',
+                default => 'jpg',
+            };
+        }
+
+        if (! $fileId) {
+            throw new RuntimeException('لطفاً تصویر را به‌صورت photo یا document تصویری ارسال کنید.');
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'broca-brand-');
+        if ($tmp === false) {
+            throw new RuntimeException('ساخت فایل موقت ناموفق بود.');
+        }
+
+        $telegramFile = $this->api->getFile((string) $fileId);
+        $filePath = (string) ($telegramFile['file_path'] ?? '');
+        if ($filePath === '') {
+            @unlink($tmp);
+            throw new RuntimeException('مسیر فایل تصویر از تلگرام دریافت نشد.');
+        }
+
+        $this->api->downloadTelegramFile($filePath, $tmp);
+
+        $bytes = (string) file_get_contents($tmp);
+        @unlink($tmp);
+
+        if ($bytes === '') {
+            throw new RuntimeException('دانلود تصویر ناموفق بود؛ دوباره تلاش کنید.');
+        }
+
+        if (strlen($bytes) > 8 * 1024 * 1024) {
+            throw new RuntimeException('حجم تصویر باید کمتر از ۸ مگابایت باشد.');
+        }
+
+        return ['body' => $bytes, 'extension' => $extension];
     }
 
     private function planTemplate(?Plan $plan): string

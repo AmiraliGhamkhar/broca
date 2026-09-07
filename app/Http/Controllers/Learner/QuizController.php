@@ -92,6 +92,17 @@ class QuizController extends Controller
 
         abort_unless($questions->isNotEmpty(), 422);
 
+        // Per-user daily cap on top of the route throttle: attempts are
+        // grading work (1 + N rows each) and feed the stats queries — a
+        // scripted loop must not grow quiz_attempts without bound.
+        $recentAttempts = QuizAttempt::query()
+            ->where('user_id', $request->user()->id)
+            ->where('quiz_id', $quiz->id)
+            ->where('submitted_at', '>=', now()->subDay())
+            ->count();
+
+        abort_if($recentAttempts >= 30, 429, 'تعداد تلاش‌های شما برای این آزمون در ۲۴ ساعت گذشته بیش از حد مجاز است.');
+
         $answers = $request->input('answers', []);
         abort_unless(is_array($answers), 422);
 

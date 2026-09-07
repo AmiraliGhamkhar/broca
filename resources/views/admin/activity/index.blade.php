@@ -39,14 +39,14 @@
                         </td>
                         <td class="p-3.5 font-mono text-[11px] font-bold text-ink" dir="ltr">
                             <span class="px-2 py-0.5 rounded bg-surface-soft font-mono">{{ $log->method }}</span>
-                            <span class="text-rausch">{{ $log->route_name ?: $log->url }}</span>
+                            <span class="text-rausch-text">{{ $log->route_name ?: $log->url }}</span>
                         </td>
                         <td class="p-3.5 max-w-xs truncate text-[11px] text-muted font-mono" dir="ltr">
                             {{ json_encode($log->payload, JSON_UNESCAPED_UNICODE) }}
                         </td>
                         <td class="p-3.5 text-center font-mono text-[11px] text-muted" dir="ltr">{{ $log->ip_address ?? '—' }}</td>
                         <td class="p-3.5 text-center">
-                            <span class="rounded-full px-2.5 py-1 text-[11px] font-bold {{ $log->status_code < 400 ? 'bg-teal/10 text-teal' : 'bg-rausch-tint text-rausch' }}">
+                            <span class="rounded-full px-2.5 py-1 text-[11px] font-bold {{ $log->status_code < 400 ? 'bg-teal/10 text-teal' : 'bg-rausch-tint text-rausch-text' }}">
                                 {{ $log->status_code }}
                             </span>
                         </td>

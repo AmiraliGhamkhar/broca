@@ -8,8 +8,8 @@
 @section('content')
 @php($displayTimezone = config('broca.display_timezone'))
 <section class="section-shell section-stack section-stack-tight-top" x-data="flashcardStudy()">
-    <p x-show="error" x-cloak class="rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-sm font-bold text-rausch" role="alert" x-text="error"></p>
-    <p x-show="sessionExpired" x-cloak class="rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-sm font-bold text-rausch" role="alert" aria-live="assertive">
+    <p x-show="error" x-cloak class="rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-sm font-bold text-rausch-text" role="alert" x-text="error"></p>
+    <p x-show="sessionExpired" x-cloak class="rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-sm font-bold text-rausch-text" role="alert" aria-live="assertive">
         نشست شما منقضی شده است؛ برای ثبت مرورها دوباره وارد شوید.
     </p>
 
@@ -22,7 +22,7 @@
         <div class="space-y-6">
             <div class="section-intro max-w-4xl">
                 <span class="sr-only">مرور فاصله‌دار</span>
-                <p class="mt-4 text-sm font-bold text-rausch">{{ $deck->course->subject?->name }} · {{ $deck->course->title }}</p>
+                <p class="mt-4 text-sm font-bold text-rausch-text">{{ $deck->course->subject?->name }} · {{ $deck->course->title }}</p>
                 <h1 class="section-title mt-4">{{ $deck->title }}</h1>
                 <p class="section-copy mt-5">هر کارت را بخوانید، پاسخ را نمایش دهید و کیفیت یادآوری را ثبت کنید تا زمان مرور بعدی به‌شکل هوشمند تنظیم شود.</p>
             </div>
@@ -52,7 +52,7 @@
                             <p class="text-xs font-bold text-muted">کیفیت یادآوری شما از این کارت چطور بود؟</p>
                             <div class="mt-3 flex flex-wrap gap-2" x-show="!submitted">
                                 @foreach ([0 => 'فراموش کردم', 3 => 'سخت بود', 4 => 'خوب بود', 5 => 'آسان بود'] as $quality => $label)
-                                    <button type="button" x-on:click="submitReview(@js(route('flashcards.review', $card)), {{ $quality }}).then(ok => submitted = ok)" class="button-secondary">
+                                    <button type="button" x-on:click="submitReview(@js(route('flashcards.review', $card)), {{ $quality }}).then(ok => submitted = ok)" x-bind:disabled="busy" x-bind:class="busy ? 'opacity-60 cursor-wait' : ''" class="button-secondary">
                                         {{ $label }}
                                     </button>
                                 @endforeach
@@ -121,7 +121,13 @@
         return {
             error: '',
             sessionExpired: false,
+            busy: false,
             async submitReview(reviewUrl, quality) {
+                // Guard against double-fire: an impatient second click would
+                // POST twice and the row-locked write would apply SM-2 twice
+                // (double interval), corrupting the schedule.
+                if (this.busy) return false;
+                this.busy = true;
                 this.error = '';
                 this.sessionExpired = false;
 
@@ -152,6 +158,8 @@
                 } catch {
                     this.error = 'ارتباط با سرور برقرار نشد؛ دوباره تلاش کنید.';
                     return false;
+                } finally {
+                    this.busy = false;
                 }
             },
         };

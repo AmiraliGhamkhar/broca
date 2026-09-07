@@ -96,7 +96,12 @@
                 <!-- Brand Logo -->
                 <div class="flex items-center gap-8">
                     <a href="{{ url('/') }}" class="flex items-center gap-3 group focus:outline-none">
-                        <span class="brand-mark">ب</span>
+                        @php($brandLogoUrl = \App\Support\BrandAssets::logoUrl())
+                        @if ($brandLogoUrl !== null)
+                            <img src="{{ $brandLogoUrl }}" alt="{{ __('app.name') }}" class="h-10 w-auto max-w-[10rem] object-contain">
+                        @else
+                            <span class="brand-mark">ب</span>
+                        @endif
                         <div>
                             <span class="font-display text-2xl leading-none text-ink block group-hover:text-rausch transition-colors">
                                 {{ __('app.name') }}
@@ -197,7 +202,7 @@
                                      class="absolute left-0 mt-2 w-64 rounded-lg bg-white border border-hairline-soft shadow-float py-2 text-xs font-bold z-50">
                                     <div class="px-4 py-2.5 border-b border-hairline-soft text-right">
                                         <span class="sr-only">{{ auth()->user()->name }} — {{ auth()->user()->email }}</span>
-                                        <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[11px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch' : 'bg-surface-soft text-muted' }}">
+                                        <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[11px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch-text' : 'bg-surface-soft text-muted' }}">
                                             {{ auth()->user()->hasActiveSubscription() ? 'اشتراک ویژه فعال ✓' : 'حساب رایگان' }}
                                         </span>
                                     </div>
@@ -207,7 +212,7 @@
                                     </a>
 
                                     @if (auth()->user()->is_admin)
-                                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 hover:bg-surface-soft text-rausch text-right font-bold">
+                                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 hover:bg-surface-soft text-rausch-text text-right font-bold">
                                             پنل مدیریت و استودیو
                                         </a>
                                     @endif
@@ -337,7 +342,11 @@
                 <!-- Col 1: Brand & Bio -->
                 <div class="lg:col-span-2 space-y-4">
                     <div class="flex items-center gap-3">
-                        <span class="brand-mark">ب</span>
+                        @if (\App\Support\BrandAssets::logoUrl() !== null)
+                            <img src="{{ \App\Support\BrandAssets::logoUrl() }}" alt="{{ __('app.name') }}" class="h-10 w-auto max-w-[10rem] object-contain">
+                        @else
+                            <span class="brand-mark">ب</span>
+                        @endif
                         <div>
                             <span class="font-display text-xl text-ink">{{ __('app.name') }}</span>
                             <span class="text-[11px] text-muted block">آموزش عمیق علوم پزشکی برای دانشجویان</span>

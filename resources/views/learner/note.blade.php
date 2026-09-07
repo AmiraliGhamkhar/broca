@@ -17,7 +17,7 @@
         <div class="space-y-8">
             <div class="section-intro max-w-4xl">
                 <span class="sr-only">جزوه خصوصی دوره</span>
-                <p class="mt-4 text-sm font-bold text-rausch">{{ $course->subject?->name }} · {{ $course->title }}</p>
+                <p class="mt-4 text-sm font-bold text-rausch-text">{{ $course->subject?->name }} · {{ $course->title }}</p>
                 <h1 class="section-title mt-4">{{ $note->title }}</h1>
                 @if ($note->description)
                     <p class="section-copy mt-5">{{ $note->description }}</p>

@@ -49,6 +49,11 @@
     /* Airbnb design tokens (DESIGN-airbnb.md) */
     --color-rausch: #ff385c;
     --color-rausch-active: #e00b41;
+    /* Accessible variant of brand coral for SMALL text: #ff385c is ~3.5:1 on
+       white — fine for large headings (WCAG 3:1) but below the 4.5:1 that
+       text-xs/sm requires. #c81e3e is ~5.7:1 on white and ~5.1:1 on the
+       rausch-tint alert background (audit 2026-09-07, WCAG 1.4.3). */
+    --color-rausch-text: #c81e3e;
     --color-rausch-disabled: #ffd1da;
     --color-rausch-tint: #fff1f3;
     --color-error-text: #c13515;

@@ -10,15 +10,15 @@
 
     <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-hairline-soft">
         <div>
-            <span class="text-xs font-bold text-rausch">شناسه کاربر: #{{ $user->id }}</span>
+            <span class="text-xs font-bold text-rausch-text">شناسه کاربر: #{{ $user->id }}</span>
             <h2 class="text-2xl font-bold text-ink mt-0.5">{{ $user->name }}</h2>
             <p class="text-xs text-muted mt-1">{{ $user->email }} · {{ $user->phone ?? 'بدون شماره' }}</p>
         </div>
-        <a href="{{ route('admin.users.index') }}" class="text-xs font-bold text-rausch underline">بازگشت به لیست کاربران</a>
+        <a href="{{ route('admin.users.index') }}" class="text-xs font-bold text-rausch-text underline">بازگشت به لیست کاربران</a>
     </div>
 
     @if ($errors->any())
-        <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch" role="alert">
+        <div class="mt-4 rounded-2xl border border-rausch/30 bg-rausch-tint p-4 text-xs font-bold text-rausch-text" role="alert">
             {{ $errors->first() }}
         </div>
     @endif
@@ -116,7 +116,7 @@
                                 <span class="font-bold text-ink">{{ $attempt->quiz->title ?? 'آزمون' }}</span>
                                 <span class="text-[11px] text-muted block">{{ $attempt->correct_count }} از {{ $attempt->question_count }} پاسخ درست</span>
                             </div>
-                            <span class="font-bold {{ $attempt->passed ? 'text-teal' : 'text-rausch' }}">
+                            <span class="font-bold {{ $attempt->passed ? "text-teal" : "text-rausch-text" }}">
                                 {{ $attempt->score_percent }}٪ ({{ $attempt->passed ? 'قبول' : 'مردود' }})
                             </span>
                         </div>

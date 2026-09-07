@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Subject;
 use App\Services\SiteMarkdown;
+use App\Support\MarkdownTwin;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 
@@ -82,51 +82,63 @@ class MarkdownController extends Controller
 
     public function index(): Response
     {
-        return $this->markdown(SiteMarkdown::home());
+        return $this->markdown($this->twin('home'));
     }
 
     public function catalog(): Response
     {
-        return $this->markdown(SiteMarkdown::catalog());
+        return $this->markdown($this->twin('catalog'));
     }
 
     public function subject(Subject $subject): Response
     {
         abort_unless($subject->is_visible, 404);
 
-        return $this->markdown(SiteMarkdown::subject($subject));
+        return $this->markdown($this->twin('subjects.show', ['subject' => $subject]));
     }
 
     public function course(Course $course): Response
     {
         abort_unless($course->isPublished(), 404);
 
-        return $this->markdown(SiteMarkdown::course($course));
+        return $this->markdown($this->twin('courses.show', ['course' => $course]));
     }
 
     public function blogIndex(): Response
     {
-        return $this->markdown(SiteMarkdown::blogIndex());
+        return $this->markdown($this->twin('blog.index'));
     }
 
     public function blogPost(string $slug): Response
     {
-        $post = BlogPost::query()->published()->where('slug', $slug)->firstOrFail();
+        $markdown = $this->twin('blog.show', ['slug' => $slug]);
+        abort_if($markdown === null, 404);
 
-        return $this->markdown(SiteMarkdown::blogPost($post));
+        return $this->markdown($markdown);
     }
 
     public function plans(): Response
     {
-        return $this->markdown(SiteMarkdown::plans());
+        return $this->markdown($this->twin('plans'));
     }
 
     public function legal(string $page): Response
     {
-        $markdown = SiteMarkdown::legal($page);
+        $markdown = $this->twin('legal.show', ['page' => $page]);
         abort_if($markdown === null, 404);
 
         return $this->markdown($markdown);
+    }
+
+    /**
+     * Cached twin lookup — same renderer the content-negotiation middleware
+     * uses, so the .md routes and the Accept-header path share one cache.
+     *
+     * @param  array<string, mixed>  $params
+     */
+    private function twin(string $routeName, array $params = []): ?string
+    {
+        return MarkdownTwin::markdownForRoute($routeName, $params);
     }
 
     private function markdown(string $content): Response

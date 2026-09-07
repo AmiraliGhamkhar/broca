@@ -162,7 +162,10 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
 
         Route::get('/quizzes/{quiz}', [QuizController::class, 'show'])->name('quizzes.show');
-        Route::post('/quizzes/{quiz}/attempts', [QuizController::class, 'submit'])->name('quizzes.attempts.store');
+        // Throttled: each POST writes an attempt row plus one answer row per
+        // question — unbounded, a scripted client grows quiz_attempts without
+        // limit (API4:2023). 10/min is far above any human's retry rate.
+        Route::post('/quizzes/{quiz}/attempts', [QuizController::class, 'submit'])->middleware('throttle:10,1')->name('quizzes.attempts.store');
         Route::get('/quizzes/{quiz}/attempts/{attempt}', [QuizController::class, 'result'])->name('quizzes.attempts.show');
     });
 });

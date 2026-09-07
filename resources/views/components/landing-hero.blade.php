@@ -48,13 +48,17 @@
                      instead of the cancelled 3D-heart video). The image IS
                      the LCP element on mobile — it is preloaded via the
                      'head' stack in welcome.blade.php, carries explicit
-                     dimensions (CLS) and ships as WebP ≤ 80KB with a JPEG
-                     fallback. Swap by replacing public/images/hero/hero.* and
-                     updating the alt text to match the new photograph. --}}
+                     dimensions (CLS). Admin-manageable via the Telegram bot
+                     (/set_hero); the WebP source is only linked while a
+                     current twin exists (BrandAssets removes a stale one on
+                     every upload so JPEG/WebP can never disagree). --}}
+                @php($heroWebpUrl = \App\Support\BrandAssets::heroWebpUrl())
                 <figure class="relative m-0 overflow-hidden rounded-xl border border-hairline-soft bg-white shadow-float">
                     <picture>
-                        <source type="image/webp" srcset="/images/hero/hero.webp">
-                        <img src="/images/hero/hero.jpg"
+                        @if ($heroWebpUrl !== null)
+                            <source type="image/webp" srcset="{{ $heroWebpUrl }}">
+                        @endif
+                        <img src="{{ \App\Support\BrandAssets::heroJpgUrl() }}"
                              alt="ماکت آموزشی قلب روی پایهٔ سفید، در نور موزه‌ای"
                              width="1200" height="1600"
                              fetchpriority="high" decoding="async"

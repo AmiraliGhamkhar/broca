@@ -34,9 +34,24 @@ class TwoFactorController extends Controller
 
         $user = $request->user();
 
-        if (! $user?->is_admin || ! $user->hasConfirmedTwoFactor() || ! Totp::verify((string) $user->totp_secret, $validated['code'])) {
+        $matchedStep = ($user?->is_admin && $user->hasConfirmedTwoFactor())
+            ? Totp::verifyStep((string) $user->totp_secret, $validated['code'])
+            : null;
+
+        if ($matchedStep === null) {
             return back()->withErrors(['code' => 'کد تأیید درست نیست.']);
         }
+
+        // TOTP replay guard: a code captured inside the ±1 step drift window
+        // (≤90s) must not unlock a second session. Recovery codes are already
+        // single-use; the time-based code becomes single-use at step level.
+        $user = $user->refresh();
+
+        if ($user->totp_last_step !== null && $matchedStep <= (int) $user->totp_last_step) {
+            return back()->withErrors(['code' => 'این کد قبلاً استفاده شده است؛ کد جدیدی از اپلیکیشن خود وارد کنید.']);
+        }
+
+        $user->forceFill(['totp_last_step' => $matchedStep])->save();
 
         $request->session()->put(RequireAdminTwoFactor::SESSION_KEY, now()->timestamp);
         $request->session()->regenerate();

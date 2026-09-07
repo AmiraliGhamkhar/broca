@@ -39,7 +39,7 @@
         <div class="pt-4 border-t border-hairline-soft text-xs text-muted">
             <form method="post" action="{{ route('logout') }}" class="inline">
                 @csrf
-                <button type="submit" class="text-rausch underline font-bold">خروج از حساب</button>
+                <button type="submit" class="text-rausch-text underline font-bold">خروج از حساب</button>
             </form>
         </div>
     </div>
