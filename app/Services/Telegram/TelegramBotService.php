@@ -23,6 +23,7 @@ use App\Services\FreeItemDesignationService;
 use App\Support\BrandAssets;
 use App\Support\Slug;
 use App\Support\StructuredMessageParser;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -108,6 +109,12 @@ class TelegramBotService
             $this->api->sendMessage($chatId, $this->formatValidationErrors($exception), [
                 'reply_markup' => $this->mainMenuMarkup(),
             ]);
+        } catch (ModelNotFoundException $exception) {
+            // Stale button / wrong id (entity deleted meanwhile): a raw 500
+            // would make Telegram retry the update forever.
+            $this->api->sendMessage($chatId, '🔍 آیتم موردنظر پیدا نشد؛ احتمالاً حذف شده است. لیست را دوباره باز کنید.', [
+                'reply_markup' => $this->mainMenuMarkup(),
+            ]);
         } catch (RuntimeException $exception) {
             $this->api->sendMessage($chatId, '⚠️ '.$exception->getMessage(), [
                 'reply_markup' => $this->mainMenuMarkup(),
@@ -144,6 +151,12 @@ class TelegramBotService
             $this->dispatchCallbackAction($chatId, $telegramUserId, $data);
         } catch (ValidationException $exception) {
             $this->api->sendMessage($chatId, $this->formatValidationErrors($exception), [
+                'reply_markup' => $this->mainMenuMarkup(),
+            ]);
+        } catch (ModelNotFoundException $exception) {
+            // Stale inline button (entity deleted meanwhile): a raw 500 would
+            // make Telegram retry the callback update forever.
+            $this->api->sendMessage($chatId, '🔍 آیتم موردنظر پیدا نشد؛ احتمالاً حذف شده است. لیست را دوباره باز کنید.', [
                 'reply_markup' => $this->mainMenuMarkup(),
             ]);
         } catch (RuntimeException $exception) {
@@ -2809,7 +2822,7 @@ class TelegramBotService
         return true;
     }
 
-    private function showUserManageMenu(int $chatId, int $id): void
+    private function showUserManageMenu(int $chatId, int $id): bool
     {
         $user = User::query()->withCount(['enrollments', 'subscriptions', 'quizAttempts'])->findOrFail($id);
         $subscription = $user->activeSubscription();
@@ -2837,6 +2850,8 @@ class TelegramBotService
                 [$this->button('↩️ لیست کاربران', 'list:users:1')],
             ]),
         ]);
+
+        return true;
     }
 
     private function confirmUserStatus(int $chatId, int $id): void
@@ -3114,7 +3129,7 @@ class TelegramBotService
      |  برند و ظاهر — لوگو و تصویر هیرو
      * ================================================================== */
 
-    private function startBrandImageWorkflow(int $chatId, int $telegramUserId, string $target): void
+    private function startBrandImageWorkflow(int $chatId, int $telegramUserId, string $target): bool
     {
         $this->storeSession($chatId, $telegramUserId, $target === 'hero' ? 'brand.hero' : 'brand.logo', ['target' => $target]);
 
@@ -3138,6 +3153,8 @@ class TelegramBotService
         $this->api->sendMessage($chatId, $text, [
             'reply_markup' => $this->workflowMarkup('menu:brand'),
         ]);
+
+        return true;
     }
 
     private function submitBrandImage(TelegramChatSession $session, array $message): void
@@ -3152,7 +3169,7 @@ class TelegramBotService
             : "✅ لوگوی سایت به‌روزرسانی شد.\nآدرس فایل: ".$url."\nلوگوی جدید در هدر و فوتر جایگزین حرف «ب» شده است.");
     }
 
-    private function confirmRemoveBrand(int $chatId, string $target): void
+    private function confirmRemoveBrand(int $chatId, string $target): bool
     {
         if ($target !== 'logo') {
             $this->api->sendMessage($chatId, 'حذف تصویر هیرو از طریق ربات انجام نمی‌شود — صفحهٔ اصلی همیشه به یک تصویر نیاز دارد. برای تغییر، همان دکمهٔ «تغییر هیرو» را بزنید.', [
@@ -3161,7 +3178,7 @@ class TelegramBotService
                 ]),
             ]);
 
-            return;
+            return true;
         }
 
         $this->api->sendMessage($chatId, 'لوگو حذف شود؟ سایت دوباره حرف پیش‌فرض «ب» را نشان می‌دهد.', [
@@ -3170,6 +3187,8 @@ class TelegramBotService
                 [$this->button('↩️ بازگشت', 'menu:brand')],
             ]),
         ]);
+
+        return true;
     }
 
     private function applyRemoveBrand(int $chatId, string $target): void
