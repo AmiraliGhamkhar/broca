@@ -22,4 +22,21 @@ class StructuredMessageParserTest extends TestCase
         $this->assertSame('draft', $parsed['status']);
         $this->assertSame("خط اول\nخط دوم", $parsed['content']);
     }
+
+    public function test_it_parses_persian_rtl_keys_blocks_and_values(): void
+    {
+        $parsed = StructuredMessageParser::parse(implode("\n", [
+            'عنوان: مقاله فارسی',
+            'وضعیت: در بازبینی',
+            'فعال: بله',
+            '[محتوا]',
+            'خط نخست',
+            '[/محتوا]',
+        ]));
+
+        $this->assertSame('مقاله فارسی', $parsed['title']);
+        $this->assertSame('in_review', $parsed['status']);
+        $this->assertSame('بله', $parsed['is_active']);
+        $this->assertSame('خط نخست', $parsed['content']);
+    }
 }

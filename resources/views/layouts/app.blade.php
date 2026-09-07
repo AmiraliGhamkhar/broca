@@ -96,7 +96,11 @@
                 <!-- Brand Logo -->
                 <div class="flex items-center gap-8">
                     <a href="{{ url('/') }}" class="flex items-center gap-3 group focus:outline-none">
-                        <span class="brand-mark">ب</span>
+                        @if ($siteAppearance->logoUrl())
+                            <img src="{{ $siteAppearance->logoUrl() }}" alt="لوگوی {{ __('app.name') }}" width="48" height="48" class="size-12 rounded-xl object-contain">
+                        @else
+                            <span class="brand-mark">ب</span>
+                        @endif
                         <div>
                             <span class="font-display text-2xl leading-none text-ink block group-hover:text-rausch transition-colors">
                                 {{ __('app.name') }}
@@ -337,7 +341,11 @@
                 <!-- Col 1: Brand & Bio -->
                 <div class="lg:col-span-2 space-y-4">
                     <div class="flex items-center gap-3">
-                        <span class="brand-mark">ب</span>
+                        @if ($siteAppearance->logoUrl())
+                            <img src="{{ $siteAppearance->logoUrl() }}" alt="" width="48" height="48" class="size-12 rounded-xl object-contain">
+                        @else
+                            <span class="brand-mark">ب</span>
+                        @endif
                         <div>
                             <span class="font-display text-xl text-ink">{{ __('app.name') }}</span>
                             <span class="text-[11px] text-muted block">آموزش عمیق علوم پزشکی برای دانشجویان</span>
@@ -355,23 +363,6 @@
                 <div class="space-y-3">
                     <h3 class="text-sm font-bold text-ink">شاخه‌های آموزشی</h3>
                     <ul class="space-y-2.5 text-muted">
-                        @php
-                            $footerSubjects = \Illuminate\Support\Facades\Cache::remember(
-                                'footer_subjects',
-                                300,
-                                // Cache plain arrays (slug + name), NOT Eloquent models:
-                                // the database cache store unserializes with
-                                // allowed_classes => false, which strips objects
-                                // into useless strings on retrieval.
-                                fn () => \App\Models\Subject::query()
-                                    ->where('is_visible', true)
-                                    ->orderBy('sort_order')
-                                    ->limit(4)
-                                    ->get(['slug', 'name'])
-                                    ->map(fn ($s) => ['slug' => $s->slug, 'name' => $s->name])
-                                    ->all()
-                            );
-                        @endphp
                         @forelse ($footerSubjects as $footerSubject)
                             <li><a href="{{ route('subjects.show', ['subject' => $footerSubject['slug']]) }}" class="hover:text-rausch transition-colors">{{ $footerSubject['name'] }}</a></li>
                         @empty

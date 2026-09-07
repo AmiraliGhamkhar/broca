@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AppearanceController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -196,6 +197,8 @@ Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admi
 
 Route::prefix('admin')->middleware(['auth', 'active', 'verified', 'admin', 'admin.audit', 'admin.2fa'])->group(function (): void {
     Route::get('/', AdminDashboardController::class)->name('admin.dashboard');
+    Route::get('/appearance', [AppearanceController::class, 'edit'])->name('admin.appearance.edit');
+    Route::patch('/appearance', [AppearanceController::class, 'update'])->name('admin.appearance.update');
 
     // Courses CRUD
     Route::get('/courses', [AdminCourseController::class, 'index'])->name('admin.courses.index');

@@ -21,6 +21,20 @@ class AdminCrudSmokeTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_can_update_the_hero_accessibility_text(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAsAdmin($admin)->patch(route('admin.appearance.update'), [
+            'hero_image_alt' => 'تصویر کلاس آموزش پزشکی',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('site_settings', [
+            'id' => 1,
+            'hero_image_alt' => 'تصویر کلاس آموزش پزشکی',
+        ]);
+    }
+
     public function test_admin_index_pages_render_with_seeded_data(): void
     {
         $admin = User::factory()->admin()->create();
@@ -55,6 +69,7 @@ class AdminCrudSmokeTest extends TestCase
             'admin.quizzes.index',
             'admin.flashcards.index',
             'admin.blogs.index',
+            'admin.appearance.edit',
         ];
 
         foreach ($routes as $route) {
