@@ -30,6 +30,10 @@ class PaymentTimeoutTest extends TestCase
 {
     public function test_payment_manager_resolves_timeout_bound_zarinpal_driver(): void
     {
+        // CI's .env sets ZARINPAL_SANDBOX=true; pin the mode explicitly so
+        // this test resolves the same strategy in every environment.
+        config()->set('payment.drivers.zarinpal.mode', 'normal');
+
         $driver = $this->freshDriver(new Payment((array) config('payment')), 'zarinpal');
 
         $this->assertInstanceOf(TimeoutZarinpal::class, $driver);
@@ -38,6 +42,21 @@ class PaymentTimeoutTest extends TestCase
         $strategy = $strategy->getValue($driver);
 
         $this->assertInstanceOf(TimeoutZarinpalNormal::class, $strategy);
+        $this->assertBoundedClient($strategy);
+    }
+
+    public function test_payment_manager_resolves_timeout_bound_zarinpal_sandbox_driver(): void
+    {
+        config()->set('payment.drivers.zarinpal.mode', 'sandbox');
+
+        $driver = $this->freshDriver(new Payment((array) config('payment')), 'zarinpal');
+
+        $this->assertInstanceOf(TimeoutZarinpal::class, $driver);
+
+        $strategy = (new ReflectionClass($driver))->getProperty('strategy');
+        $strategy = $strategy->getValue($driver);
+
+        $this->assertInstanceOf(TimeoutZarinpalSandbox::class, $strategy);
         $this->assertBoundedClient($strategy);
     }
 
