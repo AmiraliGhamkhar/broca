@@ -2,6 +2,8 @@
 
 namespace App\Services\Telegram;
 
+use App\Jobs\RunDatabaseBackup;
+use App\Models\AdminActivityLog;
 use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Flashcard;
@@ -11,12 +13,11 @@ use App\Models\Plan;
 use App\Models\Quiz;
 use App\Models\QuizOption;
 use App\Models\QuizQuestion;
-use App\Models\Subject;
 use App\Models\SiteSetting;
-use App\Models\User;
-use App\Models\AdminActivityLog;
+use App\Models\Subject;
 use App\Models\TelegramAdmin;
 use App\Models\TelegramChatSession;
+use App\Models\User;
 use App\Models\Video;
 use App\Services\FreeItemDesignationService;
 use App\Services\OpsHealthReport;
@@ -50,8 +51,7 @@ class TelegramBotService
     public function __construct(
         private readonly TelegramApiClient $api,
         private readonly FreeItemDesignationService $freeItems,
-    ) {
-    }
+    ) {}
 
     public function handle(array $update): void
     {
@@ -2014,7 +2014,7 @@ class TelegramBotService
     private function submitSubjectForm(TelegramChatSession $session, string $text): void
     {
         $data = StructuredMessageParser::parse($text);
-        $subject = isset($session->context['id']) ? Subject::query()->findOrFail((int) $session->context['id']) : new Subject();
+        $subject = isset($session->context['id']) ? Subject::query()->findOrFail((int) $session->context['id']) : new Subject;
         $validated = Validator::make([
             'name' => $data['name'] ?? null,
             'description' => $data['description'] ?? null,
@@ -2095,7 +2095,7 @@ class TelegramBotService
         // duplicate dump. The database queue is drained every minute by the
         // cron worker (routes/console.php), so the job completes without a
         // daemon on shared hosting.
-        \App\Jobs\RunDatabaseBackup::dispatch($chatId);
+        RunDatabaseBackup::dispatch($chatId);
 
         return true;
     }
@@ -3176,7 +3176,7 @@ class TelegramBotService
             }
         } catch (RuntimeException $exception) {
             throw $exception;
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             @unlink($tmp);
             throw new RuntimeException('دریافت فایل از URL ناموفق بود: '.$exception->getMessage());
         }
@@ -3584,8 +3584,8 @@ class TelegramBotService
     }
 
     /** @template TModel of \Illuminate\Database\Eloquent\Model
-     *  @param class-string<TModel> $modelClass
-     *  @return TModel|null
+     * @param  class-string<TModel>  $modelClass
+     * @return TModel|null
      */
     private function resolveOptionalModel(TelegramChatSession $session, array $data, string $modelClass)
     {

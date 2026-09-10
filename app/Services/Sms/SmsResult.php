@@ -17,8 +17,7 @@ final class SmsResult
         public readonly string $driver,
         public readonly string $detail,
         public readonly ?string $reference = null,
-    ) {
-    }
+    ) {}
 
     public static function delivered(string $driver, string $detail = '', ?string $reference = null): self
     {

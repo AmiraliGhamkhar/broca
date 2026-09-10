@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Video;
 use App\Models\VideoProgress;
 use App\Policies\ContentPolicy;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -112,7 +113,7 @@ class VideoController extends Controller
             if (! $progress) {
                 try {
                     $progress = VideoProgress::create(['user_id' => $request->user()->id, 'video_id' => $video->id]);
-                } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                } catch (UniqueConstraintViolationException) {
                     // Lost a first-insert race — re-read the winner's row.
                     $progress = VideoProgress::query()->where('user_id', $request->user()->id)->where('video_id', $video->id)->lockForUpdate()->firstOrFail();
                 }

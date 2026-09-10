@@ -10,6 +10,7 @@ use App\Models\FlashcardReview;
 use App\Models\UserFlashcardSchedule;
 use App\Policies\ContentPolicy;
 use App\Services\SrsService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -96,7 +97,7 @@ class FlashcardController extends Controller
                         'repetition_count' => 0,
                         'due_at' => now(),
                     ]);
-                } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                } catch (UniqueConstraintViolationException) {
                     $schedule = UserFlashcardSchedule::query()->where('user_id', $user->id)->where('flashcard_id', $flashcard->id)->lockForUpdate()->firstOrFail();
                 }
             }

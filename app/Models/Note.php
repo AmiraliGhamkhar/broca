@@ -3,17 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['course_id', 'title', 'slug', 'description', 'sort_order', 'storage_disk', 'storage_key', 'mime_type', 'size_bytes', 'checksum', 'is_free_designated', 'status', 'published_at', 'author_id', 'reviewer_id'])]
 class Note extends Model
 {
     use HasFactory;
-
     use SoftDeletes;
+
     protected function casts(): array
     {
         return ['published_at' => 'datetime', 'is_free_designated' => 'boolean'];
@@ -32,7 +32,18 @@ class Note extends Model
         return $this->status === 'published' && $this->published_at?->isPast();
     }
 
-    public function course(): BelongsTo { return $this->belongsTo(Course::class); }
-    public function author(): BelongsTo { return $this->belongsTo(Contributor::class, 'author_id'); }
-    public function reviewer(): BelongsTo { return $this->belongsTo(Contributor::class, 'reviewer_id'); }
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(Contributor::class, 'author_id');
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(Contributor::class, 'reviewer_id');
+    }
 }

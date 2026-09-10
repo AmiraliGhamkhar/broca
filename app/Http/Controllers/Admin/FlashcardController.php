@@ -11,6 +11,7 @@ use App\Services\FreeItemDesignationService;
 use App\Support\Slug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -48,7 +49,7 @@ class FlashcardController extends Controller
     public function createDeck(): View
     {
         return view('admin.flashcards.edit-deck', [
-            'deck' => new FlashcardDeck(),
+            'deck' => new FlashcardDeck,
             'courses' => Course::orderBy('title')->get(['id', 'title']),
             'contributors' => Contributor::orderBy('name')->get(['id', 'name', 'credentials']),
         ]);
@@ -73,7 +74,7 @@ class FlashcardController extends Controller
 
         $deck = new FlashcardDeck($validated);
         $deck->slug = Slug::unique($validated['title'], fn (string $slug) => FlashcardDeck::where('course_id', $validated['course_id'])->where('slug', $slug)->exists());
-        $deck->published_at = ! empty($validated['published_at']) ? \Illuminate\Support\Carbon::parse($validated['published_at']) : ($validated['status'] === 'published' ? now() : null);
+        $deck->published_at = ! empty($validated['published_at']) ? Carbon::parse($validated['published_at']) : ($validated['status'] === 'published' ? now() : null);
         $deck->save();
 
         return redirect()->route('admin.flashcards.index', ['deck_id' => $deck->id])->with('status', 'دسته کارت‌ها ایجاد شد.');
@@ -112,7 +113,7 @@ class FlashcardController extends Controller
         }
 
         if (! empty($validated['published_at'])) {
-            $deck->published_at = \Illuminate\Support\Carbon::parse($validated['published_at']);
+            $deck->published_at = Carbon::parse($validated['published_at']);
         }
 
         $deck->save();
@@ -152,7 +153,7 @@ class FlashcardController extends Controller
         ]);
 
         $card = new Flashcard(collect($validated)->except(['is_free_designated', 'published_at'])->all());
-        $card->published_at = ! empty($validated['published_at']) ? \Illuminate\Support\Carbon::parse($validated['published_at']) : ($validated['status'] === 'published' ? now() : null);
+        $card->published_at = ! empty($validated['published_at']) ? Carbon::parse($validated['published_at']) : ($validated['status'] === 'published' ? now() : null);
         $card->save();
 
         if ($request->boolean('is_free_designated')) {
@@ -189,7 +190,7 @@ class FlashcardController extends Controller
         $card->fill(collect($validated)->except(['is_free_designated', 'published_at'])->all());
 
         if (! empty($validated['published_at'])) {
-            $card->published_at = \Illuminate\Support\Carbon::parse($validated['published_at']);
+            $card->published_at = Carbon::parse($validated['published_at']);
         }
 
         $card->save();

@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
-use App\Models\Flashcard;
 use App\Models\FlashcardReview;
 use App\Models\UserFlashcardSchedule;
-use App\Models\VideoProgress;
+use App\Services\EntitlementService;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -33,7 +32,7 @@ class DashboardController extends Controller
 
         // Effective free status (flag AND global cap) for the badges —
         // same rule the playback/download endpoints enforce.
-        $entitlements = app(\App\Services\EntitlementService::class);
+        $entitlements = app(EntitlementService::class);
         $enrollments->each(function ($enrollment) use ($entitlements): void {
             $enrollment->course->videos->each(function ($video) use ($entitlements): void {
                 $video->is_free_available = $entitlements->isFree($video);

@@ -19,9 +19,7 @@ use Illuminate\Notifications\Notification;
  */
 class SmsChannel
 {
-    public function __construct(private readonly SmsManager $sms)
-    {
-    }
+    public function __construct(private readonly SmsManager $sms) {}
 
     public function send(object $notifiable, Notification $notification): mixed
     {

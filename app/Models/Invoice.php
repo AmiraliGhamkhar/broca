@@ -13,10 +13,15 @@ class Invoice extends Model
     use HasFactory;
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_INITIATED = 'initiated';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_FAILED = 'failed';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_EXPIRED = 'expired';
 
     protected $fillable = ['user_id', 'user_name_snapshot', 'user_email_snapshot', 'user_phone_snapshot', 'plan_id', 'number', 'amount_irr', 'currency', 'status', 'gateway', 'gateway_payment_id', 'authority', 'paid_at', 'expires_at'];

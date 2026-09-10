@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\BlogPost;
+use App\Models\Contributor;
 use App\Models\Course;
 use App\Models\FlashcardDeck;
 use App\Models\Note;
@@ -45,7 +46,7 @@ class AdminCrudSmokeTest extends TestCase
         FlashcardDeck::factory()->count(2)->for($course)->create();
         BlogPost::factory()->published()->create();
 
-        $contributor = \App\Models\Contributor::factory()->create();
+        $contributor = Contributor::factory()->create();
         Note::create([
             'course_id' => $course->id,
             'title' => 'جزوه نمونه',

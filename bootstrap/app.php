@@ -1,9 +1,14 @@
 <?php
 
+use App\Http\Middleware\EnsureActive;
+use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureVerifiedContact;
 use App\Http\Middleware\ForceSecureConnections;
 use App\Http\Middleware\LogAdminActivity;
 use App\Http\Middleware\RequireAdminTwoFactor;
+use App\Http\Middleware\ServeMarkdown;
 use App\Http\Middleware\SetSecurityHeaders;
+use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,14 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureAdmin::class,
-            'active' => \App\Http\Middleware\EnsureActive::class,
+            'admin' => EnsureAdmin::class,
+            'active' => EnsureActive::class,
             // Gates /dashboard, /checkout and /admin on "the account proved a
             // contact channel": the emailed link OR the SMS one-time code.
             // Named explicitly (rather than overriding the framework's
             // `verified` alias) so the guard is greppable at every route and
             // cannot be swapped out by an alias-merge order change.
-            'verified.contact' => \App\Http\Middleware\EnsureVerifiedContact::class,
+            'verified.contact' => EnsureVerifiedContact::class,
             'admin.2fa' => RequireAdminTwoFactor::class,
             'admin.audit' => LogAdminActivity::class,
         ]);
@@ -35,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Proxy trust is resolved at request time in App\Http\Middleware\
         // TrustProxies. It cannot be done here: env() breaks under
         // config:cache, and config() is not yet bound in this closure.
-        $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
+        $middleware->prepend(TrustProxies::class);
 
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
@@ -44,7 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             ForceSecureConnections::class,
             SetSecurityHeaders::class,
-            \App\Http\Middleware\ServeMarkdown::class,
+            ServeMarkdown::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

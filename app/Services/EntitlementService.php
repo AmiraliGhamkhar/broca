@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\QuizQuestion;
 use App\Models\Flashcard;
 use App\Models\Note;
-use App\Models\Video;
+use App\Models\QuizQuestion;
 use App\Models\User;
+use App\Models\Video;
 use App\Support\CourseVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -22,8 +22,11 @@ use Illuminate\Support\Facades\Cache;
 class EntitlementService
 {
     public const FREE_VIDEO_CAP = 2;
+
     public const FREE_NOTE_CAP = 1;
+
     public const FREE_FLASHCARD_CAP = 10;
+
     public const FREE_QUIZ_QUESTION_CAP = 1;
 
     public static function freeCapKey(string $model): string

@@ -19,9 +19,7 @@ use Illuminate\Validation\ValidationException;
  */
 class PhoneVerificationController extends Controller
 {
-    public function __construct(private readonly PhoneVerificationService $verification)
-    {
-    }
+    public function __construct(private readonly PhoneVerificationService $verification) {}
 
     /**
      * (Re)send the code to the number on file.

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Subject;
+use App\Services\EntitlementService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -74,7 +75,7 @@ class CatalogController extends Controller
         abort_unless($course->status === 'published' && $course->published_at?->isPast(), 404);
         $course->load(['subject', 'author', 'reviewer']);
 
-        $entitlements = app(\App\Services\EntitlementService::class);
+        $entitlements = app(EntitlementService::class);
 
         // The "رایگان" badge must reflect the EFFECTIVE entitlement (flag
         // AND global cap), not the bare flag — otherwise the page promises

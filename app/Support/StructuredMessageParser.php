@@ -36,9 +36,11 @@ class StructuredMessageParser
                     $data[$blockKey] = trim(implode("\n", $blockLines));
                     $blockKey = null;
                     $blockLines = [];
+
                     continue;
                 }
                 $blockLines[] = $line;
+
                 continue;
             }
 
@@ -47,6 +49,7 @@ class StructuredMessageParser
             }
             if (preg_match('/^\[('.$keyPattern.')\]$/iu', $trimmed, $matches)) {
                 $blockKey = self::key($matches[1]);
+
                 continue;
             }
             if (preg_match('/^('.$keyPattern.')\s*[:=：]\s*(.*)$/iu', $line, $matches)) {

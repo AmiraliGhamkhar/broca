@@ -3,18 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['flashcard_deck_id', 'front', 'back', 'hint', 'sort_order', 'is_free_designated', 'status', 'published_at'])]
 class Flashcard extends Model
 {
     use HasFactory;
-
     use SoftDeletes;
-    protected function casts(): array { return ['published_at' => 'datetime', 'is_free_designated' => 'boolean']; }
+
+    protected function casts(): array
+    {
+        return ['published_at' => 'datetime', 'is_free_designated' => 'boolean'];
+    }
 
     // Single source of truth for "published" (see Note/Course/Video scopes).
     public function scopePublished($query)
@@ -27,9 +31,12 @@ class Flashcard extends Model
         return $this->status === 'published' && $this->published_at?->isPast();
     }
 
-    public function deck(): BelongsTo { return $this->belongsTo(FlashcardDeck::class, 'flashcard_deck_id'); }
+    public function deck(): BelongsTo
+    {
+        return $this->belongsTo(FlashcardDeck::class, 'flashcard_deck_id');
+    }
 
-    public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function schedules(): HasMany
     {
         return $this->hasMany(UserFlashcardSchedule::class);
     }

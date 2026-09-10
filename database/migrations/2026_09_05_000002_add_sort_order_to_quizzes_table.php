@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -33,14 +34,14 @@ return new class extends Migration
         });
 
         // Deterministic per-course ordering for rows that predate the column.
-        foreach (\Illuminate\Support\Facades\DB::table('quizzes')->select('course_id')->distinct()->pluck('course_id') as $courseId) {
-            $ids = \Illuminate\Support\Facades\DB::table('quizzes')
+        foreach (DB::table('quizzes')->select('course_id')->distinct()->pluck('course_id') as $courseId) {
+            $ids = DB::table('quizzes')
                 ->where('course_id', $courseId)
                 ->orderBy('id')
                 ->pluck('id');
 
             foreach ($ids as $index => $id) {
-                \Illuminate\Support\Facades\DB::table('quizzes')
+                DB::table('quizzes')
                     ->where('id', $id)
                     ->update(['sort_order' => $index + 1]);
             }

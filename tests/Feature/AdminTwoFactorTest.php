@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\RequireAdminTwoFactor;
 use App\Models\User;
 use App\Support\Totp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,7 +67,7 @@ class AdminTwoFactorTest extends TestCase
         $this->actingAs($admin)->get('/admin')->assertOk();
 
         // Rotate the pass flag: the same code must no longer be enough.
-        $this->session([\App\Http\Middleware\RequireAdminTwoFactor::SESSION_KEY => null]);
+        $this->session([RequireAdminTwoFactor::SESSION_KEY => null]);
 
         $this->actingAs($admin)
             ->post(route('admin.two-factor.verify'), ['code' => $code])
@@ -99,7 +100,7 @@ class AdminTwoFactorTest extends TestCase
         $this->actingAs($admin)->get('/admin')->assertOk();
 
         // Rotate: clear the pass flag, second use of the same code must fail.
-        $this->session([\App\Http\Middleware\RequireAdminTwoFactor::SESSION_KEY => null]);
+        $this->session([RequireAdminTwoFactor::SESSION_KEY => null]);
         $admin->forceFill(['totp_secret' => Totp::generateSecret(), 'totp_confirmed_at' => now()])->save();
 
         $this->actingAs($admin)

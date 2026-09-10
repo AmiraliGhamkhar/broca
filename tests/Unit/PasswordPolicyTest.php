@@ -56,5 +56,4 @@ class PasswordPolicyTest extends TestCase
         $this->assertInstanceOf(Password::class, PasswordPolicy::rule());
         $this->assertInstanceOf(Password::class, Password::defaults());
     }
-
 }

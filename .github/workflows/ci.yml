@@ -144,7 +144,7 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Non-blocking style gate until the codebase has had one pint pass.
-      - name: Code style (pint, non-blocking)
+      # Blocking style gate: Round 10 (2026-09-10) was the codebase's first
+      # full pint pass, so drift now fails CI like any other check.
+      - name: Code style (pint)
         run: vendor/bin/pint --test
-        continue-on-error: true

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -181,7 +182,7 @@ class GeoTest extends TestCase
         $this->assertStringContainsString('/catalog.md', $content); // hidden agent hint
 
         // Auth-gated pages have no twin and must not advertise one.
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
         $dashboard = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
         $this->assertStringNotContainsString('rel="alternate" type="text/markdown"', $dashboard);
     }

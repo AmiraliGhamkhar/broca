@@ -7,6 +7,7 @@ use App\Models\BlogPost;
 use App\Support\Slug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -23,7 +24,7 @@ class BlogController extends Controller
     {
         $posts = BlogPost::query()
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
-            ->when($request->filled('q'), fn ($query) => $query->where('title', 'like', '%' . addcslashes((string) $request->string('q'), '\\%_') . '%'))
+            ->when($request->filled('q'), fn ($query) => $query->where('title', 'like', '%'.addcslashes((string) $request->string('q'), '\\%_').'%'))
             ->latest('published_at')
             ->latest('id')
             ->paginate(15)
@@ -34,7 +35,7 @@ class BlogController extends Controller
 
     public function create(): View
     {
-        return view('admin.blogs.edit', ['post' => new BlogPost()]);
+        return view('admin.blogs.edit', ['post' => new BlogPost]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -142,10 +143,10 @@ class BlogController extends Controller
         ]);
     }
 
-    private function publishedAt(array $data, ?BlogPost $post = null): ?\Illuminate\Support\Carbon
+    private function publishedAt(array $data, ?BlogPost $post = null): ?Carbon
     {
         if (! empty($data['published_at'])) {
-            return \Illuminate\Support\Carbon::parse($data['published_at']);
+            return Carbon::parse($data['published_at']);
         }
 
         if ($data['status'] === 'published' && ! $post?->published_at) {

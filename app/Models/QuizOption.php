@@ -11,6 +11,14 @@ class QuizOption extends Model
     use HasFactory;
 
     protected $fillable = ['quiz_question_id', 'label', 'is_correct', 'sort_order'];
-    protected function casts(): array { return ['is_correct' => 'boolean']; }
-    public function question(): BelongsTo { return $this->belongsTo(QuizQuestion::class, 'quiz_question_id'); }
+
+    protected function casts(): array
+    {
+        return ['is_correct' => 'boolean'];
+    }
+
+    public function question(): BelongsTo
+    {
+        return $this->belongsTo(QuizQuestion::class, 'quiz_question_id');
+    }
 }

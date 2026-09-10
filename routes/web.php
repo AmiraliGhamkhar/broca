@@ -78,21 +78,21 @@ Route::get('/plans', [PlanController::class, 'index'])->name('plans');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
 
-    // Gateway callback is hit by the paying user's browser after the redirect;
-    // it verifies server-side and is safe without a session. Throttled
-    // (Round-6 audit B-2): each hit with Status=OK against an unpaid invoice
-    // triggers an outbound gateway verify request, and the route is reachable
-    // without a session — 30/min/IP absorbs gateway retries and impatient
-    // double-clicks while stopping verify-flooding.
-    Route::get('/payments/zarinpal/callback', [PaymentController::class, 'callback'])
-        ->middleware('throttle:30,1')
-        ->name('payments.zarinpal.callback');
+// Gateway callback is hit by the paying user's browser after the redirect;
+// it verifies server-side and is safe without a session. Throttled
+// (Round-6 audit B-2): each hit with Status=OK against an unpaid invoice
+// triggers an outbound gateway verify request, and the route is reachable
+// without a session — 30/min/IP absorbs gateway retries and impatient
+// double-clicks while stopping verify-flooding.
+Route::get('/payments/zarinpal/callback', [PaymentController::class, 'callback'])
+    ->middleware('throttle:30,1')
+    ->name('payments.zarinpal.callback');
 
-    // Zibal callback (secondary gateway, client decision 2026-09-05: finish
-    // the driver). Same threat model, same bound.
-    Route::get('/payments/zibal/callback', [PaymentController::class, 'zibalCallback'])
-        ->middleware('throttle:30,1')
-        ->name('payments.zibal.callback');
+// Zibal callback (secondary gateway, client decision 2026-09-05: finish
+// the driver). Same threat model, same bound.
+Route::get('/payments/zibal/callback', [PaymentController::class, 'zibalCallback'])
+    ->middleware('throttle:30,1')
+    ->name('payments.zibal.callback');
 
 /*
 |--------------------------------------------------------------------------
@@ -140,7 +140,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
         // operator, worded for the user — and the SMS path stays available.
         try {
             $request->user()->sendEmailVerificationNotification();
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             report($exception);
 
             return back()->with('error',

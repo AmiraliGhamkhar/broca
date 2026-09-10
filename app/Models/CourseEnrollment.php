@@ -8,7 +8,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CourseEnrollment extends Model
 {
     protected $fillable = ['user_id', 'course_id', 'enrolled_at', 'status'];
-    protected function casts(): array { return ['enrolled_at' => 'datetime']; }
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function course(): BelongsTo { return $this->belongsTo(Course::class); }
+
+    protected function casts(): array
+    {
+        return ['enrolled_at' => 'datetime'];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class);
+    }
 }

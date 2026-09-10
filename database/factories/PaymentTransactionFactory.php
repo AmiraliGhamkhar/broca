@@ -16,7 +16,7 @@ class PaymentTransactionFactory extends Factory
             'invoice_id' => Invoice::factory(),
             'gateway' => 'zarinpal',
             'request_payload' => ['amount' => fake()->numberBetween(100000, 1000000), 'description' => 'Test payment'],
-            'response_payload' => ['authority' => 'A' . fake()->unique()->randomNumber(8)],
+            'response_payload' => ['authority' => 'A'.fake()->unique()->randomNumber(8)],
             'status' => 'initiated',
         ];
     }

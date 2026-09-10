@@ -4,17 +4,17 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
+use App\Support\PhoneNormalizer;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Support\PhoneNormalizer;
 
 /**
  * Security: `is_admin` and `status` are deliberately NOT mass-assignable.
@@ -149,8 +149,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * @return list<string> The stored (sha256-hashed) recovery codes.
-     *                       Plaintext codes are shown once at creation and
-     *                       never persisted — a DB leak must not bypass 2FA.
+     *                      Plaintext codes are shown once at creation and
+     *                      never persisted — a DB leak must not bypass 2FA.
      */
     public function recoveryCodes(): array
     {

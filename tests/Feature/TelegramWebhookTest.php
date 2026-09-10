@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\RunDatabaseBackup;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
@@ -192,7 +194,7 @@ class TelegramWebhookTest extends TestCase
 
     public function test_admin_can_suspend_a_user_after_confirmation(): void
     {
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
 
         $this->postJson(route('telegram.webhook'), $this->callbackUpdate('confirmuser:'.$user->id.':status:suspended'), $this->headers())->assertOk();
 
@@ -211,7 +213,7 @@ class TelegramWebhookTest extends TestCase
         $this->postJson(route('telegram.webhook'), $this->message('/backup_db'), $this->headers())
             ->assertOk();
 
-        Bus::assertDispatched(\App\Jobs\RunDatabaseBackup::class, fn (\App\Jobs\RunDatabaseBackup $job) => $job->chatId === 1001);
+        Bus::assertDispatched(RunDatabaseBackup::class, fn (RunDatabaseBackup $job) => $job->chatId === 1001);
     }
 
     private function headers(): array

@@ -97,6 +97,13 @@ without access granted.** Not optional once checkout goes live.
 
 ## Still open
 
+> Supersession note (Round 10, 2026-09-10 re-audit): the first three items
+> below are resolved by later rounds — Zibal finished + inert (Round 6,
+> DECISIONS.md), prices confirmed ۲۷۰/۶۰۰ تومان (Round 7), hero is a photo,
+> not the 3D-heart video (Round 6; final pick still the client's).
+> Legal copy (`v1-placeholder`) is still open — see
+> docs/PROJECT_STATUS.md for the current launch gates.
+
 - **Zibal** has driver config but no callback route — half-wired. Finish it or
   remove it; don't leave a money path partially built.
 - **Placeholder register** (`SPEC.md` §15): real plan prices, legal copy, and

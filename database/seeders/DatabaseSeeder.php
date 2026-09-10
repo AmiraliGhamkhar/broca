@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Video;
 use App\Support\PlanCatalog;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -150,7 +151,7 @@ class DatabaseSeeder extends Seeder
                 'course_id' => $course1->id,
                 'title' => $vTitle,
                 'slug' => $vSlug,
-                'description' => 'جلسه آموزشی ' . ($idx + 1) . ' از دوره فیزیولوژی قلب.',
+                'description' => 'جلسه آموزشی '.($idx + 1).' از دوره فیزیولوژی قلب.',
                 'sort_order' => $idx + 1,
                 'duration_seconds' => $dur,
                 'manifest_reference' => 'sample-video.mp4',
@@ -300,7 +301,7 @@ class DatabaseSeeder extends Seeder
                 'course_id' => $course2->id,
                 'title' => $vTitle,
                 'slug' => $vSlug,
-                'description' => 'درس ' . ($idx + 1) . ' از دوره نوروآناتومی جامع.',
+                'description' => 'درس '.($idx + 1).' از دوره نوروآناتومی جامع.',
                 'sort_order' => $idx + 1,
                 'duration_seconds' => $dur,
                 'manifest_reference' => 'sample-video.mp4',
@@ -384,7 +385,7 @@ class DatabaseSeeder extends Seeder
                 'course_id' => $course3->id,
                 'title' => $vTitle,
                 'slug' => $vSlug,
-                'description' => 'درس ' . ($idx + 1) . ' از دوره آناتومی قفسه سینه.',
+                'description' => 'درس '.($idx + 1).' از دوره آناتومی قفسه سینه.',
                 'sort_order' => $idx + 1,
                 'duration_seconds' => $dur,
                 'manifest_reference' => 'sample-video.mp4',
@@ -463,6 +464,6 @@ class DatabaseSeeder extends Seeder
      */
     private function provisionPlaceholderMedia(): void
     {
-        \Illuminate\Support\Facades\Artisan::call('broca:provision-media');
+        Artisan::call('broca:provision-media');
     }
 }

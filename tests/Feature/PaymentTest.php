@@ -209,7 +209,7 @@ class PaymentTest extends TestCase
         $this->get(route('payments.zarinpal.callback', ['Authority' => $invoice->authority, 'Status' => 'OK']));
 
         $this->assertSame(1, Subscription::where('invoice_id', $invoice->id)->count());
-        $this->assertSame(1, \App\Models\PaymentTransaction::where('invoice_id', $invoice->id)->count());
+        $this->assertSame(1, PaymentTransaction::where('invoice_id', $invoice->id)->count());
         $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'status' => 'paid']);
     }
 

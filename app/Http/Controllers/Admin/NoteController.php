@@ -10,6 +10,7 @@ use App\Services\FreeItemDesignationService;
 use App\Support\Slug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -20,7 +21,7 @@ class NoteController extends Controller
         $notes = Note::with(['course', 'author', 'reviewer'])
             ->when($request->filled('course_id'), fn ($q) => $q->where('course_id', $request->integer('course_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('q'), fn ($q) => $q->where('title', 'like', '%' . addcslashes((string) $request->string('q'), '\\%_') . '%'))
+            ->when($request->filled('q'), fn ($q) => $q->where('title', 'like', '%'.addcslashes((string) $request->string('q'), '\\%_').'%'))
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
@@ -33,7 +34,7 @@ class NoteController extends Controller
     public function create(): View
     {
         return view('admin.notes.edit', [
-            'note' => new Note(),
+            'note' => new Note,
             'courses' => Course::orderBy('title')->get(['id', 'title']),
             'contributors' => Contributor::orderBy('name')->get(['id', 'name', 'credentials']),
         ]);
@@ -48,7 +49,7 @@ class NoteController extends Controller
         // withTrashed: UNIQUE(course_id, slug) covers soft-deleted rows (D-5).
         $note->slug = Slug::unique($data['title'], fn (string $slug) => Note::withTrashed()->where('course_id', $data['course_id'])->where('slug', $slug)->exists());
         $note->storage_disk = $data['storage_disk'] ?? 'local';
-        $note->storage_key = $data['storage_key'] ?? ('notes/' . $note->slug . '.pdf');
+        $note->storage_key = $data['storage_key'] ?? ('notes/'.$note->slug.'.pdf');
         $note->mime_type = $data['mime_type'] ?? 'application/pdf';
         $note->published_at = $this->publishedAt($data);
         $note->save();
@@ -79,7 +80,7 @@ class NoteController extends Controller
         }
 
         $note->storage_disk = $data['storage_disk'] ?? $note->storage_disk ?? 'local';
-        $note->storage_key = $data['storage_key'] ?? $note->storage_key ?? ('notes/' . $note->slug . '.pdf');
+        $note->storage_key = $data['storage_key'] ?? $note->storage_key ?? ('notes/'.$note->slug.'.pdf');
         $note->mime_type = $data['mime_type'] ?? $note->mime_type ?? 'application/pdf';
         $note->published_at = $this->publishedAt($data, $note);
         $note->save();
@@ -136,10 +137,10 @@ class NoteController extends Controller
         return null;
     }
 
-    private function publishedAt(array $data, ?Note $note = null): ?\Illuminate\Support\Carbon
+    private function publishedAt(array $data, ?Note $note = null): ?Carbon
     {
         if (! empty($data['published_at'])) {
-            return \Illuminate\Support\Carbon::parse($data['published_at']);
+            return Carbon::parse($data['published_at']);
         }
 
         if ($data['status'] === 'published' && ! $note?->published_at) {

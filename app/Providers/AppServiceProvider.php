@@ -4,26 +4,34 @@ namespace App\Providers;
 
 use App\Contracts\PaymentGateway;
 use App\Contracts\VideoProvider;
-use App\Services\EntitlementService;
-use App\Services\PlaceholderVideoProvider;
-use App\Services\ZarinPalGateway;
 use App\Models\BlogPost;
 use App\Models\Course;
+use App\Models\Flashcard;
+use App\Models\Note;
+use App\Models\QuizQuestion;
+use App\Models\SiteSetting;
 use App\Models\Subject;
 use App\Models\Video;
-use App\Models\Note;
-use App\Models\Flashcard;
-use App\Models\QuizQuestion;
-use App\Observers\FreeCapObserver;
+use App\Notifications\Channels\SmsChannel;
 use App\Observers\CourseFreeCapObserver;
+use App\Observers\FreeCapObserver;
 use App\Observers\PublicIndexCacheObserver;
+use App\Services\EntitlementService;
+use App\Services\PlaceholderVideoProvider;
+use App\Services\Sms\SmsManager;
+use App\Services\ZarinPalGateway;
 use App\Support\MarkdownTwin;
 use App\Support\PasswordPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,7 +56,7 @@ class AppServiceProvider extends ServiceProvider
         // One manager instance keeps the resolved transport (and its HTTP
         // client config) for the request; the transports themselves are
         // stateless.
-        $this->app->singleton(\App\Services\Sms\SmsManager::class);
+        $this->app->singleton(SmsManager::class);
     }
 
     /**
@@ -59,15 +67,15 @@ class AppServiceProvider extends ServiceProvider
         // Every page that has a Markdown twin advertises it in <head>
         // (<link rel="alternate"> + hidden agent hint). Pure URL
         // construction — no DB work on the hot path.
-        \Illuminate\Support\Facades\View::composer('layouts.app', function (\Illuminate\View\View $view): void {
+        \Illuminate\Support\Facades\View::composer('layouts.app', function (View $view): void {
             $request = request();
             $view->with([
                 'markdownAlternate' => MarkdownTwin::alternateUrlForRoute(
                     (string) ($request->route()?->getName() ?? ''),
                     $request->route()?->parameters() ?? []
                 ),
-                'siteAppearance' => \App\Models\SiteSetting::current(),
-                'footerSubjects' => \Illuminate\Support\Facades\Cache::remember(
+                'siteAppearance' => SiteSetting::current(),
+                'footerSubjects' => Cache::remember(
                     'footer_subjects',
                     300,
                     fn () => Subject::query()
@@ -83,7 +91,7 @@ class AppServiceProvider extends ServiceProvider
 
         \Illuminate\Support\Facades\View::composer(
             ['welcome', 'components.landing-hero'],
-            fn (\Illuminate\View\View $view) => $view->with('siteAppearance', \App\Models\SiteSetting::current())
+            fn (View $view) => $view->with('siteAppearance', SiteSetting::current())
         );
 
         Video::observe(FreeCapObserver::class);
@@ -113,16 +121,16 @@ class AppServiceProvider extends ServiceProvider
          * while the channel itself is resolved from the container with its
          * SmsManager dependency.
          */
-        \Illuminate\Support\Facades\Notification::extend(
+        Notification::extend(
             'sms',
-            fn (\Illuminate\Contracts\Foundation\Application $app) => new \App\Notifications\Channels\SmsChannel($app->make(\App\Services\Sms\SmsManager::class))
+            fn (Application $app) => new SmsChannel($app->make(SmsManager::class))
         );
 
         // Staging safety valve (Laravel's Mail::alwaysTo): every outbound mail
         // is retargeted to one inbox so a staging run can exercise real SMTP
         // without mailing students. Unset in production = no-op.
         if (($alwaysTo = config('broca.mail_to')) && ! app()->isProduction()) {
-            \Illuminate\Support\Facades\Mail::alwaysTo($alwaysTo);
+            Mail::alwaysTo($alwaysTo);
         }
 
         RateLimiter::for('video-progress', function (Request $request): Limit {
