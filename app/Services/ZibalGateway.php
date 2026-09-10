@@ -30,9 +30,7 @@ use Shetabit\Multipay\Receipt;
  */
 class ZibalGateway implements PaymentGateway
 {
-    public function __construct(private readonly Payment $payment)
-    {
-    }
+    public function __construct(private readonly Payment $payment) {}
 
     public function startPayment(Invoice $invoice): string
     {
@@ -78,7 +76,7 @@ class ZibalGateway implements PaymentGateway
             return $attached instanceof Receipt
                 ? $attached
                 : new Receipt($this->getGatewayName(), (string) $invoice->authority);
-        } catch (InvalidPaymentException | PurchaseFailedException | TimeoutException) {
+        } catch (InvalidPaymentException|PurchaseFailedException|TimeoutException) {
             return null;
         } catch (\Throwable $exception) {
             report($exception);

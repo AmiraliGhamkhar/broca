@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\OpsHealthReport;
 use App\Support\PlanCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -80,7 +81,7 @@ class PlanLineupTest extends TestCase
         // One card is what the client saw; the admin panel must name the gap.
         $this->assertSame(
             ['monthly', 'quarterly'],
-            (new \App\Services\OpsHealthReport)->missingPlanCodes()
+            (new OpsHealthReport)->missingPlanCodes()
         );
 
         $admin = User::factory()->admin()->create();
@@ -96,7 +97,7 @@ class PlanLineupTest extends TestCase
     {
         $this->seed();
 
-        $this->assertSame([], (new \App\Services\OpsHealthReport)->missingPlanCodes());
+        $this->assertSame([], (new OpsHealthReport)->missingPlanCodes());
         $this->assertSame(3, Plan::query()->count());
 
         // Seeding twice must not duplicate the lineup: `code` is the identity.

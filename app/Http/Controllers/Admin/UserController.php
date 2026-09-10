@@ -16,7 +16,7 @@ class UserController extends Controller
         $users = User::query()
             ->withCount(['enrollments', 'subscriptions', 'quizAttempts'])
             ->when($request->filled('q'), function ($q) use ($request) {
-                $term = '%' . addcslashes((string) $request->string('q'), '\\%_') . '%';
+                $term = '%'.addcslashes((string) $request->string('q'), '\\%_').'%';
                 $q->where(function ($sub) use ($term) {
                     $sub->where('name', 'like', $term)
                         ->orWhere('email', 'like', $term)

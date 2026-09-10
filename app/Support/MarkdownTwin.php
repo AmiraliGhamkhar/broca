@@ -6,6 +6,7 @@ use App\Models\BlogPost;
 use App\Models\Course;
 use App\Models\Subject;
 use App\Services\SiteMarkdown;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Maps the public HTML routes to their Markdown twins (llmstxt.org
@@ -43,9 +44,9 @@ class MarkdownTwin
      * Absolute URL of the Markdown twin for the given route, or null.
      * Pure URL construction — safe to run on every HTML page render.
      *
-     * @param array<string, mixed> $params the route's parameters (models or
-     *        raw values — both are handled, as route()->parameters() returns
-     *        bound models after dispatch).
+     * @param  array<string, mixed>  $params  the route's parameters (models or
+     *                                        raw values — both are handled, as route()->parameters() returns
+     *                                        bound models after dispatch).
      */
     public static function alternateUrlForRoute(string $routeName, array $params): ?string
     {
@@ -67,7 +68,7 @@ class MarkdownTwin
      * no twin or its content is no longer public (unpublished/removed).
      * Touches the DB — call it only when a client actually asks for Markdown.
      *
-     * @param array<string, mixed> $params
+     * @param  array<string, mixed>  $params
      */
     public static function markdownForRoute(string $routeName, array $params): ?string
     {
@@ -136,7 +137,7 @@ class MarkdownTwin
      */
     private static function modelSlugUrl(string $route, Subject|Course|string|null $model): ?string
     {
-        $slug = $model instanceof \Illuminate\Database\Eloquent\Model
+        $slug = $model instanceof Model
             ? (string) $model->slug
             : (string) $model;
 

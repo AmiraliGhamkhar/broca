@@ -9,6 +9,7 @@ use App\Models\Subject;
 use App\Support\Slug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class CourseController extends Controller
@@ -19,7 +20,7 @@ class CourseController extends Controller
             ->withCount(['videos', 'notes', 'decks', 'quizzes', 'enrollments'])
             ->when($request->filled('subject_id'), fn ($q) => $q->where('subject_id', $request->integer('subject_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('q'), fn ($q) => $q->where('title', 'like', '%' . addcslashes((string) $request->string('q'), '\\%_') . '%'))
+            ->when($request->filled('q'), fn ($q) => $q->where('title', 'like', '%'.addcslashes((string) $request->string('q'), '\\%_').'%'))
             ->orderBy('sort_order')
             ->latest('id')
             ->paginate(15)
@@ -33,7 +34,7 @@ class CourseController extends Controller
     public function create(): View
     {
         return view('admin.courses.edit', [
-            'course' => new Course(),
+            'course' => new Course,
             'subjects' => Subject::orderBy('name')->get(['id', 'name']),
             'contributors' => Contributor::orderBy('name')->get(['id', 'name', 'credentials']),
         ]);
@@ -107,10 +108,10 @@ class CourseController extends Controller
         ]);
     }
 
-    private function publishedAt(array $data, ?Course $course = null): ?\Illuminate\Support\Carbon
+    private function publishedAt(array $data, ?Course $course = null): ?Carbon
     {
         if (! empty($data['published_at'])) {
-            return \Illuminate\Support\Carbon::parse($data['published_at']);
+            return Carbon::parse($data['published_at']);
         }
 
         if ($data['status'] === 'published' && ! $course?->published_at) {

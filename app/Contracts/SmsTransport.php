@@ -2,8 +2,8 @@
 
 namespace App\Contracts;
 
-use App\Services\Sms\SmsResult;
 use App\Services\Sms\SmsDeliveryException;
+use App\Services\Sms\SmsResult;
 
 /**
  * One outbound text message.

@@ -16,7 +16,7 @@ class LegalContent
 {
     /**
      * @return array<string, array{heading:string, sections:array<int, array{h?:string, p:string}>}>
-     *         page key (matches the /{page} route) → document
+     *                                                                                               page key (matches the /{page} route) → document
      */
     public static function all(): array
     {

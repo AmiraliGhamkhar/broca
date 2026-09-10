@@ -19,9 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ContentPolicy
 {
-    public function __construct(private readonly EntitlementService $entitlements)
-    {
-    }
+    public function __construct(private readonly EntitlementService $entitlements) {}
 
     public function viewVideo(User $user, Video $video): bool
     {

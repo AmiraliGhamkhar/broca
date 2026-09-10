@@ -17,7 +17,10 @@ class PaymentTransaction extends Model
         return ['request_payload' => 'array', 'response_payload' => 'array', 'verified_at' => 'datetime'];
     }
 
-    public function invoice(): BelongsTo { return $this->belongsTo(Invoice::class); }
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
+    }
 
     public function isVerified(): bool
     {

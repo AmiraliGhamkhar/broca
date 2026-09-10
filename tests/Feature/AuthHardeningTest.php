@@ -5,9 +5,13 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
 use App\Support\PasswordPolicy;
+use App\Support\PersianNumber;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
+use Symfony\Component\HttpFoundation\Cookie;
 use Tests\TestCase;
 
 /**
@@ -194,7 +198,7 @@ class AuthHardeningTest extends TestCase
         // policy enforces. Asserting the whole sentence character-for-character
         // would fail on an invisible ZWNJ difference without meaning anything.
         $this->assertStringContainsString(
-            'حداقل '.\App\Support\PersianNumber::digits(PasswordPolicy::min()),
+            'حداقل '.PersianNumber::digits(PasswordPolicy::min()),
             $response->getContent()
         );
     }
@@ -273,7 +277,7 @@ class AuthHardeningTest extends TestCase
 
         $recaller = array_values(array_filter(
             $remember->headers->getCookies(),
-            fn (\Symfony\Component\HttpFoundation\Cookie $cookie) => str_starts_with($cookie->getName(), 'remember_web_')
+            fn (Cookie $cookie) => str_starts_with($cookie->getName(), 'remember_web_')
         ));
 
         // At least one, not exactly one: the assertion that matters is that a
@@ -292,7 +296,7 @@ class AuthHardeningTest extends TestCase
         );
 
         $user = User::where('email', 'remember@example.com')->firstOrFail();
-        $token = \Illuminate\Support\Facades\Password::broker()->createToken($user);
+        $token = Password::broker()->createToken($user);
 
         // A reset lives in the *guest* group, so a browser that is still signed
         // in (as this one is, after the login above) must not be able to consume
@@ -301,7 +305,7 @@ class AuthHardeningTest extends TestCase
         // a bug report, and it is the failure CI just pointed at.
         $this->post('/reset-password', $this->resetPayload($token))->assertRedirect(route('dashboard'));
         $this->assertFalse(
-            \Illuminate\Support\Facades\Hash::check('EvenStronger4You', (string) User::find($user->id)->password),
+            Hash::check('EvenStronger4You', (string) User::find($user->id)->password),
             'a signed-in session must not be able to complete a password reset'
         );
 
@@ -319,7 +323,7 @@ class AuthHardeningTest extends TestCase
             'a password reset must invalidate the outstanding remember token'
         );
         $this->assertTrue(
-            \Illuminate\Support\Facades\Hash::check('EvenStronger4You', (string) User::find($user->id)->password),
+            Hash::check('EvenStronger4You', (string) User::find($user->id)->password),
             'the reset itself must land'
         );
     }
@@ -337,7 +341,7 @@ class AuthHardeningTest extends TestCase
         ])->assertRedirect(route('dashboard'));
 
         $names = array_map(
-            fn (\Symfony\Component\HttpFoundation\Cookie $cookie) => $cookie->getName(),
+            fn (Cookie $cookie) => $cookie->getName(),
             $response->headers->getCookies()
         );
 
@@ -370,7 +374,7 @@ class AuthHardeningTest extends TestCase
     public function test_password_reset_requires_the_same_policy_and_invalidates_the_token_once(): void
     {
         $user = User::factory()->create(['email' => 'reset-policy@example.com']);
-        $token = \Illuminate\Support\Facades\Password::broker()->createToken($user);
+        $token = Password::broker()->createToken($user);
 
         $this->post('/reset-password', [
             'token' => $token,
@@ -386,8 +390,8 @@ class AuthHardeningTest extends TestCase
             'password_confirmation' => self::STRONG_PASSWORD,
         ])->assertRedirect(route('login'));
 
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check(self::STRONG_PASSWORD, $user->fresh()->password));
-        $this->assertFalse(\Illuminate\Support\Facades\Password::broker()->tokenExists($user->fresh(), $token));
+        $this->assertTrue(Hash::check(self::STRONG_PASSWORD, $user->fresh()->password));
+        $this->assertFalse(Password::broker()->tokenExists($user->fresh(), $token));
     }
 
     public function test_malformed_utf8_payloads_fail_gracefully(): void

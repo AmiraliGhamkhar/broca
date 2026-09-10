@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\Subject;
 use App\Support\LegalContent;
 use App\Support\PlanFaq;
+use Illuminate\Support\Str;
 
 /**
  * Clean Markdown renderings of the public pages — the "Markdown twin" layer
@@ -304,7 +305,7 @@ class SiteMarkdown
             return $fallback;
         }
 
-        return \Illuminate\Support\Str::limit($clean, 160, '');
+        return Str::limit($clean, 160, '');
     }
 
     private static function url(string $route, ...$params): string

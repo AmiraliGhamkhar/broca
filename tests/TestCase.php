@@ -2,9 +2,12 @@
 
 namespace Tests;
 
-use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use App\Http\Middleware\RequireAdminTwoFactor;
 use App\Models\User;
 use App\Support\Totp;
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Sleep;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -20,7 +23,7 @@ abstract class TestCase extends BaseTestCase
         // PHP_SAPI is cli/fpm, and keeps the timing-normalization logic
         // fully exercised (Sleep::fake records the sleeps).
         if (getenv('WASM_HARNESS')) {
-            \Illuminate\Support\Sleep::fake();
+            Sleep::fake();
         }
 
         /*
@@ -34,7 +37,7 @@ abstract class TestCase extends BaseTestCase
          * self-contained, and any test that *wants* throttling builds it up
          * inside its own body.
          */
-        \Illuminate\Support\Facades\Cache::clear();
+        Cache::clear();
 
         /*
          * Limiters are keyed by IP as well, and every test in the suite shares
@@ -55,7 +58,7 @@ abstract class TestCase extends BaseTestCase
         }
 
         return $this->actingAs($admin)->withSession([
-            \App\Http\Middleware\RequireAdminTwoFactor::SESSION_KEY => now()->timestamp,
+            RequireAdminTwoFactor::SESSION_KEY => now()->timestamp,
         ]);
     }
 }

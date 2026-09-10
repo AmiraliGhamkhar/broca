@@ -17,7 +17,18 @@ class UserFlashcardSchedule extends Model
         return ['ease_factor' => 'float', 'due_at' => 'datetime', 'last_reviewed_at' => 'datetime'];
     }
 
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function flashcard(): BelongsTo { return $this->belongsTo(Flashcard::class); }
-    public function reviews(): HasMany { return $this->hasMany(FlashcardReview::class, 'schedule_id'); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function flashcard(): BelongsTo
+    {
+        return $this->belongsTo(Flashcard::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(FlashcardReview::class, 'schedule_id');
+    }
 }

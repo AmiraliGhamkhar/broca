@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Contracts\PaymentGateway;
 use App\Models\Invoice;
-use App\Models\Plan;
 use App\Models\PaymentTransaction;
+use App\Models\Plan;
 use App\Models\User;
 use App\Services\PaymentFinalizer;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -20,8 +20,7 @@ class PaymentController extends Controller
     public function __construct(
         private readonly PaymentGateway $gateway,
         private readonly PaymentFinalizer $finalizer,
-    ) {
-    }
+    ) {}
 
     /**
      * Create (or reuse) an invoice for the plan, then redirect to the gateway.

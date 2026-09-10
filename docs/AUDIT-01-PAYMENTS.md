@@ -99,6 +99,12 @@ access never granted. The config invites a misconfiguration that loses money.
 I have **not** changed this: removing a payment option is a business decision.
 Tell me A or B.
 
+> Resolved Round 6 (DECISIONS.md, 2026-09-05): option B — the Zibal driver,
+> callback route (`/payments/zibal/callback`) and ledger flow are implemented
+> and tested; checkout stays inert behind `BROCA_CHECKOUT_ENABLED=false` and
+> activation is an env change (`PAYMENT_GATEWAY=zibal` + `ZIBAL_MERCHANT_ID`).
+> Re-verified Round 10 (2026-09-10).
+
 ### P3 — Callback has no signature/IP verification · ACCEPTED RISK (documented)
 
 **Finding.** `/payments/zarinpal/callback` is an unauthenticated GET keyed only
@@ -143,9 +149,12 @@ exception context.
 - [ ] **Scheduler cron installed** (see AUDIT-02). Without it
       `broca:reconcile-payments` never runs: that is the net that catches
       payments captured at ZarinPal but unresolved locally.
-- [ ] Real plan prices set — `price_irr` still holds placeholder values.
+- [ ] Real plan prices set — ~~`price_irr` still holds placeholder values~~
+      lineup confirmed Round 7 (free / ۲۷۰ / ۶۰۰ تومان, `2700`/`6000` Rial);
+      still verify the rows in production after `broca:sync-plans`.
 - [ ] `APP_DEBUG=false`, `LOG_LEVEL=error`.
-- [ ] Decide P2 (Zibal: remove or finish).
+- [x] ~~Decide P2 (Zibal: remove or finish)~~ — decided Round 6: finished +
+      inert (see P2 note above).
 - [ ] One real end-to-end purchase of the cheapest plan, then verify:
       invoice `paid`, subscription `active`, and a **second** hit of the same
       callback URL still lands on the success page without creating a second

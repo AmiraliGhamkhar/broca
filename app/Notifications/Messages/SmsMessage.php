@@ -15,8 +15,7 @@ class SmsMessage
     public function __construct(
         public string $text = '',
         public ?string $code = null,
-    ) {
-    }
+    ) {}
 
     public static function make(string $text = ''): self
     {

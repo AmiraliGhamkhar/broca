@@ -558,3 +558,53 @@ HTTP-200-with-error-body, unconfigured degradation).
   you switch.
 - Prices remain DB-editable; `broca:sync-plans --reset` is the only thing that
   re-asserts the canonical numbers.
+
+---
+
+## 14. Round 10 — AUDIT-03 re-audit (2026-09-10)
+
+Scope C: every AUDIT-03 finding re-verified against HEAD
+(`574917b`), claim by claim, plus the three things earlier rounds could not
+check (vendor source, CI status, a runnable suite). Step-1 verification:
+suite `OK (266 tests, 1047 assertions)` on HEAD via the PHP 8.4 WASM harness
+(sqlite; CI's own MySQL run on this commit is `success` per the checks API),
+`broca:ops:health` runs (exit 1 with the 4 expected fresh-seed warnings),
+fresh `npm run build` byte-identical to committed `public/build`,
+`pint --test` red (~40 files) but explicitly non-blocking in CI.
+
+### 14.1 Findings (fixed this round)
+
+| # | Finding | Fix |
+|---|---|---|
+| R10-1 | **B-4 confirmed with vendor in hand: no gateway HTTP timeout.** ZarinPal `Normal`/`Sandbox` strategies and the Zibal driver (multipay v3.0.4) all build a bare `new Client()`; Guzzle ships no `timeout` default, so a hung gateway holds a worker until `max_execution_time`. Earlier rounds flagged this "verify at implementation" because vendor/ was unreadable. | `App\Services\Payments\Timeout*` subclasses (only delta: 15 s / 5 s-connect client) wired via `config/payment.php` `map`; `PaymentTimeoutTest` (4 tests) proves manager→subclass→client-options with zero network, and pins the vendor ctor shapes the subclasses track. |
+| R10-2 | **I-3's token redaction had no regression test.** The Round-6 choke point (`redactToken` in `TelegramApiClient`) was correct but untested. | `TelegramTokenRedactionTest`: faked `ConnectionException` with a token-bearing URL → thrown message redacted, original kept on the chain. |
+| R10-3 | **B-5c still open: redundant `Hash::make()` at registration** while the `User` `hashed` cast (which reset + repair already rely on) does the same job. | Call removed; existing register→login tests prove hashing still works. |
+| R10-4 | **Stale audit text:** AUDIT-00 "Still open" (Zibal half-wired, placeholder prices, 3D-heart) and AUDIT-01 P2 + checklist ("NEEDS YOUR DECISION", placeholder prices) described a pre-Round-6 repo with no pointer to the resolutions. | Dated supersession notes appended (history preserved, dead findings un-actionable). |
+| R10-5 | **`pint --test` red at HEAD** (~40 files; CI non-blocking "until one pint pass"). | First full pass: 87 files, cosmetic-only fixers, suite re-greened, CI gate flipped to blocking per its own comment. |
+
+### 14.2 Re-audit verdicts (verified, not assumed)
+
+| AUDIT-03 items | Verdict at HEAD |
+|---|---|
+| D-1…D-8 | All hold: `session:prune` + `broca:prune-cache` scheduled, activity logs untouched (retention = forever), `withTrashed()` slugs at all 5 sites, `id` tiebreakers on every paginated `sort_order`, quiz submit eager-loads `quiz.course`, dashboard counts published cards. D-9 skip re-confirmed (R10, decision 6). |
+| B-1, B-2, B-3 | Hold: no `services.zarinpal` block (zero references), both gateway callbacks `throttle:30,1`, sanitizer recursive with absence-not-marker contract. |
+| B-5a/b | Hold, exceeded: session replay guard + 5/min (Round 8); RUNBOOK §6 names `/health` for external probes. |
+| F-1…F-7 | Hold: hint div in `<body>`, DB-driven specialties, deck study course-scoped, no pre-launch payment/faculty claims, dead lang key gone, 6 utility views noindexed + register indexable, self-canonical pagination, `.htaccess` blocks `database/tests/lang/config/app/bootstrap/resources/routes/vendor` + `storage/logs` while preserving the `storage:link` symlink. |
+| A-1, A-2 | Intent holds in Round-8 shape: named `throttle:login` 10/min/IP (stricter than the audit's suggested 20) with Persian 429, composing with the 5/min identifier·IP limiter. Auth inventory unchanged; recovery codes still SHA-256 + row-locked. |
+| I-1, I-2, I-4, I-5 | Hold: amount-bound verify + heal-set finalizer untouched; receipt persisted to the ledger (`attachReceipt`, covered by `PaymentTest`); backup dispatched to the queue worker; Zibal driver + callback + tests inert behind `BROCA_CHECKOUT_ENABLED=false`. |
+| S-1…S-5 | Hold: every named robots group repeats the full Disallow set (asserted per-group by `GeoTest`); GEO/llms.txt/FAQ expectations unchanged and still correctly calibrated; hero ships `width`/`height` + aspect classes. |
+| M-1, M-2, §9 Q1–Q8 | M-2 copy button shipped; M-1 + trust-strip + retention + Zibal + robots + throttling + noindex + copy decisions all implemented per client answers. Q1 residual (final hero pick) still correctly the client's. |
+| Research ledger | Holds: lock pins `laravel/framework v13.26.1` (past the 13.10.0 CVE-2026-48019 fix), `composer audit` runs in CI, `BCRYPT_ROUNDS=12`, zero `env()` calls outside `config/` (one comment mention), LIKE inputs escaped at 6 sites, raw SQL limited to a constant (`1 = 0`), a constant select list, and one parameterized binding. |
+
+### 14.3 What was verified, not assumed
+
+- **Full suite green after the changes**: `OK (271 tests, 1063 assertions)`
+  (266 + 4 `PaymentTimeoutTest` + 1 `TelegramTokenRedactionTest`).
+- **Pint green**: `PASS … 241 files`; the 87-file diff spot-checked as
+  cosmetic-only (spacing, import order, `fully_qualified_strict_types`, …).
+- **Assets**: post-change rebuild byte-identical (`DRIFT_CHECK_PASS`).
+- **CI on HEAD**: `tests` check-run `completed/success` (2026-09-07) via the
+  checks API — PROJECT_STATUS's "CI green" claim confirmed from outside.
+- Gaps carried forward (unchanged): harness runs sqlite while CI runs MySQL
+  (row-lock paths untested here); live merchant, SMTP/SMS end-to-end, cron,
+  backup-restore proof and `ops:health` exit 0 remain pre-launch gates.

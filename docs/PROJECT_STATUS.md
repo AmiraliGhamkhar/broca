@@ -16,7 +16,7 @@ What exists, what works, and what is still a placeholder. Referenced from
 | Admin | Dashboard, subjects/courses/videos/notes/decks/cards/quizzes/questions CRUD, publication workflow, users, activity log, appearance, backups |
 | Telegram bot | Content + user management, cover images, backups, **and** an operations menu (health, plan restore, queue, SMS test) |
 | SEO / LLM | `robots.txt`, `sitemap.xml`, `/llms.txt`, `.md` twins with content negotiation |
-| Test suite | CI (MySQL 8, PHP 8.4) green on this branch: phone verification, plan lineup, admin login/recovery, Telegram ops and the SMS driver all covered |
+| Test suite | CI (MySQL 8, PHP 8.4) green on this branch: 271 tests incl. phone verification, plan lineup, admin login/recovery, Telegram ops, the SMS driver, gateway timeouts and Telegram token redaction; `pint --test` green and blocking since round 10 |
 
 ## Known gaps / placeholders
 

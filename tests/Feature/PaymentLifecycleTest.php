@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\Console\Command\Command;
 use Tests\Fixtures\FakePaymentGateway;
 use Tests\TestCase;
 
@@ -153,6 +154,6 @@ class PaymentLifecycleTest extends TestCase
         }
 
         $this->artisan('broca:backup-database')
-            ->assertExitCode(\Symfony\Component\Console\Command\Command::INVALID);
+            ->assertExitCode(Command::INVALID);
     }
 }

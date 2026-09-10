@@ -1,5 +1,8 @@
 <?php
 
+use App\Services\Payments\TimeoutZarinpal;
+use App\Services\Payments\TimeoutZibal;
+
 /**
  * shetabit/payment (multipay) configuration. The package's own default config
  * (driver map, API URLs for 30+ gateways) is merged with this file at runtime,
@@ -11,6 +14,18 @@
  */
 return [
     'default' => env('PAYMENT_GATEWAY', 'zarinpal'),
+
+    // The manager instantiates config['map'][$driver]. These subclasses are
+    // the vendor drivers with bounded HTTP clients (Round-6 audit B-4,
+    // verified + fixed Round 10): shetabit/multipay builds a bare
+    // `new Client()` (no timeout), so a hung gateway would hold a PHP worker
+    // until max_execution_time. mergeConfigFrom() is a shallow merge, so this
+    // key replaces the package's 30-driver map — reachability is unchanged
+    // because the `drivers` key below already constrains the app to these two.
+    'map' => [
+        'zarinpal' => TimeoutZarinpal::class,
+        'zibal' => TimeoutZibal::class,
+    ],
 
     'drivers' => [
         'zarinpal' => [

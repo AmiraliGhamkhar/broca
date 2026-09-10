@@ -25,9 +25,7 @@ class SmsManager
     /** @var array<string, SmsTransport> */
     private array $transports = [];
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * @param  array<string, mixed>  $context

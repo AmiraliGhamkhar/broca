@@ -15,7 +15,7 @@ return new class extends Migration
             $table->json('request_payload');
             $table->json('response_payload');
             $table->string('reference_number')->nullable();
-            $table->enum('status', ['initiated','verified','failed','duplicate'])->default('initiated');
+            $table->enum('status', ['initiated', 'verified', 'failed', 'duplicate'])->default('initiated');
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
             $table->unique(['gateway', 'reference_number']);

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Rules\IranianMobile;
 use App\Support\PasswordPolicy;
+use App\Support\PersianNumber;
 use App\Support\PhoneNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -97,8 +98,8 @@ class RegisterUserRequest extends FormRequest
              * next to "validation.password.mixed". Kept in sync with
              * PasswordPolicy::rule(): one rule, one copy per complaint.
              */
-            'password.min' => 'گذرواژه باید حداقل '.\App\Support\PersianNumber::digits(\App\Support\PasswordPolicy::min()).' کاراکتر باشد.',
-            'password.max' => 'گذرواژه نمی‌تواند بیشتر از '.\App\Support\PersianNumber::digits(\App\Support\PasswordPolicy::BCRYPT_INPUT_LIMIT).' کاراکتر باشد (سقف هش رمز).',
+            'password.min' => 'گذرواژه باید حداقل '.PersianNumber::digits(PasswordPolicy::min()).' کاراکتر باشد.',
+            'password.max' => 'گذرواژه نمی‌تواند بیشتر از '.PersianNumber::digits(PasswordPolicy::BCRYPT_INPUT_LIMIT).' کاراکتر باشد (سقف هش رمز).',
             'password.mixed' => 'گذرواژه باید شامل حروف بزرگ و کوچک باشد.',
             'password.numbers' => 'گذرواژه باید دست‌کم یک رقم داشته باشد.',
             'password.symbols' => 'گذرواژه باید دست‌کم یک نماد داشته باشد.',

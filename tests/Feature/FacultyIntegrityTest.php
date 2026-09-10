@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Contributor;
 use App\Models\Course;
 use App\Models\Subject;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -93,7 +94,7 @@ class FacultyIntegrityTest extends TestCase
 
     public function test_seeder_contributors_are_not_publicly_visible(): void
     {
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         // Demo/sample rows must never be visible; production faculty is
         // entered by hand through the admin.

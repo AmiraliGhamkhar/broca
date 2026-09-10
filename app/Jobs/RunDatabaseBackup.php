@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\Telegram\TelegramApiClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -29,11 +30,9 @@ class RunDatabaseBackup implements ShouldQueue
     /** The dump command itself allows 10 minutes; never exceed it here. */
     public int $timeout = 600;
 
-    public function __construct(public readonly int $chatId)
-    {
-    }
+    public function __construct(public readonly int $chatId) {}
 
-    public function handle(\App\Services\Telegram\TelegramApiClient $api): void
+    public function handle(TelegramApiClient $api): void
     {
         $exit = Artisan::call('broca:backup-database');
         $output = trim(Artisan::output());
@@ -62,7 +61,7 @@ class RunDatabaseBackup implements ShouldQueue
         report($exception);
 
         try {
-            app(\App\Services\Telegram\TelegramApiClient::class)
+            app(TelegramApiClient::class)
                 ->sendMessage($this->chatId, '❌ بکاپ انجام نشد؛ خطا ثبت شد. دوباره تلاش کنید.');
         } catch (\Throwable) {
             // The chat may be unreachable; the report() above is the record.

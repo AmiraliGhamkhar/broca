@@ -10,6 +10,7 @@ use App\Support\Slug;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use RuntimeException;
 
 class VideoController extends Controller
@@ -28,7 +29,7 @@ class VideoController extends Controller
     public function create(): View
     {
         return view('admin.videos.edit', [
-            'video' => new Video(),
+            'video' => new Video,
             'courses' => Course::query()->orderBy('title')->get(['id', 'title']),
         ]);
     }
@@ -123,10 +124,10 @@ class VideoController extends Controller
         return null;
     }
 
-    private function publishedAt(array $data, ?Video $video = null): ?\Illuminate\Support\Carbon
+    private function publishedAt(array $data, ?Video $video = null): ?Carbon
     {
         if (! empty($data['published_at'])) {
-            return \Illuminate\Support\Carbon::parse($data['published_at']);
+            return Carbon::parse($data['published_at']);
         }
 
         // Publishing without an explicit date stamps "now" so the publish

@@ -8,6 +8,7 @@ use App\Support\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -212,7 +213,7 @@ class TwoFactorController extends Controller
         $codes = [];
 
         for ($i = 0; $i < $count; $i++) {
-            $codes[] = strtoupper(\Illuminate\Support\Str::random(5).'-'.\Illuminate\Support\Str::random(5));
+            $codes[] = strtoupper(Str::random(5).'-'.Str::random(5));
         }
 
         return $codes;

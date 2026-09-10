@@ -9,18 +9,16 @@ use App\Services\PhoneVerificationService;
 use App\Support\PasswordPolicy;
 use App\Support\PhoneNormalizer;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use PDOException;
 
 class RegisteredUserController extends Controller
 {
-    public function __construct(private readonly PhoneVerificationService $phoneVerification)
-    {
-    }
+    public function __construct(private readonly PhoneVerificationService $phoneVerification) {}
 
     public function create(): View
     {
@@ -39,7 +37,11 @@ class RegisteredUserController extends Controller
                     'name' => $validated['name'],
                     'email' => mb_strtolower($validated['email']),
                     'phone' => PhoneNormalizer::normalize($validated['phone']),
-                    'password' => Hash::make($validated['password']),
+                    // Plain password: the User model's 'hashed' cast hashes on
+                    // write (Round-6 audit B-5c — Hash::make() here double-
+                    // declared the same behavior; reset + repair already
+                    // rely on the cast).
+                    'password' => $validated['password'],
                 ]);
 
                 $user->consents()->create([
@@ -53,7 +55,7 @@ class RegisteredUserController extends Controller
 
                 return $user;
             });
-        } catch (\Illuminate\Database\QueryException|PDOException $e) {
+        } catch (QueryException|PDOException $e) {
             // Two browsers (or a retry after a slow first response) can pass
             // the `unique` rule at the same instant; the DB unique index is the
             // thing that actually decides. Translate that into a form error —
@@ -161,7 +163,7 @@ class RegisteredUserController extends Controller
         return 'حساب شما ساخته شد. برای فعال‌سازی کامل، لینک ارسال‌شده به ایمیل یا کد ارسال‌شده به شمارهٔ همراه را وارد کنید.';
     }
 
-    private function isUniqueViolation(\Illuminate\Database\QueryException|PDOException $e): bool
+    private function isUniqueViolation(QueryException|PDOException $e): bool
     {
         // 23001 = SQLSTATE for integrity constraint violation, 23505 = the
         // PostgreSQL duplicate-key code; MySQL reports 1062 in errorInfo[1].
@@ -170,7 +172,7 @@ class RegisteredUserController extends Controller
             || in_array((string) $e->getCode(), ['23000', '23001', '23505'], true);
     }
 
-    private function uniqueViolationField(\Illuminate\Database\QueryException|PDOException $e): string
+    private function uniqueViolationField(QueryException|PDOException $e): string
     {
         return str_contains($e->getMessage(), 'phone') ? 'phone' : 'email';
     }

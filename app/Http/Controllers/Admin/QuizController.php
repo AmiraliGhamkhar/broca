@@ -12,6 +12,7 @@ use App\Services\FreeItemDesignationService;
 use App\Support\Slug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use RuntimeException;
@@ -75,7 +76,7 @@ class QuizController extends Controller
 
         $quiz = new Quiz($validated);
         $quiz->slug = Slug::unique($validated['title'], fn (string $slug) => Quiz::where('course_id', $validated['course_id'])->where('slug', $slug)->exists());
-        $quiz->published_at = ! empty($validated['published_at']) ? \Illuminate\Support\Carbon::parse($validated['published_at']) : ($validated['status'] === 'published' ? now() : null);
+        $quiz->published_at = ! empty($validated['published_at']) ? Carbon::parse($validated['published_at']) : ($validated['status'] === 'published' ? now() : null);
         $quiz->save();
 
         return redirect()->route('admin.quizzes.index', ['quiz_id' => $quiz->id])->with('status', 'آزمون با موفقیت ایجاد شد.');
@@ -115,7 +116,7 @@ class QuizController extends Controller
         }
 
         if (! empty($validated['published_at'])) {
-            $quiz->published_at = \Illuminate\Support\Carbon::parse($validated['published_at']);
+            $quiz->published_at = Carbon::parse($validated['published_at']);
         }
 
         $quiz->save();

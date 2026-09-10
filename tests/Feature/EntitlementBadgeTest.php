@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Contributor;
 use App\Models\Course;
 use App\Models\Note;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -25,7 +27,7 @@ class EntitlementBadgeTest extends TestCase
 
         // The cap check caches counts for 300 s — never let one test's
         // state leak into the next (array cache is process-wide).
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
     }
 
     public function test_course_page_badges_follow_the_global_cap(): void
@@ -39,7 +41,7 @@ class EntitlementBadgeTest extends TestCase
         // A third designation pushes the count past the cap → fail-closed:
         // NO video may present itself as free, or the lock would be bypassed.
         Video::factory()->for($course)->create(['is_free_designated' => true]);
-        \Illuminate\Support\Facades\Cache::flush(); // drop the 300 s cap cache
+        Cache::flush(); // drop the 300 s cap cache
 
         $content = $this->get(route('courses.show', $course->fresh()))->assertOk()->getContent();
         $this->assertSame(0, substr_count($content, '>رایگان</span>'));
@@ -67,7 +69,7 @@ class EntitlementBadgeTest extends TestCase
 
         // Past the cap → every row degrades to "ویژه".
         Video::factory()->for($course)->create(['is_free_designated' => true]);
-        \Illuminate\Support\Facades\Cache::flush(); // drop the 300 s cap cache
+        Cache::flush(); // drop the 300 s cap cache
 
         $content = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
         $this->assertSame(0, substr_count($content, '>رایگان</span>'));
@@ -101,7 +103,7 @@ class EntitlementBadgeTest extends TestCase
 
         // Archiving the hidden course changes nothing for visible content.
         $hidden->update(['status' => 'archived']);
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
 
         $content = $this->get(route('courses.show', $visible->fresh()))->assertOk()->getContent();
         $this->assertSame(2, substr_count($content, '>رایگان</span>'));
@@ -118,7 +120,7 @@ class EntitlementBadgeTest extends TestCase
         // Soft-deleting the second course drops its (still-published)
         // videos out of the count → the visible course stays within cap.
         $hidden->delete();
-        \Illuminate\Support\Facades\Cache::flush();
+        Cache::flush();
 
         $content = $this->get(route('courses.show', $visible->fresh()))->assertOk()->getContent();
         $this->assertSame(2, substr_count($content, '>رایگان</span>'));
@@ -127,7 +129,7 @@ class EntitlementBadgeTest extends TestCase
     public function test_note_badge_uses_the_effective_entitlement(): void
     {
         $course = Course::factory()->published()->create();
-        $contributor = \App\Models\Contributor::factory()->create();
+        $contributor = Contributor::factory()->create();
         Note::create([
             'course_id' => $course->id,
             'title' => 'جزوه نمونه',
@@ -164,7 +166,7 @@ class EntitlementBadgeTest extends TestCase
             'reviewer_id' => $contributor->id,
         ]);
 
-        \Illuminate\Support\Facades\Cache::flush(); // drop the 300 s cap cache
+        Cache::flush(); // drop the 300 s cap cache
         $content = $this->get(route('courses.show', $course->fresh()))->assertOk()->getContent();
         $this->assertSame(0, substr_count($content, '>رایگان</span>'));
     }

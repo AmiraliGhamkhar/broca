@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Course;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizOption;
@@ -36,7 +37,7 @@ class QuizTest extends TestCase
 
         $this->user = User::factory()->create();
 
-        $course = \App\Models\Course::factory()->published()->create();
+        $course = Course::factory()->published()->create();
         $this->quiz = Quiz::factory()->published()->create(['course_id' => $course->id]);
         $this->user->enrollments()->create([
             'course_id' => $this->quiz->course_id,

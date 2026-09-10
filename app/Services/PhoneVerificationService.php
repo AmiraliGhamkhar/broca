@@ -29,9 +29,7 @@ use Illuminate\Support\Str;
  */
 class PhoneVerificationService
 {
-    public function __construct(private readonly SmsManager $sms)
-    {
-    }
+    public function __construct(private readonly SmsManager $sms) {}
 
     public function enabled(): bool
     {

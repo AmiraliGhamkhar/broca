@@ -396,3 +396,48 @@ without SSH*.
 - `llms.txt` is kept (built, tested, near-zero cost) but its value is
   unproven: no major vendor has committed to reading it (2026 studies).
   The robots named-group fix is the actual control for AI crawler access.
+
+## Round 10 decisions (2026-09-10, AUDIT-03 re-audit)
+
+Scope C: every AUDIT-03 claim re-verified against HEAD item-by-item (see
+ANALYSIS.md §14). All Round-6 fixes hold; later rounds superseded two fix
+shapes without weakening them. Four changes resulted.
+
+1. **B-4 (no gateway HTTP timeout) is fixed via the config `map`, not vendor
+   edits.** shetabit/multipay v3.0.4 builds every ZarinPal strategy and the
+   Zibal driver with a bare `new Client()` (Guzzle ships no `timeout` default
+   at all — verified in vendor, which earlier rounds could not read). The
+   manager instantiates `config['map'][$driver]`, so `config/payment.php` now
+   points both drivers at app subclasses whose only delta is a 15 s / 5 s
+   connect client. No new env knob: the values are not deployment-specific,
+   and one more var is one more 1 AM misconfiguration.
+2. **The B-4 subclasses track vendor constructor shapes, and the tests pin
+   them.** `PaymentTimeoutTest` resolves both drivers through the real
+   `Payment` manager (reflection-seeded invoice, zero network) and asserts
+   client options; a fourth test asserts the *vendor* class still has no
+   timeout, so a future vendor release that adds its own names the cleanup
+   instead of hiding the redundancy.
+3. **`zaringate` keeps the vendor strategy class.** It speaks SOAP (no Guzzle
+   client), the mode is unused, and PHP's `default_socket_timeout` already
+   bounds it — subclassing it would be change without effect.
+4. **I-3's token redaction finally has a regression test.**
+   `TelegramTokenRedactionTest` fakes a `ConnectionException` carrying a
+   token-bearing URL and asserts the thrown message contains `REDACTED_TOKEN`
+   and keeps the original on the chain. The Round-6 fix was correct; it was
+   just untested, which is how a refactor silently re-opens a secret leak.
+5. **B-5c: the one redundant `Hash::make()` is gone; the `hashed` cast is the
+   single hashing path.** Registration was the only writer that hashed
+   explicitly — reset and repair already relied on the cast — so the cast
+   stays and the call goes. Covered by the existing register→login tests.
+6. **D-9 (missing quiz free-flag index) stays skipped, re-confirmed.** The
+   audit said to fix it only if the schema was touched for another reason;
+   no migration was needed this round and quiz tables are small. No evidence,
+   no migration.
+7. **First full pint pass: 87 files, cosmetic-only, CI gate now blocking.**
+   The CI comment made the gate non-blocking "until the codebase has had one
+   pint pass" — this is that pass (`--test` green over 241 files, suite
+   re-greened after). Style drift now fails CI like any other check.
+8. **Stale audit text gets supersession pointers, not rewrites.**
+   AUDIT-00's "Still open" and AUDIT-01's P2/checklist described a repo from
+   before Rounds 6–7 resolved them; both now carry dated notes pointing at
+   the resolving round. History stays readable, nobody acts on dead findings.

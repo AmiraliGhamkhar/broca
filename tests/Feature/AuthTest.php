@@ -5,9 +5,14 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -106,7 +111,7 @@ class AuthTest extends TestCase
         Notification::assertSentTo($user, VerifyEmailNotification::class);
         // The override must win: the framework's stock (English, sync)
         // notification is never what gets queued.
-        Notification::assertNotSentTo($user, \Illuminate\Auth\Notifications\VerifyEmail::class);
+        Notification::assertNotSentTo($user, VerifyEmail::class);
     }
 
     public function test_guest_middleware_redirects_authed_users_to_dashboard(): void
@@ -187,7 +192,7 @@ class AuthTest extends TestCase
 
         Notification::assertSentTo($user, ResetPasswordNotification::class);
         // The override must win over the framework's stock notification.
-        Notification::assertNotSentTo($user, \Illuminate\Auth\Notifications\ResetPassword::class);
+        Notification::assertNotSentTo($user, ResetPassword::class);
     }
 
     public function test_password_reset_changes_the_password_and_kills_every_live_session(): void
@@ -201,13 +206,13 @@ class AuthTest extends TestCase
 
         // A live session held by the (possibly compromised) account.
         DB::table('sessions')->insert([
-            'id' => \Illuminate\Support\Str::random(40),
+            'id' => Str::random(40),
             'user_id' => $user->id,
             'payload' => 2,
             'last_activity' => now()->timestamp,
         ]);
 
-        $token = \Illuminate\Support\Facades\Password::broker()->createToken($user);
+        $token = Password::broker()->createToken($user);
 
         $this->post('/reset-password', [
             'token' => $token,
@@ -217,6 +222,6 @@ class AuthTest extends TestCase
         ])->assertRedirect(route('login'))->assertSessionHas('status');
 
         $this->assertDatabaseMissing('sessions', ['user_id' => $user->id]);
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Xk9vP2mQ7zR4tW8n', $user->fresh()->password));
+        $this->assertTrue(Hash::check('Xk9vP2mQ7zR4tW8n', $user->fresh()->password));
     }
 }
