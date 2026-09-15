@@ -81,7 +81,7 @@
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 </head>
-<body class="bg-canvas text-ink font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileNav: false }">
+<body @if (request()->routeIs('home', 'plans', 'blog.*', 'catalog', 'subjects.show', 'courses.show')) data-cursor="fx" @endif class="bg-canvas text-ink font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileNav: false }">
 
     @if (! empty($markdownAlternate ?? null))
         <div class="sr-only" aria-hidden="true">نسخهٔ مارک‌داون این صفحه در آدرس {{ $markdownAlternate }} در دسترس است، بهینه‌شده برای ابزارهای هوش مصنوعی و LLM.</div>
@@ -140,9 +140,9 @@
                              which forces layout on every keystroke/focus.
                              Feedback now comes from border + shadow. -->
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="جستجوی دوره، فیزیولوژی، آناتومی..."
-                               class="w-56 lg:w-64 pl-10 pr-4 py-2.5 rounded border border-hairline bg-white text-xs font-medium focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
+                               class="w-56 lg:w-64 pl-4 pr-10 py-2.5 rounded border border-hairline bg-white text-xs font-medium focus:border-ink focus:shadow-float transition-[border-color,box-shadow] duration-200">
                         <button type="submit"
-                                class="absolute left-1.5 top-1/2 -translate-y-1/2 size-8 rounded bg-rausch text-white text-xs grid place-items-center hover:bg-rausch-active transition-colors"
+                                class="absolute right-1.5 top-1/2 -translate-y-1/2 size-8 rounded bg-rausch text-white text-xs grid place-items-center hover:bg-rausch-active transition-colors"
                                 aria-label="جستجو">
                             <x-ui.icon name="search" class="size-4" />
                         </button>
@@ -198,7 +198,7 @@
                                      x-transition:leave="transition duration-100 ease-in"
                                      x-transition:leave-start="opacity-100"
                                      x-transition:leave-end="opacity-0 -translate-y-1"
-                                     class="absolute left-0 mt-2 w-64 rounded-lg bg-white border border-hairline-soft shadow-float py-2 text-xs font-bold z-50">
+                                     class="absolute right-0 mt-2 w-64 rounded-lg bg-white border border-hairline-soft shadow-float py-2 text-xs font-bold z-50">
                                     <div class="px-4 py-2.5 border-b border-hairline-soft text-right">
                                         <span class="sr-only">{{ auth()->user()->name }} — {{ auth()->user()->email }}</span>
                                         <span class="inline-block mt-1.5 px-2 py-0.5 rounded text-[11px] font-bold {{ auth()->user()->hasActiveSubscription() ? 'bg-rausch-tint text-rausch' : 'bg-surface-soft text-muted' }}">
