@@ -48,6 +48,9 @@ function createSpring(target, { damping, stiffness, mass, restDelta }) {
 }
 
 function initSmoothCursor() {
+    // Skip unless the Blade view explicitly opted into the decorative cursor.
+    if (document.body?.dataset.cursor !== "fx") return;
+
     // Skip on touch-first devices or when the user prefers reduced motion.
     if (!window.matchMedia(DESKTOP_POINTER_QUERY).matches) return;
     if (window.matchMedia(REDUCED_MOTION_QUERY).matches) return;
@@ -170,7 +173,7 @@ function initSmoothCursor() {
         wake();
     }
 
-    // Hide the OS cursor sitewide, but keep the I-beam for text inputs so
+    // Hide the OS cursor on opted-in pages, but keep the I-beam for text inputs so
     // users can still see where they're typing (accessibility trade-off
     // recommended by the original component docs).
     const style = document.createElement("style");
