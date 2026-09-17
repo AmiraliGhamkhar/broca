@@ -20,26 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class MarkdownTwin
 {
-    /** @return list<string> route names that have a Markdown twin */
-    public static function twinRoutes(): array
-    {
-        return [
-            'home',
-            'catalog',
-            'plans',
-            'blog.index',
-            'blog.show',
-            'subjects.show',
-            'courses.show',
-            'legal.show',
-        ];
-    }
-
-    public static function hasTwin(?string $routeName): bool
-    {
-        return $routeName !== null && in_array($routeName, self::twinRoutes(), true);
-    }
-
     /**
      * Absolute URL of the Markdown twin for the given route, or null.
      * Pure URL construction — safe to run on every HTML page render.

@@ -479,8 +479,6 @@ Three tiers on `/plans`: **رایگان**, **یک‌ماهه ۲۷۰ تومان**
   (`۱ ماه دسترسی`, `۲۶٪`) go through `App\Support\PersianNumber`.
 - Layout is fixed at three columns from `md` up (never `auto-fit`, which orphans
   the third card near 900px) and single column on phones.
-- `public/plans-pricing-preview.html` is a static, framework-free preview of the
-  same markup (same compiled stylesheet) for design review; it is not a route.
 
 ### 7.4 Pills, tags, and badges
 

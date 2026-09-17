@@ -26,7 +26,7 @@ class ServeMarkdown
     {
         $routeName = $request->route()?->getName();
 
-        if ($routeName && MarkdownTwin::hasTwin($routeName) && $this->prefersMarkdown($request->header('Accept'))) {
+        if ($routeName && $this->prefersMarkdown($request->header('Accept'))) {
             $params = $request->route()->parameters() ?? [];
             $markdown = MarkdownTwin::markdownForRoute($routeName, $params);
 

@@ -188,26 +188,6 @@ h1 {
 }
 
 
-.site-nav-links a,
-.site-nav-links button {
-    border-radius: 0.375rem;
-    padding: 0.55rem 0.85rem;
-}
-
-.site-nav-links a:hover,
-.site-nav-links button:hover {
-    background: var(--color-surface-soft);
-}
-
-.site-nav-links .nav-primary {
-    background: var(--color-ink);
-    color: #ffffff;
-}
-
-.site-nav-links .nav-primary:hover {
-    background: var(--color-rausch);
-}
-
 /* =========================================================================
    Hero
    ========================================================================= */
@@ -235,31 +215,9 @@ h1 {
 
 
 
-.hero-kicker::before {
-    width: 0.45rem;
-    height: 0.45rem;
-    background: var(--color-rausch);
-    content: "";
-}
-
-
-.hero-actions .btn-cta-primary,
-.hero-actions .btn-cta-secondary {
-    min-height: 3rem;
-    border-radius: 0.375rem;
-}
-
 /* =========================================================================
    Surfaces & cards
    ========================================================================= */
-
-/* Professional card styles */
-
-.interactive-card:hover {
-    border-color: var(--color-hairline);
-    box-shadow: var(--shadow-float);
-    transform: translateY(-2px);
-}
 
 /* Editorial card */
 .editorial-card {
@@ -299,14 +257,6 @@ h1 {
     box-shadow: var(--shadow-float);
     transform: translateY(-1px);
 }
-
-/* Professional button styles */
-
-.btn-outline:hover {
-    background: var(--color-surface-soft);
-}
-
-/* Pill CTA - removed as part of AI slop removal */
 
 /* Surface panel */
 .surface-panel {
@@ -371,15 +321,6 @@ h1 {
     line-height: 1.95;
 }
 
-/* Section label */
-
-.section-label::before {
-    width: 1.4rem;
-    height: 2px;
-    background: currentColor;
-    content: "";
-}
-
 /* =========================================================================
    Forms
    ========================================================================= */
@@ -424,34 +365,8 @@ a.rounded-xl:active {
         padding-block: 0.75rem;
     }
 
-    .site-nav-links {
-        width: 100%;
-        overflow-x: auto;
-        padding-block: 0.2rem;
-        scrollbar-width: none;
-    }
-
-    .site-nav-links::-webkit-scrollbar {
-        display: none;
-    }
-
-    .site-nav-links a,
-    .site-nav-links button {
-        flex: 0 0 auto;
-    }
-
     .hero-shell::after {
         background: linear-gradient(180deg, rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.4));
-    }
-
-    .hero-content {
-        padding-block: 5rem 6rem;
-        text-align: center;
-    }
-
-    .hero-kicker,
-    .hero-actions {
-        justify-content: center;
     }
 }
 
@@ -466,12 +381,6 @@ a.rounded-xl:active {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
-    }
-
-    .interactive-card:hover,
-    .site-nav-links a:hover,
-    .site-nav-links button:hover {
-        transform: none;
     }
 }
 
@@ -543,10 +452,6 @@ a.rounded-xl:active {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .subtle-grid.cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
     .subtle-grid.cols-4 {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
@@ -556,8 +461,7 @@ a.rounded-xl:active {
 .button-secondary,
 .button-soft,
 .btn-cta-primary,
-.btn-cta-secondary,
-.btn-cta-soft {
+.btn-cta-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -570,23 +474,27 @@ a.rounded-xl:active {
     transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
-.button-primary {
+.button-primary,
+.btn-cta-primary {
     background: var(--color-rausch);
     color: #ffffff;
     box-shadow: var(--shadow-float);
 }
 
-.button-primary:hover {
+.button-primary:hover,
+.btn-cta-primary:hover {
     background: var(--color-rausch-active);
 }
 
-.button-secondary {
+.button-secondary,
+.btn-cta-secondary {
     border: 1px solid rgb(34 34 34 / 0.16);
     background: #ffffff;
     color: var(--color-ink);
 }
 
-.button-secondary:hover {
+.button-secondary:hover,
+.btn-cta-secondary:hover {
     background: var(--color-surface-soft);
 }
 
@@ -607,34 +515,6 @@ a.rounded-xl:active {
 }
 
 .button-soft:hover {
-    border-color: rgb(34 34 34 / 0.1);
-    background: #ffffff;
-}
-
-/* Sharp CTA aliases (post-redesign naming). Identical visuals to the
-   .button-* classes above so existing views render correctly. */
-.btn-cta-primary {
-    background: var(--color-rausch);
-    color: #ffffff;
-    box-shadow: var(--shadow-float);
-}
-.btn-cta-primary:hover {
-    background: var(--color-rausch-active);
-}
-.btn-cta-secondary {
-    border: 1px solid rgb(34 34 34 / 0.16);
-    background: #ffffff;
-    color: var(--color-ink);
-}
-.btn-cta-secondary:hover {
-    background: var(--color-surface-soft);
-}
-.btn-cta-soft {
-    border: 1px solid transparent;
-    background: var(--color-surface-soft);
-    color: var(--color-ink);
-}
-.btn-cta-soft:hover {
     border-color: rgb(34 34 34 / 0.1);
     background: #ffffff;
 }
@@ -847,12 +727,6 @@ a.rounded-xl:active {
 }
 
 
-@media (min-width: 640px) {
-    .stat-grid.cols-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
 .stat-card {
     border: 1px solid var(--color-hairline-soft);
     border-radius: 1.25rem;
@@ -950,13 +824,11 @@ a.rounded-xl:active {
     color: #ffffff;
 }
 
-.meta-card.is-dark dt,
-.meta-card.is-dark .meta-muted {
+.meta-card.is-dark dt {
     color: rgb(255 255 255 / 0.6);
 }
 
-.meta-card.is-dark dd,
-.meta-card.is-dark .meta-strong {
+.meta-card.is-dark dd {
     color: #ffffff;
 }
 

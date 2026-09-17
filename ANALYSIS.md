@@ -64,12 +64,12 @@ The app is a **classic server-rendered Laravel monolith**: no SPA, no JSON API (
 ├── public/                 — index.php, robots.txt (served statically), fonts (Vazirmatn), images
 ├── resources/
 │   ├── css/app.css         — Tailwind v4 theme tokens + full design system
-│   ├── js/app.js, bootstrap.js — Alpine bootstrap
-│   └── views/              — 60 Blade views (layouts, welcome, catalog, courses, learner,
+│   ├── js/                 — Alpine bootstrap and smooth-cursor enhancement
+│   └── views/              — 59 Blade views (layouts, welcome, catalog, courses, learner,
 │                             admin, auth, payments, blog, legal, errors, components)
 ├── routes/                 — web.php (all HTTP), console.php (schedule)
 ├── storage/                — logs, framework dirs (empty)
-└── tests/                  — Feature (17 files), Unit (3 files), Fixtures (FakePaymentGateway)
+└── tests/                  — Feature (39 files), Unit (6 files), Fixtures (FakePaymentGateway)
 ```
 
 ---

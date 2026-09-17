@@ -28,24 +28,4 @@ final class SmsResult
     {
         return new self(false, $driver, $detail, $reference);
     }
-
-    public function isDelivered(): bool
-    {
-        return $this->delivered;
-    }
-
-    /**
-     * Never log the whole number: handset numbers are personal data and the
-     * log file is the first thing pasted into a support chat.
-     */
-    public function maskPhone(string $phone): string
-    {
-        $digits = preg_replace('/\D+/', '', $phone) ?? '';
-
-        if (strlen($digits) < 4) {
-            return '***';
-        }
-
-        return substr($digits, 0, 4).str_repeat('*', max(0, strlen($digits) - 7)).substr($digits, -3);
-    }
 }

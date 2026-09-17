@@ -22,21 +22,6 @@ class PaymentTransaction extends Model
         return $this->belongsTo(Invoice::class);
     }
 
-    public function isVerified(): bool
-    {
-        return $this->status === 'verified';
-    }
-
-    public function isInitiated(): bool
-    {
-        return $this->status === 'initiated';
-    }
-
-    public function isFailed(): bool
-    {
-        return $this->status === 'failed';
-    }
-
     public function markVerified(): void
     {
         $this->update(['status' => 'verified', 'verified_at' => now()]);

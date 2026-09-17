@@ -3,7 +3,6 @@
 namespace App\Services\Payments;
 
 use Shetabit\Multipay\Drivers\Zarinpal\Strategies\Normal;
-use Shetabit\Multipay\Invoice;
 
 /**
  * ZarinPal `normal` strategy with a bounded HTTP client (B-4).
@@ -15,10 +14,5 @@ use Shetabit\Multipay\Invoice;
  */
 class TimeoutZarinpalNormal extends Normal
 {
-    public function __construct(Invoice $invoice, array|object $settings)
-    {
-        $this->invoice($invoice);
-        $this->settings = (object) $settings;
-        $this->client = TimeoutHttpClient::make();
-    }
+    use InitializesTimeoutPaymentDriver;
 }
