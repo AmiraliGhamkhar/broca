@@ -20,6 +20,7 @@ use App\Services\EntitlementService;
 use App\Services\PlaceholderVideoProvider;
 use App\Services\Sms\SmsManager;
 use App\Services\ZarinPalGateway;
+use App\Services\ZibalGateway;
 use App\Support\MarkdownTwin;
 use App\Support\PasswordPolicy;
 use Illuminate\Cache\RateLimiting\Limit;

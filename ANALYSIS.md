@@ -69,7 +69,7 @@ The app is a **classic server-rendered Laravel monolith**: no SPA, no JSON API (
 │                             admin, auth, payments, blog, legal, errors, components)
 ├── routes/                 — web.php (all HTTP), console.php (schedule)
 ├── storage/                — logs, framework dirs (empty)
-└── tests/                  — Feature (38 files), Unit (6 files), Fixtures (FakePaymentGateway)
+└── tests/                  — Feature (39 files), Unit (6 files), Fixtures (FakePaymentGateway)
 ```
 
 ---
