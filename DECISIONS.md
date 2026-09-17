@@ -108,11 +108,11 @@ Client answered all §9 questions of `docs/AUDIT-03-FULL-STACK-AUDIT.md` on
 2026-09-05; item IDs below refer to that report.
 
 1. **Hero is a photograph, not the cancelled 3D-heart video.** Three
-   AI-generated candidates were produced (client informed the asset is
-   AI-generated, disclosed here as required): `heart-model` (shipped
-   default), `hero-atlas`, `hero-study` — previewed at
-   `/hero-candidates.html` during the working session; the final pick is a
-   one-file swap (`public/images/hero/hero.{webp,jpg}` + alt text).
+   AI-generated candidates were reviewed (client informed the asset is
+   AI-generated, disclosed here as required). The selected `heart-model`
+   artwork ships at `public/images/hero/hero.{webp,jpg}` with its final alt
+   text; the temporary candidate copies and review page were removed once the
+   decision was complete.
 2. **The 4-card trust strip stays as-is.** No decorative or animated
    replacement; copy kept honest under decision 3.
 3. **`admin_activity_logs` retention is forever.** The prune command added
@@ -391,8 +391,6 @@ without SSH*.
 
 ### Residual open items (not blocking)
 
-- Final hero pick from the three candidates (swap = copy 2 files + alt
-  text) — user to choose via the live preview.
 - `llms.txt` is kept (built, tested, near-zero cost) but its value is
   unproven: no major vendor has committed to reading it (2026 studies).
   The robots named-group fix is the actual control for AI crawler access.

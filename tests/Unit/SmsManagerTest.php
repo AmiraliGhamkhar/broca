@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use App\Services\Sms\SmsDeliveryException;
 use App\Services\Sms\SmsManager;
 use Illuminate\Support\Facades\Http;
-use RuntimeException;
 use Tests\TestCase;
 
 /**
@@ -127,29 +126,6 @@ class SmsManagerTest extends TestCase
         // A half-configured .env must mean "no text messages", not "signup is
         // down".
         $result = (new SmsManager)->send('09123456789', 'متن');
-
-        $this->assertFalse($result->delivered);
-    }
-
-    public function test_send_quietly_never_throws(): void
-    {
-        config()->set('sms.enabled', true);
-        config()->set('sms.default', 'http');
-        config()->set('sms.drivers.http', [
-            'url' => 'https://panel.example/send',
-            'method' => 'POST',
-            'encode' => 'json',
-            'headers' => [],
-            'body' => ['receptor' => ':to'],
-            'success_status' => [200],
-            'success_contains' => 'success',
-            'timeout' => 5,
-            'verify' => true,
-        ]);
-
-        Http::fake(['*' => fn () => throw new RuntimeException('boom')]);
-
-        $result = (new SmsManager)->sendQuietly('09123456789', 'متن');
 
         $this->assertFalse($result->delivered);
     }

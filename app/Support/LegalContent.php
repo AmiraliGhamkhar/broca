@@ -52,14 +52,14 @@ class LegalContent
         ];
     }
 
+    /** @return list<string> */
+    public static function pages(): array
+    {
+        return array_keys(self::all());
+    }
+
     public static function document(string $page): ?array
     {
         return self::all()[$page] ?? null;
-    }
-
-    /** @return array<string, string> page key → heading */
-    public static function headings(): array
-    {
-        return array_map(fn (array $document): string => $document['heading'], self::all());
     }
 }

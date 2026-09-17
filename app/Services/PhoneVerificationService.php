@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Notifications\PhoneVerificationNotification;
-use App\Services\Sms\SmsManager;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -29,8 +28,6 @@ use Illuminate\Support\Str;
  */
 class PhoneVerificationService
 {
-    public function __construct(private readonly SmsManager $sms) {}
-
     public function enabled(): bool
     {
         return (bool) config('broca.phone_verification.enabled', true);
@@ -50,13 +47,6 @@ class PhoneVerificationService
         $cooldown = (int) config('broca.phone_verification.resend_cooldown_seconds', 60);
 
         return max(0, $cooldown - (int) $lastSentAt->diffInSeconds(now(), false));
-    }
-
-    public function canResend(User $user): bool
-    {
-        return $this->enabled()
-            && ! $user->hasVerifiedPhone()
-            && $this->secondsUntilResend($user) === 0;
     }
 
     /**

@@ -36,6 +36,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\TelegramWebhookController;
+use App\Support\LegalContent;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -67,7 +68,7 @@ Route::get('/blog.md', [MarkdownController::class, 'blogIndex'])->name('seo.md.b
 Route::get('/blog/{slug}.md', [MarkdownController::class, 'blogPost'])->name('seo.md.blog.show');
 Route::get('/subjects/{subject:slug}.md', [MarkdownController::class, 'subject'])->name('seo.md.subject');
 Route::get('/courses/{course:slug}.md', [MarkdownController::class, 'course'])->name('seo.md.course');
-Route::get('/{page}.md', [MarkdownController::class, 'legal'])->whereIn('page', ['terms', 'privacy', 'medical-disclaimer', 'contact'])->name('seo.md.legal');
+Route::get('/{page}.md', [MarkdownController::class, 'legal'])->whereIn('page', LegalContent::pages())->name('seo.md.legal');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
@@ -330,4 +331,4 @@ Route::post('/telegram/webhook', TelegramWebhookController::class)->middleware('
 | Legal pages (catch-all — kept last)
 |--------------------------------------------------------------------------
 */
-Route::get('/{page}', [LegalController::class, 'show'])->whereIn('page', ['terms', 'privacy', 'medical-disclaimer', 'contact'])->name('legal.show');
+Route::get('/{page}', [LegalController::class, 'show'])->whereIn('page', LegalContent::pages())->name('legal.show');

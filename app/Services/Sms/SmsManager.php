@@ -25,8 +25,6 @@ class SmsManager
     /** @var array<string, SmsTransport> */
     private array $transports = [];
 
-    public function __construct() {}
-
     /**
      * @param  array<string, mixed>  $context
      *
@@ -96,22 +94,6 @@ class SmsManager
             'null' => new NullSmsTransport,
             default => new NullSmsTransport,
         };
-    }
-
-    /**
-     * Non-throwing wrapper for paths where a failed text message must not
-     * change the response (registration, verification resend). The failure is
-     * still reported to the log and to the exception handler.
-     */
-    public function sendQuietly(string $phone, string $message, array $context = []): SmsResult
-    {
-        try {
-            return $this->send($phone, $message, $context);
-        } catch (SmsDeliveryException $exception) {
-            report($exception);
-
-            return SmsResult::failed((string) config('sms.default', 'log'), $exception->getMessage());
-        }
     }
 
     private function reference(): string

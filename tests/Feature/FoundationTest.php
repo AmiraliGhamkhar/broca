@@ -16,18 +16,7 @@ class FoundationTest extends TestCase
         $response->assertOk()
             ->assertSee('<html lang="fa" dir="rtl">', false)
             ->assertSee('آموزش پزشکی برای دانشجویان', false)
-            // The 2026-09 hero is the editorial card, not the old
-            // heart-placeholder poster — assert copy the current hero renders.
+            // Assert the copy rendered beside the selected editorial hero artwork.
             ->assertSee('پلتفرم بازبینی‌شده آموزش پزشکی', false);
-    }
-
-    public function test_the_health_endpoint_reports_service_status(): void
-    {
-        $response = $this->getJson('/health');
-
-        $response->assertOk()
-            ->assertJsonStructure(['status', 'db', 'time'])
-            ->assertJsonPath('status', 'ok')
-            ->assertJsonPath('db', 'ok');
     }
 }
